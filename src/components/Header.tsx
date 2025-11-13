@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { ChevronDown, Zap } from "lucide-react";
+import { ChevronDown, Zap, MessageCircle, Linkedin, Twitter, Circle } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,32 +38,55 @@ export function Header() {
             
             {/* Navigation */}
             <nav className="hidden md:flex items-center gap-6">
-              <a href="#community" className="text-sm font-medium hover:text-primary transition-colors">
-                Community
-              </a>
-              <a href="#enterprise" className="text-sm font-medium hover:text-primary transition-colors">
-                Enterprise
-              </a>
+              <button 
+                onClick={() => navigate('/features')}
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
+                Features
+              </button>
               <button className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
                 Resources
                 <ChevronDown className="w-4 h-4" />
               </button>
-              <a href="#careers" className="text-sm font-medium hover:text-primary transition-colors">
-                Careers
-              </a>
-              <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
+              <button 
+                onClick={() => navigate('/pricing')}
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
                 Pricing
-              </a>
+              </button>
             </nav>
           </div>
 
           {/* Right side */}
           <div className="flex items-center gap-3">
+            {/* Social Icons */}
+            <div className="hidden lg:flex items-center gap-2 mr-2">
+              <a href="#" className="p-2 hover:text-primary transition-colors">
+                <MessageCircle className="w-5 h-5" />
+              </a>
+              <a href="#" className="p-2 hover:text-primary transition-colors">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="#" className="p-2 hover:text-primary transition-colors">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="#" className="p-2 hover:text-primary transition-colors">
+                <Circle className="w-5 h-5" />
+              </a>
+            </div>
+            
             <ThemeToggle />
-            <Button variant="ghost" className="hidden sm:inline-flex">
+            <Button 
+              variant="ghost" 
+              className="hidden sm:inline-flex"
+              onClick={() => navigate('/auth')}
+            >
               Sign in
             </Button>
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => navigate('/auth')}
+            >
               Get started
             </Button>
           </div>
