@@ -1,15 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Zap, Plus, Sparkles, Github, Figma } from "lucide-react";
 import { Textarea } from "./ui/textarea";
+import { motion } from "framer-motion";
+import { ShaderBackground } from "./ui/neural-network-hero";
 
 export function Hero() {
   const [prompt, setPrompt] = useState("");
+  const [titleNumber, setTitleNumber] = useState(0);
+  const titles = useMemo(
+    () => ["build", "create", "design", "launch", "ship"],
+    []
+  );
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (titleNumber === titles.length - 1) {
+        setTitleNumber(0);
+      } else {
+        setTitleNumber(titleNumber + 1);
+      }
+    }, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [titleNumber, titles]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-background via-background to-surface-elevated">
-      {/* Glow effect */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Neural Network Background */}
+      <ShaderBackground />
       
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Announcement banner */}
@@ -27,7 +45,29 @@ export function Hero() {
         <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
             What will you{" "}
-            <span className="text-primary">build</span>{" "}
+            <span className="relative inline-flex justify-center overflow-hidden">
+              {titles.map((title, index) => (
+                <motion.span
+                  key={index}
+                  className="absolute text-primary font-bold"
+                  initial={{ opacity: 0, y: -100 }}
+                  transition={{ type: "spring", stiffness: 50 }}
+                  animate={
+                    titleNumber === index
+                      ? {
+                          y: 0,
+                          opacity: 1,
+                        }
+                      : {
+                          y: titleNumber > index ? -150 : 150,
+                          opacity: 0,
+                        }
+                  }
+                >
+                  {title}
+                </motion.span>
+              ))}
+            </span>{" "}
             today?
           </h1>
           
@@ -37,7 +77,7 @@ export function Hero() {
         </div>
 
         {/* Large Chat Box */}
-        <div className="max-w-4xl mx-auto mb-8 rise-in-delay-1">
+        <div className="max-w-3xl mx-auto mb-8 rise-in-delay-1">
           <div className="bg-surface-elevated border border-border rounded-2xl shadow-lg overflow-hidden">
             <Textarea
               value={prompt}
