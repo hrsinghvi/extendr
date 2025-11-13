@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame, extend } from '@react-three/fiber';
-import { shaderMaterial } from '@react-three/drei';
-import * as THREE from 'three';
+import { useRef, useMemo } from "react";
+import { Canvas, useFrame, extend } from "@react-three/fiber";
+import { shaderMaterial } from "@react-three/drei";
+import * as THREE from "three";
 
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { SplitText } from 'gsap/SplitText';
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { SplitText } from "gsap/SplitText";
 
 gsap.registerPlugin(SplitText, useGSAP);
 
@@ -157,7 +157,7 @@ const fragmentShader = `
 const CPPNShaderMaterial = shaderMaterial(
   { iTime: 0, iResolution: new THREE.Vector2(1, 1) },
   vertexShader,
-  fragmentShader
+  fragmentShader,
 );
 
 extend({ CPPNShaderMaterial });
@@ -183,38 +183,41 @@ function ShaderPlane() {
 
 export function ShaderBackground() {
   const canvasRef = useRef<HTMLDivElement | null>(null);
-  
-  const camera = useMemo(() => ({ position: [0, 0, 1] as [number, number, number], fov: 75, near: 0.1, far: 1000 }), []);
-  
+
+  const camera = useMemo(
+    () => ({ position: [0, 0, 1] as [number, number, number], fov: 75, near: 0.1, far: 1000 }),
+    [],
+  );
+
   useGSAP(
     () => {
       if (!canvasRef.current) return;
-      
+
       gsap.set(canvasRef.current, {
-        filter: 'blur(20px)',
+        filter: "blur(20px)",
         scale: 1.1,
-        autoAlpha: 0.7
+        autoAlpha: 0.7,
       });
-      
+
       gsap.to(canvasRef.current, {
-        filter: 'blur(0px)',
+        filter: "blur(0px)",
         scale: 1,
         autoAlpha: 1,
         duration: 1.5,
-        ease: 'power3.out',
-        delay: 0.3
+        ease: "power3.out",
+        delay: 0.3,
       });
     },
-    { scope: canvasRef }
+    { scope: canvasRef },
   );
-  
+
   return (
     <div ref={canvasRef} className="absolute inset-0 -z-10 w-full h-full" aria-hidden>
       <Canvas
         camera={camera}
         gl={{ antialias: true, alpha: false }}
         dpr={[1, 2]}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: "100%", height: "100%" }}
       >
         <ShaderPlane />
       </Canvas>
@@ -223,7 +226,7 @@ export function ShaderBackground() {
   );
 }
 
-declare module '@react-three/fiber' {
+declare module "@react-three/fiber" {
   interface ThreeElements {
     cPPNShaderMaterial: any;
   }
