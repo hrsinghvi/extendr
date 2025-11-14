@@ -29,7 +29,7 @@ export function Hero() {
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Main headline */}
         <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight" style={{ color: '#0C1111' }}>
             What will you{" "}
             <MorphingText
               words={["build", "create", "design", "develop", "launch"]}
