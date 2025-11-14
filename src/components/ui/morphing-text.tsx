@@ -63,7 +63,6 @@ export const MorphingText = ({
     <div className={cn("relative inline-block", className)}>
       <span className="font-bold text-primary">
         {displayText}
-        <span className="inline-block w-0.5 h-8 bg-primary animate-pulse ml-1" />
       </span>
     </div>
   );
