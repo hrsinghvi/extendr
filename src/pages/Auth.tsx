@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Zap } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -75,7 +76,13 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-surface-elevated px-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-surface-elevated px-4"
+    >
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="flex justify-center">
@@ -178,6 +185,6 @@ export default function Auth() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
