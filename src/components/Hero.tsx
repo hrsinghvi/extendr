@@ -32,13 +32,13 @@ export function Hero() {
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Main headline */}
         <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 lg:gap-x-5">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground flex flex-wrap items-baseline justify-center gap-x-3 sm:gap-x-4">
             <span>What will you</span>
-            <span className="relative inline-block min-w-[160px] sm:min-w-[220px] lg:min-w-[300px]">
+            <span className="relative inline-flex items-baseline justify-center" style={{ width: '1em', minWidth: 'fit-content' }}>
               {titles.map((title, index) => (
                 <motion.span
                   key={index}
-                  className="absolute inset-0 flex items-center justify-center text-primary font-bold"
+                  className="absolute left-1/2 -translate-x-1/2 text-primary font-bold whitespace-nowrap"
                   initial={{ opacity: 0, y: 100 }}
                   transition={{ type: "spring", stiffness: 50 }}
                   animate={
