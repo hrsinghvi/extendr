@@ -1,4 +1,4 @@
-import { Header } from "@/components/Header";
+import { Navbar1 } from "@/components/ui/navbar-1";
 import { Hero } from "@/components/Hero";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
@@ -12,7 +12,7 @@ const Index = () => {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-background"
     >
-      <Header />
+      <Navbar1 />
       <main>
         <Hero />
       </main>

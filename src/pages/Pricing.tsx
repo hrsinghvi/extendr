@@ -1,4 +1,4 @@
-import { Header } from "@/components/Header";
+import { Navbar1 } from "@/components/ui/navbar-1";
 import { Footer } from "@/components/Footer";
 import PricingSection3 from "@/components/ui/pricing-section-3";
 import { motion } from "framer-motion";
@@ -12,7 +12,7 @@ export default function Pricing() {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-background"
     >
-      <Header />
+      <Navbar1 />
       <PricingSection3 />
       <Footer />
     </motion.div>
