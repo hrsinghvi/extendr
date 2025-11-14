@@ -41,12 +41,12 @@ export function Hero() {
         <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white">
             What will you{" "}
-            <span className="relative inline-flex justify-center overflow-hidden w-[280px] sm:w-[360px] lg:w-[480px]">
+            <span className="relative inline-block min-w-[180px] sm:min-w-[240px] lg:min-w-[320px] h-[1.2em]">
               {titles.map((title, index) => (
                 <motion.span
                   key={index}
-                  className="absolute text-primary font-bold"
-                  initial={{ opacity: 0, y: -100 }}
+                  className="absolute left-0 right-0 text-center text-primary font-bold"
+                  initial={{ opacity: 0, y: 100 }}
                   transition={{ type: "spring", stiffness: 50 }}
                   animate={
                     titleNumber === index
