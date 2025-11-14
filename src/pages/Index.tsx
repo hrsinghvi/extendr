@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { FeaturesSectionWithBentoGrid } from "@/components/ui/feature-section-with-bento-grid";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 
@@ -26,6 +27,7 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
+        <FeaturesSectionWithBentoGrid />
       </main>
       <Footer />
     </motion.div>
