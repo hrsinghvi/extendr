@@ -111,9 +111,15 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
+  
+  html {
+    @apply dark;
+  }
 
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(184 15% 6%);
+    color: hsl(0 0% 100%);
     font-feature-settings: "kern", "liga", "calt";
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;

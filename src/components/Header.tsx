@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { ChevronDown, Zap } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
 import { useNavigate } from "react-router-dom";
 
 export function Header() {
@@ -59,7 +58,6 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <ThemeToggle />
             <Button 
               variant="ghost" 
               className="hidden sm:inline-flex"
