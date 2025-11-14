@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Footer } from "@/components/Footer";
+import { motion } from "framer-motion";
 
 const Index = () => {
   useEffect(() => {
@@ -15,13 +16,19 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen bg-background"
+    >
       <Header />
       <main>
         <Hero />
       </main>
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 
