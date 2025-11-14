@@ -1,7 +1,26 @@
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import { ChevronDown, Zap } from "lucide-react";
+import { Button, buttonVariants } from "./ui/button";
+import { Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { MobileNav } from "./ui/navbar";
+import {
+    NavigationMenu,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
+
+const navigationLinks = [
+    {
+        name: 'Menu',
+        items: [
+            { href: '/features', label: 'Features' },
+            { href: '/pricing', label: 'Pricing' },
+            { href: '/auth', label: 'About' },
+        ],
+    },
+];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -26,41 +45,45 @@ export function Header() {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-8">
-            <a href="/" className="flex items-center gap-2 font-bold text-xl">
+          <div className="flex flex-1 items-center justify-start gap-2">
+            <MobileNav nav={navigationLinks} />
+
+            <a
+              href="/"
+              className={cn(
+                buttonVariants({ variant: 'ghost', size: 'icon' }),
+                "text-white hover:bg-transparent"
+              )}
+            >
               <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
                 <Zap className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span>Bolt</span>
             </a>
-            
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              <button 
-                onClick={() => navigate('/features')}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Features
-              </button>
-              <button className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-                Resources
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => navigate('/pricing')}
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Pricing
-              </button>
-            </nav>
           </div>
 
-          {/* Right side */}
-          <div className="flex items-center gap-3">
+          <NavigationMenu className="max-md:hidden">
+            <NavigationMenuList>
+              {navigationLinks[0].items.map((link, index) => (
+                <NavigationMenuItem key={index}>
+                  <NavigationMenuLink
+                    asChild
+                    href={link.href}
+                    className="rounded-md px-3 py-1.5 font-medium text-white hover:text-primary transition-colors"
+                  >
+                    <a onClick={(e) => {
+                      e.preventDefault();
+                      navigate(link.href);
+                    }}>{link.label}</a>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          <div className="flex flex-1 items-center justify-end gap-2">
             <Button 
               variant="ghost" 
-              className="hidden sm:inline-flex"
+              className="hidden sm:inline-flex text-white hover:bg-white/10"
               onClick={() => navigate('/auth')}
             >
               Sign in
