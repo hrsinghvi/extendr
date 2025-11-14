@@ -11,14 +11,19 @@ export function Hero() {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
       {/* Top gradient semi-circle */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-[#5A9766]/20 to-transparent rounded-b-full blur-3xl pointer-events-none" />
-      
+
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Main headline */}
         <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
-            What will you <MorphingText words={["build", "create", "design", "develop", "launch"]} className="text-5xl sm:text-6xl lg:text-7xl" />?
+            What will you{" "}
+            <MorphingText
+              words={["build", "create", "design", "develop", "launch"]}
+              className="text-5xl sm:text-6xl lg:text-7xl"
+            />
+            ?
           </h1>
-          
+
           <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto">
             Create stunning apps & websites by chatting with AI.
           </p>
@@ -52,18 +57,10 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 rise-in-delay-2">
           <span className="text-sm text-muted-foreground">or import from</span>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="hover-lift hover:border-primary/50 text-foreground"
-            >
+            <Button variant="outline" size="sm" className="hover-lift hover:border-primary/50 text-foreground">
               Figma
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="hover-lift hover:border-primary/50 text-foreground"
-            >
+            <Button variant="outline" size="sm" className="hover-lift hover:border-primary/50 text-foreground">
               GitHub
             </Button>
           </div>
