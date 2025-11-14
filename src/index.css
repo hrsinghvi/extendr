@@ -8,6 +8,59 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    --background: 184 15% 6%;
+    --foreground: 0 0% 95%;
+    
+    --card: 184 15% 8%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 184 15% 8%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 132 25% 47%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 184 15% 11%;
+    --secondary-foreground: 0 0% 95%;
+    
+    --muted: 184 15% 18%;
+    --muted-foreground: 0 0% 65%;
+    
+    --accent: 132 25% 47%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 184 15% 18%;
+    --input: 184 15% 18%;
+    --ring: 184 35% 36%;
+    
+    --radius: 0.75rem;
+    
+    /* Brand colors */
+    --brand-blue: 184 35% 36%;
+    --brand-blue-light: 184 35% 45%;
+    --brand-blue-glow: 184 35% 30%;
+    
+    /* Elevated surfaces */
+    --surface: 184 15% 8%;
+    --surface-elevated: 184 15% 11%;
+    --surface-overlay: 184 15% 14%;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 32px rgba(61, 120, 128, 0.25);
+    
+    /* Transition timing */
+    --transition-fast: 120ms;
+    --transition-base: 180ms;
+    --transition-slow: 240ms;
+  }
+
+  .dark {
     --background: 0 0% 98%;
     --foreground: 220 15% 15%;
     
@@ -36,9 +89,7 @@ All colors MUST be HSL.
     --input: 220 13% 91%;
     --ring: 184 35% 36%;
     
-    --radius: 0.75rem;
-    
-    /* Brand colors */
+    /* Brand colors - adjusted for light mode */
     --brand-blue: 184 35% 36%;
     --brand-blue-light: 184 35% 45%;
     --brand-blue-glow: 184 35% 30%;
@@ -48,16 +99,11 @@ All colors MUST be HSL.
     --surface-elevated: 0 0% 98%;
     --surface-overlay: 220 15% 95%;
     
-    /* Shadows */
+    /* Shadows - lighter for light mode */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
     --shadow-glow: 0 0 24px rgba(61, 120, 128, 0.3);
-    
-    /* Transition timing */
-    --transition-fast: 120ms;
-    --transition-base: 180ms;
-    --transition-slow: 240ms;
   }
 }
 
@@ -65,9 +111,15 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
+  
+  html {
+    @apply dark;
+  }
 
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(184 15% 6%);
+    color: hsl(0 0% 100%);
     font-feature-settings: "kern", "liga", "calt";
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
