@@ -13,9 +13,10 @@ export function Hero() {
       {/* Animated gradient background */}
       <AnimatedGradientBackground 
         Breathing={true}
-        startingGap={125}
-        breathingRange={5}
-        animationSpeed={0.02}
+        startingGap={50}
+        breathingRange={3}
+        animationSpeed={0.015}
+        topOffset={-20}
       />
       
       {/* Noise grain overlay */}
