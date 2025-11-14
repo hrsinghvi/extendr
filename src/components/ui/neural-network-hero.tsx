@@ -4,6 +4,7 @@ import { useRef, useMemo } from "react";
 import { Canvas, useFrame, extend } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
+import { useTheme } from "next-themes";
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -183,6 +184,10 @@ function ShaderPlane() {
 
 export function ShaderBackground() {
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const { theme, systemTheme } = useTheme();
+  
+  const currentTheme = theme === 'system' ? systemTheme : theme;
+  const isDark = currentTheme === 'dark';
 
   const camera = useMemo(
     () => ({ position: [0, 0, 1] as [number, number, number], fov: 75, near: 0.1, far: 1000 }),
@@ -212,7 +217,15 @@ export function ShaderBackground() {
   );
 
   return (
-    <div ref={canvasRef} className="absolute inset-0 w-full h-full bg-black" aria-hidden style={{ zIndex: 0 }}>
+    <div 
+      ref={canvasRef} 
+      className="absolute inset-0 w-full h-full" 
+      aria-hidden 
+      style={{ 
+        zIndex: 0,
+        backgroundColor: isDark ? '#11061A' : '#FFFFFF'
+      }}
+    >
       <Canvas
         camera={camera}
         gl={{ antialias: true, alpha: false }}
