@@ -61,7 +61,7 @@ export const MorphingText = ({
 
   return (
     <div className={cn("relative inline-block", className)}>
-      <span className="font-bold text-primary">
+      <span className="font-bold text-white">
         {displayText}
       </span>
     </div>
