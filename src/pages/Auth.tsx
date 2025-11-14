@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Zap } from "lucide-react";
-import { motion } from "framer-motion";
+import { Zap, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -84,6 +84,19 @@ export default function Auth() {
       className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-surface-elevated px-4"
     >
       <div className="w-full max-w-md space-y-8">
+        {/* Back Button */}
+        <div className="flex justify-start">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/")}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
+        </div>
+
         {/* Logo */}
         <div className="flex justify-center">
           <a href="/" className="flex items-center gap-2 font-bold text-2xl">
@@ -96,9 +109,19 @@ export default function Auth() {
 
         {/* Auth Card */}
         <div className="bg-surface-elevated border border-border rounded-2xl p-8 shadow-lg">
-          <h2 className="text-2xl font-bold text-center mb-6">
-            {isSignUp ? "Create an account" : "Welcome back"}
-          </h2>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isSignUp ? "signup" : "signin"}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h2 className="text-2xl font-bold text-center mb-6">
+                {isSignUp ? "Create an account" : "Welcome back"}
+              </h2>
+            </motion.div>
+          </AnimatePresence>
 
           <form onSubmit={handleEmailAuth} className="space-y-4">
             <div>
@@ -173,16 +196,25 @@ export default function Auth() {
             Continue with Google
           </Button>
 
-          <div className="mt-6 text-center text-sm">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline"
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isSignUp ? "signup-link" : "signin-link"}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="mt-6 text-center text-sm"
             >
-              {isSignUp
-                ? "Already have an account? Sign in"
-                : "Don't have an account? Sign up"}
-            </button>
-          </div>
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary hover:underline"
+              >
+                {isSignUp
+                  ? "Already have an account? Sign in"
+                  : "Don't have an account? Sign up"}
+              </button>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </motion.div>
