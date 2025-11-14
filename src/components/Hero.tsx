@@ -2,17 +2,21 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Paperclip } from "lucide-react";
 import { Textarea } from "./ui/textarea";
+import { MorphingText } from "./ui/morphing-text";
 
 export function Hero() {
   const [prompt, setPrompt] = useState("");
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
+      {/* Top gradient semi-circle */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-[#5A9766]/20 to-transparent rounded-b-full blur-3xl pointer-events-none" />
+      
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Main headline */}
         <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
-            What will you <span className="text-primary">build</span> today?
+            What will you <MorphingText words={["build", "create", "design", "develop", "launch"]} className="text-5xl sm:text-6xl lg:text-7xl" />?
           </h1>
           
           <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto">
