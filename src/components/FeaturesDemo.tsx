@@ -10,7 +10,7 @@ const GLODIE_AVATAR = 'https://avatars.githubusercontent.com/u/99137927?v=4'
 export default function FeaturesDemo() {
     return (
         <section>
-            <div className="py-24">
+            <div className="py-20">
                 <div className="mx-auto w-full max-w-5xl px-6">
                     <div>
                         <h2 className="text-foreground max-w-2xl text-balance text-4xl font-semibold">Empowering developers with AI-driven solutions</h2>
