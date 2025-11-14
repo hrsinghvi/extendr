@@ -1,63 +1,18 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Paperclip } from "lucide-react";
 import { Textarea } from "./ui/textarea";
-import { motion } from "framer-motion";
-import { ShaderBackground } from "./ui/neural-network-hero";
 
 export function Hero() {
   const [prompt, setPrompt] = useState("");
-  const [titleNumber, setTitleNumber] = useState(0);
-  const titles = useMemo(
-    () => ["build", "create", "design", "launch", "ship"],
-    []
-  );
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (titleNumber === titles.length - 1) {
-        setTitleNumber(0);
-      } else {
-        setTitleNumber(titleNumber + 1);
-      }
-    }, 2000);
-    return () => clearTimeout(timeoutId);
-  }, [titleNumber, titles]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Neural Network Background */}
-      <ShaderBackground />
-      
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Main headline */}
         <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground flex flex-wrap items-baseline justify-center gap-x-3 sm:gap-x-4">
-            <span>What will you</span>
-            <span className="relative inline-flex items-baseline justify-center" style={{ width: '1em', minWidth: 'fit-content' }}>
-              {titles.map((title, index) => (
-                <motion.span
-                  key={index}
-                  className="absolute left-1/2 -translate-x-1/2 text-primary font-bold whitespace-nowrap"
-                  initial={{ opacity: 0, y: 100 }}
-                  transition={{ type: "spring", stiffness: 50 }}
-                  animate={
-                    titleNumber === index
-                      ? {
-                          y: 0,
-                          opacity: 1,
-                        }
-                      : {
-                          y: titleNumber > index ? -150 : 150,
-                          opacity: 0,
-                        }
-                  }
-                >
-                  {title}
-                </motion.span>
-              ))}
-            </span>
-            <span>today?</span>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
+            What will you <span className="text-primary">build</span> today?
           </h1>
           
           <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto">
@@ -96,14 +51,14 @@ export function Hero() {
             <Button
               variant="outline"
               size="sm"
-              className="hover-lift hover:border-primary/50"
+              className="hover-lift hover:border-primary/50 text-foreground"
             >
               Figma
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="hover-lift hover:border-primary/50"
+              className="hover-lift hover:border-primary/50 text-foreground"
             >
               GitHub
             </Button>
