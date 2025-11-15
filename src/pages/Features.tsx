@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import FeaturesDemo from "@/components/FeaturesDemo";
+import { FeaturesSectionWithBentoGrid } from "@/components/ui/feature-section-with-bento-grid";
 import { motion } from "framer-motion";
 
 export default function Features() {
@@ -14,7 +14,7 @@ export default function Features() {
     >
       <Header />
       <main className="pt-32 pb-20">
-        <FeaturesDemo />
+        <FeaturesSectionWithBentoGrid />
       </main>
       <Footer />
     </motion.div>

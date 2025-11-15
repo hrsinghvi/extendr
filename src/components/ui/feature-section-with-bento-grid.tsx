@@ -39,16 +39,8 @@ export function FeaturesSectionWithBentoGrid() {
     },
   ];
   return (
-    <div className="relative z-20 py-10 lg:py-20 max-w-7xl mx-auto">
-      {/* Animated gradient background */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-40"
-        style={{
-          background: 'radial-gradient(120% 120% at 80% 20%, #4A8557 35%, #6AA676 50%, #4B7190 60%, #6790AB 70%, #4D5887 80%, #6775A5 90%, #5E6BA0 100%)',
-        }}
-      />
-      
-      <div className="px-8 relative z-10">
+    <div className="relative z-20 py-10 lg:py-40 max-w-7xl mx-auto">
+      <div className="px-8">
         <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-medium text-foreground">
           Packed with thousands of features
         </h4>

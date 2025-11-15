@@ -162,7 +162,7 @@ export default function PricingSection3() {
 
   return (
     <div
-      className="px-8 py-20 min-h-screen max-w-6xl mx-auto relative"
+      className="px-4 pt-20 min-h-screen max-w-7xl mx-auto relative"
       ref={pricingRef}
     >
       <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-center items-start justify-between">
@@ -212,7 +212,7 @@ export default function PricingSection3() {
         animationNum={2}
         timelineRef={pricingRef}
         customVariants={revealVariants}
-        className="grid md:grid-cols-3 gap-6 mx-auto bg-muted/30 sm:p-3 rounded-lg"
+        className="grid md:grid-cols-3 gap-4 mx-auto bg-muted/30 sm:p-3 rounded-lg"
       >
         {plans.map((plan, index) => (
           <TimelineContent
@@ -223,9 +223,9 @@ export default function PricingSection3() {
             customVariants={revealVariants}
           >
             <Card
-              className={`relative flex-col flex justify-between h-full ${
+              className={`relative flex-col flex justify-between  ${
                 plan.popular
-                  ? "scale-105 ring-2 ring-primary bg-gradient-to-t from-primary to-primary/90 text-primary-foreground"
+                  ? "scale-110 ring-2 ring-primary bg-gradient-to-t from-primary to-primary/90 text-primary-foreground"
                   : "border bg-card text-card-foreground pt-4"
               }`}
             >
