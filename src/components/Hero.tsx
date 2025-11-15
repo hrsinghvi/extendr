@@ -3,14 +3,17 @@ import { Button } from "./ui/button";
 import { Paperclip } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 import { MorphingText } from "./ui/morphing-text";
+import { GradientBackground } from "./ui/gradient-background";
 
 export function Hero() {
   const [prompt, setPrompt] = useState("");
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
-      {/* Top gradient semi-circle */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-[#5A9766]/20 to-transparent rounded-b-full blur-3xl pointer-events-none" />
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 z-0">
+        <GradientBackground />
+      </div>
 
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Main headline */}
