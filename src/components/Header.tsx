@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { ChevronDown, Zap } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useNavigate } from "react-router-dom";
+import { GradientBackground } from "./ui/gradient-background";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -19,13 +20,16 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-base ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-base overflow-hidden ${
         isScrolled
           ? "bg-background/80 backdrop-blur-lg border-b border-border shadow-sm"
           : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 z-0">
+        <GradientBackground />
+      </div>
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <div className="flex items-center gap-8">
