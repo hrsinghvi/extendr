@@ -4,6 +4,7 @@ import { Paperclip } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 import { MorphingText } from "./ui/morphing-text";
 import { GradientBackground } from "./ui/gradient-background";
+import { motion } from "framer-motion";
 
 export function Hero() {
   const [prompt, setPrompt] = useState("");
@@ -17,23 +18,38 @@ export function Hero() {
 
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
         {/* Main headline */}
-        <div className="text-center max-w-5xl mx-auto space-y-6 rise-in mb-12">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
+        <div className="text-center max-w-5xl mx-auto space-y-6 mb-12">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground"
+          >
             What will you{" "}
             <MorphingText
               words={["build", "create", "design", "develop", "launch"]}
               className="text-5xl sm:text-6xl lg:text-7xl"
             />
             ?
-          </h1>
+          </motion.h1>
 
-          <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto">
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto"
+          >
             Create stunning apps & websites by chatting with AI.
-          </p>
+          </motion.p>
         </div>
 
         {/* Large Chat Box */}
-        <div className="max-w-3xl mx-auto mb-8 rise-in-delay-1">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="max-w-3xl mx-auto mb-8"
+        >
           <div className="bg-surface-elevated border-2 border-border rounded-2xl shadow-lg overflow-hidden">
             <Textarea
               value={prompt}
@@ -54,10 +70,15 @@ export function Hero() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Import options */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 rise-in-delay-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
           <span className="text-sm text-muted-foreground">or import from</span>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" className="hover-lift hover:border-primary/50 text-foreground">
@@ -67,7 +88,7 @@ export function Hero() {
               GitHub
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
