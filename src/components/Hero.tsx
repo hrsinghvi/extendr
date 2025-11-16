@@ -1,11 +1,44 @@
 import { MorphingText } from "./ui/morphing-text";
 import { motion } from "framer-motion";
 import { PromptInputBox } from "./ui/prompt-input-box";
+import { useState, useEffect } from "react";
+import { AuthModal } from "./AuthModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function Hero() {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check initial auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) {
+        navigate("/build");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const handleSend = (message: string, files?: File[]) => {
-    console.log("Message:", message);
-    console.log("Files:", files);
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      // Show sign up modal
+      setShowAuthModal(true);
+    } else {
+      // User is authenticated, redirect to build screen with prompt
+      navigate("/build", { state: { prompt: message, files } });
+    }
   };
 
   return (
@@ -89,6 +122,13 @@ export function Hero() {
         </motion.div>
 
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        mode="signup" 
+      />
     </section>
   );
 }

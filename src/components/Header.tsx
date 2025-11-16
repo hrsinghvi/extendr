@@ -2,8 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AuthModal } from "./AuthModal";
+
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
   const navigate = useNavigate();
   useEffect(() => {
     const handleScroll = () => {
@@ -41,14 +45,34 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" className="hidden sm:inline-flex" onClick={() => navigate('/auth')}>
+            <Button 
+              variant="ghost" 
+              className="hidden sm:inline-flex" 
+              onClick={() => {
+                setAuthMode("login");
+                setShowAuthModal(true);
+              }}
+            >
               Sign in
             </Button>
-            <Button className="bg-primary hover:bg-primary/90" onClick={() => navigate('/auth')}>
+            <Button 
+              className="bg-primary hover:bg-primary/90" 
+              onClick={() => {
+                setAuthMode("signup");
+                setShowAuthModal(true);
+              }}
+            >
               Get started
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        mode={authMode} 
+      />
     </header>;
 }
