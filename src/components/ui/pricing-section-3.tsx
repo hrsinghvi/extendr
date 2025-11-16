@@ -88,11 +88,11 @@ const PricingSwitch = ({
 
   return (
     <div className={cn("flex justify-center", className)}>
-      <div className="relative z-10 mx-auto flex w-fit rounded-full bg-muted border border-border p-1">
+      <div className="relative z-10 mx-auto flex w-full max-w-md rounded-full bg-muted border border-border p-1 overflow-hidden">
         <button
           onClick={() => handleSwitch("0")}
           className={cn(
-            "relative z-10 w-fit sm:h-12 cursor-pointer h-10 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors",
+            "relative z-10 flex-1 flex items-center justify-center sm:h-10 h-8 cursor-pointer rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors",
             selected === "0"
               ? "text-foreground"
               : "text-muted-foreground hover:text-foreground",
@@ -101,7 +101,7 @@ const PricingSwitch = ({
           {selected === "0" && (
             <motion.span
               layoutId={"switch"}
-              className="absolute top-0 left-0 sm:h-12 h-10 w-full rounded-full border-4 shadow-sm border-border bg-background"
+              className="absolute inset-0 h-full w-full rounded-full border border-border/80 shadow-sm bg-background"
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           )}
@@ -111,7 +111,7 @@ const PricingSwitch = ({
         <button
           onClick={() => handleSwitch("1")}
           className={cn(
-            "relative z-10 w-fit cursor-pointer sm:h-12 h-10 flex-shrink-0 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors",
+            "relative z-10 flex-1 flex items-center justify-center cursor-pointer sm:h-10 h-8 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors",
             selected === "1"
               ? "text-foreground"
               : "text-muted-foreground hover:text-foreground",
@@ -120,7 +120,7 @@ const PricingSwitch = ({
           {selected === "1" && (
             <motion.span
               layoutId={"switch"}
-              className="absolute top-0 left-0 sm:h-12 h-10 w-full rounded-full border-4 shadow-sm border-border bg-background"
+              className="absolute inset-0 h-full w-full rounded-full border border-border/80 shadow-sm bg-background"
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           )}
@@ -167,7 +167,7 @@ export default function PricingSection3() {
     >
       <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-center items-start justify-between">
         <div className="text-left mb-6">
-          <h2 className="text-4xl font-medium leading-[130%] text-foreground mb-4">
+          <h2 className="text-4xl font-medium leading-[130%] text-foreground mb-4 pt-8">
             <VerticalCutReveal
               splitBy="words"
               staggerDuration={0.15}
@@ -212,7 +212,7 @@ export default function PricingSection3() {
         animationNum={2}
         timelineRef={pricingRef}
         customVariants={revealVariants}
-        className="grid md:grid-cols-3 gap-4 mx-auto bg-muted/30 sm:p-3 rounded-lg"
+        className="grid md:grid-cols-3 gap-4 mx-auto bg-muted/30 sm:p-2 rounded-lg"
       >
         {plans.map((plan, index) => (
           <TimelineContent
@@ -225,7 +225,7 @@ export default function PricingSection3() {
             <Card
               className={`relative flex-col flex justify-between  ${
                 plan.popular
-                  ? "scale-110 ring-2 ring-primary bg-gradient-to-t from-primary to-primary/90 text-primary-foreground"
+                  ? "scale-105 ring-2 ring-primary bg-gradient-to-t from-primary to-primary/90 text-primary-foreground"
                   : "border bg-card text-card-foreground pt-4"
               }`}
             >

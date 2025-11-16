@@ -50,7 +50,7 @@ export const MorphingText = ({
     };
   }, [currentIndex, currentWord, nextWord, interval, words.length]);
   return <div className={cn("relative inline-block", className)}>
-      <span className="font-bold text-white">
+      <span className="font-bold text-white instrument-serif-regular-italic tracking-wider">
         {displayText}
       </span>
     </div>;
