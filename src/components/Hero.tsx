@@ -15,16 +15,15 @@ export function Hero() {
     // Check initial auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      // Don't redirect on initial check - only redirect when user actually signs in
     });
 
-    // Listen for auth changes
+    // Listen for auth changes (only redirect on actual sign-in events)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
-      if (session) {
-        navigate("/build");
-      }
+      // No automatic navigation; user stays on current page unless they explicitly navigate.
     });
 
     return () => subscription.unsubscribe();
@@ -124,10 +123,10 @@ export function Hero() {
       </div>
 
       {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-        mode="signup" 
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode="signup"
       />
     </section>
   );

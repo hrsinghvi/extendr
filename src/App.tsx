@@ -52,13 +52,7 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe) {
-      // Swipe left = go forward in browser history
-      window.history.forward();
-    } else if (isRightSwipe) {
-      // Swipe right = go back in browser history
-      window.history.back();
-    }
+    // Disable automatic history navigation to prevent unintended route changes
 
     isDragging.current = false;
     touchStartX.current = null;
