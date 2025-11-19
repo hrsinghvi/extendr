@@ -10,50 +10,50 @@ All colors MUST be HSL.
   :root {
     --background: 184 15% 6%;
     --foreground: 0 0% 95%;
-    
+
     --card: 184 15% 8%;
     --card-foreground: 0 0% 95%;
-    
+
     --popover: 184 15% 8%;
     --popover-foreground: 0 0% 95%;
-    
+
     --primary: 132 25% 47%;
     --primary-foreground: 0 0% 100%;
-    
+
     --secondary: 184 15% 11%;
     --secondary-foreground: 0 0% 95%;
-    
+
     --muted: 184 15% 18%;
     --muted-foreground: 0 0% 65%;
-    
+
     --accent: 132 25% 47%;
     --accent-foreground: 0 0% 100%;
-    
+
     --destructive: 0 63% 50%;
     --destructive-foreground: 0 0% 100%;
-    
+
     --border: 184 15% 18%;
     --input: 184 15% 18%;
     --ring: 184 35% 36%;
-    
+
     --radius: 0.75rem;
-    
+
     /* Brand colors */
     --brand-blue: 184 35% 36%;
     --brand-blue-light: 184 35% 45%;
     --brand-blue-glow: 184 35% 30%;
-    
+
     /* Elevated surfaces */
     --surface: 184 15% 8%;
     --surface-elevated: 184 15% 11%;
     --surface-overlay: 184 15% 14%;
-    
+
     /* Shadows */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
     --shadow-glow: 0 0 32px rgba(61, 120, 128, 0.25);
-    
+
     /* Transition timing */
     --transition-fast: 120ms;
     --transition-base: 180ms;
@@ -114,12 +114,12 @@ All colors MUST be HSL.
     /* Prevent overscroll bounce */
     overscroll-behavior: none;
   }
-  
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }
-    
+
     *,
     *::before,
     *::after {
@@ -131,39 +131,70 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+
   /* Animation utilities */
   .fade-in {
     animation: fade-in 0.4s ease-out forwards;
   }
-  
+
   .rise-in {
     animation: rise-in 0.5s ease-out forwards;
   }
-  
+
   .rise-in-delay-1 {
     animation: rise-in 0.5s ease-out 0.1s forwards;
     opacity: 0;
   }
-  
+
   .rise-in-delay-2 {
     animation: rise-in 0.5s ease-out 0.2s forwards;
     opacity: 0;
   }
-  
+
   .hover-lift {
     transition: transform var(--transition-base) ease-out,
-                box-shadow var(--transition-base) ease-out;
+      box-shadow var(--transition-base) ease-out;
   }
-  
+
   .hover-lift:hover {
     transform: translateY(-2px);
   }
-  
+
   /* Glassmorphism effect */
   .glass {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }
 
@@ -171,6 +202,7 @@ All colors MUST be HSL.
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -181,6 +213,7 @@ All colors MUST be HSL.
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -188,9 +221,12 @@ All colors MUST be HSL.
 }
 
 @keyframes pulse-scale {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.02);
   }
