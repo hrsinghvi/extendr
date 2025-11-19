@@ -41,7 +41,7 @@ export default function Build() {
               ...prev,
               {
                 role: "assistant",
-                content: "I'm ready to help you build your app! Let me start by understanding your requirements better...",
+                content: "I'm ready to help you build your app! Let me start by understanding your requirements...",
               },
             ]);
           }, 2000);
