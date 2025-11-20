@@ -75,20 +75,20 @@ export default function Build() {
   return (
     <div className="h-screen w-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="h-12 bg-[#0C1111] border-b border-white/20 flex items-center justify-between px-4">
+      <div className="h-12 bg-[#232323] border-b border-white/20 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 hover:bg-white/5 p-2 rounded-lg transition-colors text-left focus:outline-none">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-purple-600 rounded-xl flex items-center justify-center">
-                  <Send className="w-6 h-6 text-white -rotate-45" />
+              <button className="flex items-center gap-2 hover:bg-white/5 p-1.5 rounded-lg transition-colors text-left focus:outline-none">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Send className="w-4 h-4 text-white -rotate-45" />
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">Bolt AI Landing</span>
+                    <span className="font-semibold text-white text-sm">Bolt AI Landing</span>
                     <ChevronDown className="w-3 h-3 text-gray-400" />
                   </div>
-                  <span className="text-xs text-gray-400">Previewing last saved version</span>
+                  <span className="text-[10px] text-gray-400">Previewing last saved version</span>
                 </div>
               </button>
             </DropdownMenuTrigger>
@@ -152,34 +152,34 @@ export default function Build() {
         </div>
 
         {/* View Mode Buttons */}
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="text-white hover:bg-[#2a2a2a]">
-            <Code className="w-4 h-4 mr-1" /> Code
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" className="h-8 text-xs text-white hover:bg-[#2a2a2a]">
+            <Code className="w-3.5 h-3.5 mr-1" /> Code
           </Button>
-          <Button variant="ghost" size="sm" className="text-white hover:bg-[#2a2a2a]">
-            <Eye className="w-4 h-4 mr-1" /> Preview
+          <Button variant="ghost" size="sm" className="h-8 text-xs text-white hover:bg-[#2a2a2a]">
+            <Eye className="w-3.5 h-3.5 mr-1" /> Preview
           </Button>
-          <Button variant="ghost" size="sm" className="text-white hover:bg-[#2a2a2a]">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
             <Settings className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Publish and User */}
-        <div className="flex items-center gap-3">
-          <Button className="bg-primary hover:bg-primary/90 text-white">
+        <div className="flex items-center gap-2">
+          <Button className="h-8 text-xs bg-primary hover:bg-primary/90 text-white px-3">
             Publish
           </Button>
-          <Button variant="ghost" size="sm" className="text-white hover:bg-[#2a2a2a]">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
             <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">B</div>
           </Button>
         </div>
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 flex overflow-hidden bg-[#0C1111]">
+      <div className="flex-1 flex overflow-hidden bg-[#232323]">
         {/* Left sidebar - Chat */}
         <div
-          className="bg-[#0C1111] flex flex-col w-1/3 min-w-[300px]"
+          className="bg-[#232323] flex flex-col w-1/3 min-w-[300px]"
         >
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-white custom-scrollbar">
@@ -267,7 +267,7 @@ export default function Build() {
               }}
               isLoading={isThinking}
               placeholder="Build away..."
-              className="bg-[#0C1111] border-[#3C4141] rounded-lg"
+              className="bg-[#232323] border-[#3C4141] rounded-lg"
             />
           </div>
         </div>

@@ -66,7 +66,7 @@ export function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-base border-b border-border ${isScrolled ? "backdrop-blur-lg shadow-sm" : "backdrop-blur-lg shadow-sm"}`} style={{ backgroundColor: 'rgba(12, 17, 17, 0.6)' }}>
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-base border-b border-border ${isScrolled ? "backdrop-blur-lg shadow-sm" : "backdrop-blur-lg shadow-sm"}`} style={{ backgroundColor: 'rgba(35, 35, 35, 0.6)' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo & Brand */}

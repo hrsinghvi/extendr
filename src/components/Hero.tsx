@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { AuthModal } from "./AuthModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { RecentProjects } from "./RecentProjects";
 
 export function Hero() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -41,12 +42,12 @@ export function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#050609]">
+    <section className="relative min-h-screen flex flex-col overflow-x-hidden bg-[#050609]">
       {/* Radial gradient background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050609]" />
         <motion.div
-          className="absolute bottom-[-300px] left-1/2 -translate-x-1/2 w-[1900px] h-[900px]"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150vw] h-[130vh]"
           style={{
             background:
               "radial-gradient(ellipse at center bottom, rgba(111,151,179,1.0) 0%, rgba(125,167,194,1.0) 25%, rgba(90,150,101,0.9) 55%, rgba(12,17,17,0) 75%)",
@@ -58,7 +59,7 @@ export function Hero() {
           transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
         />
         <motion.div
-          className="absolute bottom-[-240px] left-1/2 -translate-x-1/2 w-[1200px] h-[620px]"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100vw] h-[90vh]"
           style={{
             background:
               "radial-gradient(ellipse at center bottom, rgba(152,193,218,1.0) 0%, rgba(111,151,179,0.7) 35%, rgba(90,150,101,0.25) 55%, rgba(90,150,101,0) 70%)",
@@ -80,10 +81,10 @@ export function Hero() {
         />
       </div>
 
-      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-32">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-56 pb-32">
         {/* Main headline */}
         <div className="text-center max-w-5xl mx-auto space-y-6 mb-12">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -97,7 +98,7 @@ export function Hero() {
             ?
           </motion.h1>
 
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
@@ -108,16 +109,27 @@ export function Hero() {
         </div>
 
         {/* AI Prompt Box */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="max-w-3xl mx-auto mb-8"
+          className="max-w-3xl mx-auto mb-40"
         >
           <PromptInputBox
             onSend={handleSend}
             placeholder="Describe your app idea..."
+            textareaClassName="min-h-[110px]"
           />
+        </motion.div>
+
+        {/* Recent Projects Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
+          className="w-full"
+        >
+          <RecentProjects />
         </motion.div>
 
       </div>
