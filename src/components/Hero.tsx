@@ -47,10 +47,10 @@ export function Hero() {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050609]" />
         <motion.div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150vw] h-[130vh]"
+          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[150vw] h-[130vh]"
           style={{
             background:
-              "radial-gradient(ellipse at center bottom, rgba(111,151,179,1.0) 0%, rgba(125,167,194,1.0) 25%, rgba(90,150,101,0.9) 55%, rgba(12,17,17,0) 75%)",
+              "radial-gradient(ellipse at center bottom, rgba(28,100,242,0.9) 0%, rgba(131,171,199,1.0) 30%, rgba(110,170,121,0.9) 60%, rgba(12,17,17,0) 80%)",
             filter: "blur(45px)",
             opacity: 0.95,
           }}
@@ -59,10 +59,10 @@ export function Hero() {
           transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
         />
         <motion.div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100vw] h-[90vh]"
+          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[100vw] h-[90vh]"
           style={{
             background:
-              "radial-gradient(ellipse at center bottom, rgba(152,193,218,1.0) 0%, rgba(111,151,179,0.7) 35%, rgba(90,150,101,0.25) 55%, rgba(90,150,101,0) 70%)",
+              "radial-gradient(ellipse at center bottom, rgba(56,189,248,0.9) 0%, rgba(131,171,199,0.7) 35%, rgba(110,170,121,0.25) 55%, rgba(90,150,101,0) 70%)",
             filter: "blur(30px)",
             opacity: 0.9,
           }}
