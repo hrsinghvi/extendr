@@ -1,4 +1,5 @@
 import { Search, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import {
     Select,
@@ -17,7 +18,19 @@ const projects = [
         editedTime: "2 hours ago",
         image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d2Vic2l0ZXxlbnwwfHwwfHx8MA%3D%3D",
         type: "Website",
-        isPublished: false
+        isPublished: false,
+        messages: [
+            { role: "user", content: "Create a landing page for Bolt AI" },
+            { role: "assistant", content: "I can help with that. What specific features do you want to include?" },
+            { role: "user", content: "I want a hero section with a dark theme and a 'Recent Projects' section." }
+        ],
+        features: [
+            "Hero section with morphing text",
+            "Dark theme UI",
+            "Recent Projects grid with hover effects",
+            "Responsive design",
+            "Auth modal integration"
+        ]
     },
     {
         id: 2,
@@ -25,11 +38,25 @@ const projects = [
         editedTime: "4 days ago",
         image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d2Vic2l0ZXxlbnwwfHwwfHx8MA%3D%3D",
         type: "Website",
-        isPublished: true
+        isPublished: true,
+        messages: [
+            { role: "user", content: "I need a website for a sports league called THE 1600." },
+            { role: "assistant", content: "Sure! Do you have any design preferences or existing branding?" },
+            { role: "user", content: "Keep it clean and professional, with a focus on stats and schedules." }
+        ],
+        features: [
+            "League standings table",
+            "Match schedule view",
+            "Team profiles",
+            "Player statistics",
+            "News and updates section"
+        ]
     }
 ];
 
 export function RecentProjects() {
+    const navigate = useNavigate();
+
     return (
         <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323] border border-[#2a2a2a]">
             <div className="flex items-center justify-between mb-4">
@@ -67,7 +94,11 @@ export function RecentProjects() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((project) => (
-                    <div key={project.id} className="group cursor-pointer">
+                    <div
+                        key={project.id}
+                        className="group cursor-pointer"
+                        onClick={() => navigate("/build", { state: { project } })}
+                    >
                         <div className="relative aspect-video rounded-xl overflow-hidden border border-[#2a2a2a] bg-[#161B1B] mb-3 group-hover:border-gray-600 transition-colors">
                             <img
                                 src={project.image}

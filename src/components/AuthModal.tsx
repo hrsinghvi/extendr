@@ -38,7 +38,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[350px] bg-[#0C1111] border-[#2a2a2a] text-white p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[350px] bg-[#212121] border-[#2a2a2a] text-white p-0 overflow-hidden">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
@@ -91,7 +91,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 <div className="w-full border-t border-[#3a3a3a]"></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-[#0C1111] text-gray-500 font-medium">OR</span>
+                <span className="px-3 bg-[#212121] text-gray-500 font-medium">OR</span>
               </div>
             </div>
 

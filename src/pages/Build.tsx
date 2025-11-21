@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Send, Paperclip, MoreVertical, Code, Eye, Settings, Github, Plus, ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight } from "lucide-react";
+import { Send, Paperclip, MoreVertical, Code, Eye, Settings, Github, Plus, ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Database, Play, FileCode, ScanEye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PromptInputBox } from "@/components/ui/prompt-input-box";
 import {
@@ -18,10 +19,14 @@ export default function Build() {
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [projectTitle, setProjectTitle] = useState("Bolt AI Landing");
+  const [projectImage, setProjectImage] = useState<string | null>(null);
+  const [projectFeatures, setProjectFeatures] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
 
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Check initial auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         // If not authenticated, redirect to home page
@@ -45,6 +50,12 @@ export default function Build() {
               },
             ]);
           }, 2000);
+        } else if (location.state?.project) {
+          // Load existing project
+          setMessages(location.state.project.messages || []);
+          setProjectTitle(location.state.project.title);
+          setProjectImage(location.state.project.image);
+          setProjectFeatures(location.state.project.features || []);
         }
       }
     });
@@ -75,105 +86,7 @@ export default function Build() {
   return (
     <div className="h-screen w-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="h-12 bg-[#232323] border-b border-white/20 flex items-center justify-between px-4">
-        <div className="flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 hover:bg-white/5 p-1.5 rounded-lg transition-colors text-left focus:outline-none">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Send className="w-4 h-4 text-white -rotate-45" />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white text-sm">Bolt AI Landing</span>
-                    <ChevronDown className="w-3 h-3 text-gray-400" />
-                  </div>
-                  <span className="text-[10px] text-gray-400">Previewing last saved version</span>
-                </div>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" sideOffset={8} className="w-64 bg-[#0C1111] border-[#2a2a2a] text-white p-2">
-              <DropdownMenuItem onClick={() => navigate('/')} className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Go to Dashboard
-              </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="bg-[#2a2a2a] my-2" />
-
-              <div className="px-2 py-1.5 text-sm font-semibold text-gray-400">
-                The's Lovable
-              </div>
-
-              <div className="mx-2 p-3 bg-[#161B1B] border border-[#2a2a2a] rounded-lg mb-2">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Credits</span>
-                  <div className="flex items-center gap-1 text-xs text-gray-400">
-                    <span>5 left</span>
-                    <ChevronDown className="w-3 h-3" />
-                  </div>
-                </div>
-                <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden mb-2">
-                  <div className="h-full bg-blue-600 w-[60%]"></div>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-                  Daily credits used first
-                </div>
-              </div>
-
-              <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-                <span className="ml-auto text-xs text-gray-500">⌘.</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Remix this project
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                <Edit2 className="w-4 h-4 mr-2" />
-                Rename project
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator className="bg-[#2a2a2a] my-2" />
-
-              <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                <Moon className="w-4 h-4 mr-2" />
-                Appearance
-                <ChevronDown className="w-3 h-3 ml-auto text-gray-500" />
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                <HelpCircle className="w-4 h-4 mr-2" />
-                Help
-                <ArrowUpRight className="w-3 h-3 ml-auto text-gray-500" />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* View Mode Buttons */}
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="h-8 text-xs text-white hover:bg-[#2a2a2a]">
-            <Code className="w-3.5 h-3.5 mr-1" /> Code
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 text-xs text-white hover:bg-[#2a2a2a]">
-            <Eye className="w-3.5 h-3.5 mr-1" /> Preview
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
-            <Settings className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {/* Publish and User */}
-        <div className="flex items-center gap-2">
-          <Button className="h-8 text-xs bg-primary hover:bg-primary/90 text-white px-3">
-            Publish
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
-            <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">B</div>
-          </Button>
-        </div>
-      </div>
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden bg-[#232323]">
@@ -181,6 +94,75 @@ export default function Build() {
         <div
           className="bg-[#232323] flex flex-col w-1/3 min-w-[300px]"
         >
+          {/* Chat Top Bar */}
+          <div className="h-12 flex items-center px-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 hover:bg-white/5 p-1.5 rounded-lg transition-colors text-left focus:outline-none">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white text-xs">{projectTitle}</span>
+                    <ChevronDown className="w-3 h-3 text-gray-400" />
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" sideOffset={8} className="w-64 bg-[#1F2020] border-[#2a2a2a] text-white p-2">
+                <DropdownMenuItem onClick={() => navigate('/')} className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Go to Dashboard
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-[#2a2a2a] my-2" />
+
+                <div className="px-2 py-1.5 text-sm font-semibold text-gray-400">
+                  The's Lovable
+                </div>
+
+                <div className="mx-2 p-3 bg-[#161B1B] border border-[#2a2a2a] rounded-lg mb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Credits</span>
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <span>5 left</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden mb-2">
+                    <div className="h-full bg-blue-600 w-[60%]"></div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    Daily credits used first
+                  </div>
+                </div>
+
+                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                  <span className="ml-auto text-xs text-gray-500">⌘.</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Remix this project
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Rename project
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-[#2a2a2a] my-2" />
+
+                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
+                  <Moon className="w-4 h-4 mr-2" />
+                  Appearance
+                  <ChevronDown className="w-3 h-3 ml-auto text-gray-500" />
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  Help
+                  <ArrowUpRight className="w-3 h-3 ml-auto text-gray-500" />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-white custom-scrollbar">
             {messages.length === 0 ? (
@@ -190,15 +172,23 @@ export default function Build() {
             ) : (
               <div>
                 <div className="bg-[#161B1B] p-4 rounded-lg shadow-md mb-4">
-                  <h2 className="text-lg font-semibold mb-2">Unspecified Project</h2>
+                  <h2 className="text-lg font-semibold mb-2">{projectTitle}</h2>
                   <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                    <li>Clean, responsive game board with smooth animations</li>
-                    <li>Real-time player status display</li>
-                    <li>Score tracking for X, O, and draws</li>
-                    <li>Winning line highlighting with pulse animation</li>
-                    <li>Beautiful gradient UI with glass-morphism design</li>
-                    <li>Reset game and reset scores buttons</li>
-                    <li>Mobile-friendly responsive layout</li>
+                    {projectFeatures.length > 0 ? (
+                      projectFeatures.map((feature, index) => (
+                        <li key={index}>{feature}</li>
+                      ))
+                    ) : (
+                      <>
+                        <li>Clean, responsive game board with smooth animations</li>
+                        <li>Real-time player status display</li>
+                        <li>Score tracking for X, O, and draws</li>
+                        <li>Winning line highlighting with pulse animation</li>
+                        <li>Beautiful gradient UI with glass-morphism design</li>
+                        <li>Reset game and reset scores buttons</li>
+                        <li>Mobile-friendly responsive layout</li>
+                      </>
+                    )}
                   </ul>
                   <h3 className="text-md font-semibold mt-4 mb-2">How it works:</h3>
                   <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
@@ -275,10 +265,71 @@ export default function Build() {
 
 
         {/* Right side - Preview */}
-        <div className="flex-1 bg-[#0C1111] flex flex-col items-center justify-center rounded-lg shadow-2xl border border-white/20 overflow-hidden my-4 mr-4">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-500 text-lg">Your preview will appear here</p>
+        <div className="flex-1 flex flex-col min-w-0 bg-[#232323]">
+          {/* Preview Top Bar - Aligned with Chat Top Bar */}
+          <div className="h-12 flex items-center justify-between px-4 bg-[#232323]">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-[#161b1b] border border-[#2a2a2a] rounded-lg p-1">
+              <div className="flex items-center relative gap-1">
+                <button
+                  onClick={() => setViewMode('preview')}
+                  className={`relative z-10 py-1 px-2 rounded-md transition-colors duration-200 ${viewMode === 'preview' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                >
+                  {viewMode === 'preview' && (
+                    <motion.div
+                      layoutId="viewMode-indicator"
+                      className="absolute inset-0 bg-white/10 rounded-md shadow-sm"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <ScanEye className="w-4 h-4 relative z-10" />
+                </button>
+
+                <button
+                  onClick={() => setViewMode('code')}
+                  className={`relative z-10 py-1 px-2 rounded-md transition-colors duration-200 ${viewMode === 'code' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                >
+                  {viewMode === 'code' && (
+                    <motion.div
+                      layoutId="viewMode-indicator"
+                      className="absolute inset-0 bg-white/10 rounded-md shadow-sm"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <FileCode className="w-4 h-4 relative z-10" />
+                </button>
+              </div>
+            </div>
+
+            {/* Publish and User */}
+            <div className="flex items-center gap-2">
+              <Button className="h-8 text-xs bg-primary hover:bg-primary/90 text-white px-3">
+                Publish
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
+                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">B</div>
+              </Button>
+            </div>
+          </div>
+
+          {/* Preview Content Card */}
+          <div className="flex-1 pr-4 pb-4 pl-4">
+            <div className="w-full h-full bg-[#0C1111] rounded-lg shadow-2xl border border-white/20 overflow-hidden flex flex-col">
+              <div className="flex-1 flex items-center justify-center w-full h-full bg-[#1a1a1a]">
+                {projectImage ? (
+                  <img
+                    src={projectImage}
+                    alt="Preview"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-gray-500 text-lg">Your preview will appear here</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
