@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Send, Paperclip, MoreVertical, Code, Eye, Settings, Github, Plus, ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Database, Play, FileCode, ScanEye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PromptInputBox } from "@/components/ui/prompt-input-box";
+import { Project } from "@/types/database";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,49 +18,37 @@ import {
 export default function Build() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [isThinking, setIsThinking] = useState(false);
-  const [projectTitle, setProjectTitle] = useState("Bolt AI Landing");
+  const [projectTitle, setProjectTitle] = useState("New Project");
   const [projectImage, setProjectImage] = useState<string | null>(null);
   const [projectFeatures, setProjectFeatures] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
 
 
   useEffect(() => {
-    // Check initial auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initializeProject = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
-        // If not authenticated, redirect to home page
         navigate("/");
-      } else {
-        // If authenticated, allow access to build page
-        setIsLoading(false);
-
-        // If there's a prompt from the hero section, add it
-        if (location.state?.prompt) {
-          setMessages([{ role: "user", content: location.state.prompt }]);
-          setIsThinking(true);
-          // Simulate AI thinking
-          setTimeout(() => {
-            setIsThinking(false);
-            setMessages((prev) => [
-              ...prev,
-              {
-                role: "assistant",
-                content: "I'm ready to help you build your app! Let me start by understanding your requirements...",
-              },
-            ]);
-          }, 2000);
-        } else if (location.state?.project) {
-          // Load existing project
-          setMessages(location.state.project.messages || []);
-          setProjectTitle(location.state.project.title);
-          setProjectImage(location.state.project.image);
-          setProjectFeatures(location.state.project.features || []);
-        }
+        return;
       }
-    });
+
+      // Load existing project or create new one
+      if (location.state?.projectId) {
+        await loadProject(location.state.projectId);
+      } else if (location.state?.prompt) {
+        await createNewProject(location.state.prompt);
+      }
+
+      setIsLoading(false);
+    };
+
+    initializeProject();
 
     // Listen for auth changes
     const {
@@ -71,6 +61,127 @@ export default function Build() {
 
     return () => subscription.unsubscribe();
   }, [navigate, location]);
+
+  const loadProject = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      if (!data) return;
+
+      const project = data as unknown as Project;
+      setProjectId(project.id);
+      setProjectTitle(project.title);
+      setProjectImage(project.image);
+      setProjectFeatures(project.features || []);
+      setMessages(project.messages || []);
+    } catch (error) {
+      console.error('Error loading project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createNewProject = async (initialPrompt: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const projectData = {
+        user_id: session.user.id,
+        title: "New Project",
+        type: "Website",
+        messages: [{ role: "user" as const, content: initialPrompt }],
+      };
+
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([projectData] as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!data) return;
+
+      const project = data as unknown as Project;
+      setProjectId(project.id);
+      setProjectTitle(project.title);
+      setMessages([{ role: "user", content: initialPrompt }]);
+      setIsThinking(true);
+
+      setTimeout(() => {
+        setIsThinking(false);
+        const newMessages: Array<{ role: "user" | "assistant"; content: string }> = [
+          { role: "user", content: initialPrompt },
+          {
+            role: "assistant",
+            content: "I'm ready to help you build your app! Let me start by understanding your requirements...",
+          },
+        ];
+        setMessages(newMessages);
+        saveProject({ messages: newMessages });
+      }, 2000);
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveProject = async (updates: Partial<Project>) => {
+    if (!projectId) return;
+
+    try {
+      const { error } = await (supabase
+        .from('projects') as any)
+        .update(updates)
+        .eq('id', projectId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!projectId) return;
+
+    try {
+      const { error } = await (supabase
+        .from('projects') as any)
+        .update({ is_published: true })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Project published successfully!",
+      });
+    } catch (error) {
+      console.error('Error publishing project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to publish project",
+        variant: "destructive",
+      });
+    }
+  };
 
 
 
@@ -171,40 +282,16 @@ export default function Build() {
               </div>
             ) : (
               <div>
-                <div className="bg-[#161B1B] p-4 rounded-lg shadow-md mb-4">
-                  <h2 className="text-lg font-semibold mb-2">{projectTitle}</h2>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                    {projectFeatures.length > 0 ? (
-                      projectFeatures.map((feature, index) => (
+                {projectFeatures.length > 0 && (
+                  <div className="bg-[#161B1B] p-4 rounded-lg shadow-md mb-4">
+                    <h2 className="text-lg font-semibold mb-2">{projectTitle}</h2>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                      {projectFeatures.map((feature, index) => (
                         <li key={index}>{feature}</li>
-                      ))
-                    ) : (
-                      <>
-                        <li>Clean, responsive game board with smooth animations</li>
-                        <li>Real-time player status display</li>
-                        <li>Score tracking for X, O, and draws</li>
-                        <li>Winning line highlighting with pulse animation</li>
-                        <li>Beautiful gradient UI with glass-morphism design</li>
-                        <li>Reset game and reset scores buttons</li>
-                        <li>Mobile-friendly responsive layout</li>
-                      </>
-                    )}
-                  </ul>
-                  <h3 className="text-md font-semibold mt-4 mb-2">How it works:</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                    <li>Players X and O take turns clicking squares</li>
-                    <li>First to get three in a row (horizontal, vertical, or diagonal) wins</li>
-                    <li>Scores update automatically</li>
-                    <li>Play as many games as you want</li>
-                  </ul>
-                  <p className="text-sm mt-4 text-gray-300">
-                    The app is production-ready and built with React + Vite. You can start playing immediately!
-                  </p>
-                  <div className="mt-4 p-3 bg-[#0C1111] rounded-md flex items-center justify-between">
-                    <span className="text-sm font-medium">Create modern Tic Tac Toe game</span>
-                    <span className="text-xs text-gray-500">Version 2</span>
+                      ))}
+                    </ul>
                   </div>
-                </div>
+                )}
                 {messages.map((message, index) => (
                   <div
                     key={index}
@@ -239,19 +326,28 @@ export default function Build() {
             <PromptInputBox
               onSend={(message: string, files?: File[]) => {
                 if (message.trim()) {
-                  setMessages((prev) => [...prev, { role: "user", content: message }]);
+                  const newMessages: Array<{ role: "user" | "assistant"; content: string }> = [
+                    ...messages, 
+                    { role: "user", content: message }
+                  ];
+                  setMessages(newMessages);
                   setIsThinking(true);
+
+                  // Save message to database
+                  saveProject({ messages: newMessages });
 
                   // Simulate AI response
                   setTimeout(() => {
                     setIsThinking(false);
-                    setMessages((prev) => [
-                      ...prev,
+                    const updatedMessages: Array<{ role: "user" | "assistant"; content: string }> = [
+                      ...newMessages,
                       {
                         role: "assistant",
                         content: "I understand. Let me help you with that...",
                       },
-                    ]);
+                    ];
+                    setMessages(updatedMessages);
+                    saveProject({ messages: updatedMessages });
                   }, 2000);
                 }
               }}
@@ -305,7 +401,10 @@ export default function Build() {
 
             {/* Publish and User */}
             <div className="flex items-center gap-2">
-              <Button className="h-8 text-xs bg-primary hover:bg-primary/90 text-white px-3">
+              <Button 
+                onClick={handlePublish}
+                className="h-8 text-xs bg-primary hover:bg-primary/90 text-white px-3"
+              >
                 Publish
               </Button>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
