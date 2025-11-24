@@ -1,34 +1,16 @@
 import { MorphingText } from "./ui/morphing-text";
 import { motion } from "framer-motion";
 import { PromptInputBox } from "./ui/prompt-input-box";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AuthModal } from "./AuthModal";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { RecentProjects } from "./RecentProjects";
+import { useAuth } from "@/context/AuthContext";
 
 export function Hero() {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check initial auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      // Don't redirect on initial check - only redirect when user actually signs in
-    });
-
-    // Listen for auth changes (only redirect on actual sign-in events)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-      // No automatic navigation; user stays on current page unless they explicitly navigate.
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  const { isAuthenticated } = useAuth();
 
   const handleSend = (message: string, files?: File[]) => {
     // Check if user is authenticated

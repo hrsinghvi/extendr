@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Zap, LogOut, Settings, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,17 +9,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "./ui/dropdown-menu";
-import { AuthModal } from "./AuthModal";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isAuthenticated, isLoading, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,59 +26,27 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    // Set up auth state listener FIRST to catch OAuth redirects
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change:", event, session);
-
-      if (session) {
-        setIsAuthenticated(true);
-        setUser(session.user);
-
-        if (event === 'SIGNED_IN') {
-          toast({
-            title: "Signed in successfully",
-            description: "Welcome back!",
-          });
-        }
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    });
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session);
-      if (session) {
-        setIsAuthenticated(true);
-        setUser(session.user);
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [toast]);
-
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out successfully",
+      });
+      navigate("/");
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Signed out successfully",
-      });
-      navigate("/");
     }
   };
+
+  // Get user display info
+  const userEmail = user?.email || "";
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || userEmail.split('@')[0] || "User";
+  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+  const userInitial = userName.charAt(0).toUpperCase() || userEmail.charAt(0).toUpperCase() || "U";
 
   return (
     <>
@@ -114,28 +78,47 @@ export function Header() {
 
             {/* Right side */}
             <div className="flex items-center gap-3">
-              {isAuthenticated && user ? (
+              {isLoading ? (
+                // Loading state
+                <div className="w-8 h-8 rounded-md bg-gray-700 animate-pulse" />
+              ) : isAuthenticated && user ? (
                 // Authenticated user - show profile with dropdown
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-3 focus:outline-none rounded-md px-2 py-1 transition-colors hover:bg-white/10">
-                      <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
-                        {user.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
+                      {userAvatar ? (
+                        <img 
+                          src={userAvatar} 
+                          alt={userName}
+                          className="w-8 h-8 rounded-md object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
+                          {userInitial}
+                        </div>
+                      )}
                       <span className="text-sm font-medium text-white hidden sm:block">
-                        {user.email?.split('@')[0] || 'User'}
+                        {userName}
                       </span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent sideOffset={8} className="w-60 bg-[#0C1111] text-white border border-[#2a2a2a] rounded-lg shadow-lg p-2">
                     {/* Header */}
                     <div className="flex items-center gap-3 px-3 py-2">
-                      <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
-                        {user.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
+                      {userAvatar ? (
+                        <img 
+                          src={userAvatar} 
+                          alt={userName}
+                          className="w-9 h-9 rounded-md object-cover"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
+                          {userInitial}
+                        </div>
+                      )}
                       <div>
-                        <p className="text-sm font-semibold leading-none truncate max-w-[150px]">{user.email?.split('@')[0] || 'User'}</p>
-                        <p className="text-xs text-gray-400 leading-none truncate max-w-[150px]">{user.email}</p>
+                        <p className="text-sm font-semibold leading-none truncate max-w-[150px]">{userName}</p>
+                        <p className="text-xs text-gray-400 leading-none truncate max-w-[150px] mt-1">{userEmail}</p>
                       </div>
                     </div>
 
@@ -185,13 +168,6 @@ export function Header() {
           </div>
         </div>
       </header>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        mode={authMode}
-      />
     </>
   );
 }

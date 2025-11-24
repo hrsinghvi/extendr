@@ -13,34 +13,49 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Project } from "@/types/database";
+import { useAuth } from "@/context/AuthContext";
 
 export function RecentProjects() {
     const navigate = useNavigate();
     const { toast } = useToast();
+    const { user, isAuthenticated, isLoading: authLoading } = useAuth();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("last-edited");
 
+    // Fetch projects when user changes
     useEffect(() => {
+        if (authLoading) {
+            // Still determining auth state
+            return;
+        }
+
+        if (!isAuthenticated || !user) {
+            // Not authenticated, clear projects
+            setProjects([]);
+            setLoading(false);
+            return;
+        }
+
+        // User is authenticated, fetch their projects
         fetchProjects();
-    }, []);
+    }, [user, isAuthenticated, authLoading]);
 
     const fetchProjects = async () => {
+        if (!user) {
+            setProjects([]);
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session) {
-                setProjects([]);
-                setLoading(false);
-                return;
-            }
 
             let query = supabase
                 .from('projects')
                 .select('*')
-                .eq('user_id', session.user.id);
+                .eq('user_id', user.id);
 
             // Apply sorting
             if (sortBy === "last-edited") {
@@ -68,6 +83,13 @@ export function RecentProjects() {
         }
     };
 
+    // Re-fetch when sort changes
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            fetchProjects();
+        }
+    }, [sortBy]);
+
     const formatTimeAgo = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -84,7 +106,12 @@ export function RecentProjects() {
         project.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (loading) {
+    // Don't show anything if not authenticated
+    if (!isAuthenticated && !authLoading) {
+        return null;
+    }
+
+    if (authLoading || loading) {
         return (
             <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323] border border-[#2a2a2a]">
                 <div className="flex items-center justify-center py-12">
@@ -110,10 +137,7 @@ export function RecentProjects() {
                         className="pl-9 bg-[#161B1B] border-[#2a2a2a] text-white placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-gray-700"
                     />
                 </div>
-                <Select value={sortBy} onValueChange={(value) => {
-                    setSortBy(value);
-                    fetchProjects();
-                }}>
+                <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-[180px] bg-[#161B1B] border-[#2a2a2a] text-white">
                         <SelectValue placeholder="Sort by" />
                     </SelectTrigger>

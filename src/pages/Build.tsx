@@ -14,11 +14,13 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Build() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
@@ -27,17 +29,23 @@ export default function Build() {
   const [projectImage, setProjectImage] = useState<string | null>(null);
   const [projectFeatures, setProjectFeatures] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
-
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    const initializeProject = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/");
-        return;
-      }
+    // Wait for auth to finish loading
+    if (authLoading) return;
 
+    // If not authenticated, redirect to home
+    if (!isAuthenticated || !user) {
+      navigate("/");
+      return;
+    }
+
+    // Only initialize once
+    if (initialized) return;
+    setInitialized(true);
+
+    const initializeProject = async () => {
       // Load existing project or create new one
       if (location.state?.projectId) {
         await loadProject(location.state.projectId);
@@ -49,18 +57,7 @@ export default function Build() {
     };
 
     initializeProject();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate("/");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, location]);
+  }, [authLoading, isAuthenticated, user, navigate, location, initialized]);
 
   const loadProject = async (id: string) => {
     try {
@@ -91,11 +88,10 @@ export default function Build() {
 
   const createNewProject = async (initialPrompt: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!user) return;
 
       const projectData = {
-        user_id: session.user.id,
+        user_id: user.id,
         title: "New Project",
         type: "Website",
         messages: [{ role: "user" as const, content: initialPrompt }],
@@ -186,7 +182,7 @@ export default function Build() {
 
 
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="h-screen w-screen bg-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
