@@ -37,23 +37,31 @@ export function Header() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state change:", event, session);
       
-      setIsAuthenticated(!!session);
-      setUser(session?.user || null);
+      if (session) {
+        setIsAuthenticated(true);
+        setUser(session.user);
 
-      if (event === 'SIGNED_IN' && session) {
-        toast({
-          title: "Signed in successfully",
-          description: "Welcome back!",
-        });
+        if (event === 'SIGNED_IN') {
+          toast({
+            title: "Signed in successfully",
+            description: "Welcome back!",
+          });
+        }
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
       }
     });
 
-    // THEN check for existing session (this handles OAuth callback)
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session);
       if (session) {
         setIsAuthenticated(true);
         setUser(session.user);
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
       }
     });
 
