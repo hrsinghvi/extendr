@@ -31,31 +31,16 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session);
-      setIsAuthenticated(!!session);
-      setUser(session?.user || null);
-    });
-
-    // Check with getUser for more reliability
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        console.log("Initial user check:", user);
-        setIsAuthenticated(true);
-        setUser(user);
-      }
-    });
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST to catch OAuth redirects
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state change:", _event, session);
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event, session);
+      
       setIsAuthenticated(!!session);
       setUser(session?.user || null);
 
-      if (_event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' && session) {
         toast({
           title: "Signed in successfully",
           description: "Welcome back!",
@@ -63,8 +48,17 @@ export function Header() {
       }
     });
 
+    // THEN check for existing session (this handles OAuth callback)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session);
+      if (session) {
+        setIsAuthenticated(true);
+        setUser(session.user);
+      }
+    });
+
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
