@@ -31,18 +31,36 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    // Check initial auth state
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session);
       setIsAuthenticated(!!session);
       setUser(session?.user || null);
+    });
+
+    // Check with getUser for more reliability
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        console.log("Initial user check:", user);
+        setIsAuthenticated(true);
+        setUser(user);
+      }
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state change:", _event, session);
       setIsAuthenticated(!!session);
       setUser(session?.user || null);
+
+      if (_event === 'SIGNED_IN') {
+        toast({
+          title: "Signed in successfully",
+          description: "Welcome back!",
+        });
+      }
     });
 
     return () => subscription.unsubscribe();
