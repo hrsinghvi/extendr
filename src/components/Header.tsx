@@ -36,7 +36,7 @@ export function Header() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state change:", event, session);
-      
+
       if (session) {
         setIsAuthenticated(true);
         setUser(session.user);

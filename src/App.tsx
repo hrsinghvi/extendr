@@ -37,10 +37,10 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
       isDragging.current = false;
       return;
     }
-    
+
     const distance = touchStartX.current - touchEndX.current;
     const absDistance = Math.abs(distance);
-    
+
     // Only trigger if it's a significant horizontal swipe
     if (absDistance < minSwipeDistance) {
       isDragging.current = false;
@@ -92,7 +92,7 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
       if (mouseStartX !== null && mouseStartY !== null && e.buttons === 1) {
         const deltaX = Math.abs(e.clientX - mouseStartX);
         const deltaY = Math.abs(e.clientY - mouseStartY);
-        
+
         // Only trigger if horizontal movement is significant and greater than vertical
         if (deltaX > 20 && deltaX > deltaY * 1.5) {
           if (!isMouseDragging) {
@@ -135,7 +135,7 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
 
 const AnimatedRoutes = () => {
   const location = useLocation();
-  
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>

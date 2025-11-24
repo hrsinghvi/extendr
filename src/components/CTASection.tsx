@@ -8,7 +8,7 @@ export function CTASection() {
           <h2 className="text-4xl sm:text-5xl font-bold">
             Ready to build something amazing?
           </h2>
-          
+
           <p className="text-xl text-muted-foreground">
             Try it out and start building for free
           </p>

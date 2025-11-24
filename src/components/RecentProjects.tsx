@@ -30,7 +30,7 @@ export function RecentProjects() {
         try {
             setLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
-            
+
             if (!session) {
                 setProjects([]);
                 setLoading(false);

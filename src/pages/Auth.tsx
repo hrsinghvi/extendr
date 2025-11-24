@@ -197,7 +197,7 @@ export default function Auth() {
       <div className="hidden lg:flex lg:w-1/2 relative min-h-screen items-center justify-center overflow-hidden bg-[#050609]">
         {/* Rounded rectangle border around gradient */}
         <div className="absolute inset-4 z-0 rounded-3xl border border-border/30 pointer-events-none" />
-        
+
         {/* Radial gradient background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050609]" />
