@@ -14,26 +14,56 @@ import {
 } from "lucide-react";
 import { Card } from "./ui/card";
 
-const projects = [
-  { icon: LayoutDashboard, title: "Landing page", color: "text-blue-500" },
-  { icon: LayoutDashboard, title: "Dashboard", color: "text-purple-500" },
-  { icon: Smartphone, title: "Mobile", color: "text-green-500" },
-  { icon: Briefcase, title: "Portfolio", color: "text-orange-500" },
-  { icon: ShoppingCart, title: "E-commerce", color: "text-pink-500" },
-  { icon: CheckSquare, title: "Productivity", color: "text-indigo-500" },
-  { icon: Settings, title: "Internal tool", color: "text-cyan-500" },
-  { icon: MessageSquare, title: "Community & Social", color: "text-violet-500" },
-  { icon: LineChart, title: "Business & Finance", color: "text-emerald-500" },
-  { icon: FileText, title: "CRM", color: "text-amber-500" },
-  { icon: Heart, title: "Lifestyle", color: "text-rose-500" },
-  { icon: Palette, title: "Entertainment", color: "text-fuchsia-500" },
-  { icon: Heart, title: "Health & Wellness", color: "text-teal-500" },
-  { icon: BookOpen, title: "Education", color: "text-sky-500" },
-];
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Project } from "@/types/database";
+import { useAuth } from "@/context/AuthContext";
+import { notifyError } from "@/core/errorBus";
 
 export function GallerySection() {
+  const { user, isAuthenticated } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadProjects = async () => {
+      if (!isAuthenticated || !user?.id) return;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("user_id", user!.id);
+        if (error) throw error;
+        if (mounted) setProjects(data as Project[]);
+      } catch (err: any) {
+        notifyError({ title: "Load projects", description: err?.message, variant: "destructive" });
+        if (mounted) setProjects([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    loadProjects();
+    return () => {
+      mounted = false;
+    };
+  }, [isAuthenticated, user?.id]);
+
+  if (loading) {
+    return (
+      <section className="py-24 bg-surface-elevated" id="gallery">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">Loading projects…</h2>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="py-24 bg-surface-elevated">
+    <section className="py-24 bg-surface-elevated" id="gallery">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -46,26 +76,25 @@ export function GallerySection() {
           </p>
         </div>
 
-        {/* Gallery grid */}
+        {/* Gallery grid (real data from MCP) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
           {projects.map((project, index) => (
             <Card
-              key={project.title}
+              key={project.id ?? project.title}
               className="group relative overflow-hidden border border-border bg-card hover-lift hover:shadow-lg transition-all duration-base cursor-pointer"
               style={{ animationDelay: `${index * 30}ms` }}
             >
               <div className="aspect-square flex flex-col items-center justify-center p-6 space-y-4">
-                <div className={`p-4 rounded-xl bg-surface-elevated group-hover:scale-110 transition-transform duration-base ${project.color}`}>
-                  <project.icon className="w-8 h-8" />
+                <div className={`p-4 rounded-xl bg-surface-elevated group-hover:scale-110 transition-transform duration-base`} style={{ color: "#fff" }}>
+                  {/* Display a simple icon placeholder if none exists in data */}
+                  <LayoutDashboard className="w-8 h-8" />
                 </div>
-                <h3 className="text-sm font-semibold text-center">
-                  {project.title}
-                </h3>
+                <h3 className="text-sm font-semibold text-center">{project.title ?? "Untitled"}</h3>
               </div>
               
               {/* Hover overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-base flex items-end justify-center p-4">
-                <span className="text-xs text-primary font-medium">View examples →</span>
+                <span className="text-xs text-primary font-medium">View</span>
               </div>
             </Card>
           ))}

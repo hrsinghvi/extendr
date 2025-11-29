@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Send, Paperclip, MoreVertical, Code, Eye, Settings, Github, Plus, ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Database, Play, FileCode, ScanEye } from "lucide-react";
+import { ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Settings, Download } from "lucide-react";
+import { ExtensionPreview } from "@/components/preview";
 import { Button } from "@/components/ui/button";
 import { PromptInputBox } from "@/components/ui/prompt-input-box";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -13,67 +14,630 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
+// Types for chat and messages
+interface Message {
+  id: string;
+  chat_id: string;
+  user_id: string;
+  content: string;
+  role: "user" | "assistant";
+  created_at: string;
+}
+
+interface Chat {
+  id: string;
+  project_id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Project {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  image_url?: string;
+  is_published?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Extendr System Prompt - Tailored for Chrome Extension Development
+ */
+const EXTENDR_SYSTEM_PROMPT = `You are Extendr, an AI assistant specialized in creating and modifying Chrome extensions. You help users build Chrome extensions by chatting with them and providing code guidance in real-time.
+
+## Core Identity
+You are the expert Chrome extension developer. You assist users by explaining concepts, writing code, debugging issues, and guiding them through the Chrome extension development process.
+
+## Technology Stack (STRICTLY ENFORCED)
+Extendr projects use ONLY these technologies:
+- **Languages**: JavaScript, TypeScript, HTML, CSS
+- **Styling**: Tailwind CSS, vanilla CSS
+- **Chrome APIs**: All Chrome Extension APIs (tabs, storage, runtime, scripting, etc.)
+- **Manifest**: Manifest V3 (MV3) - ALWAYS use Manifest V3, never V2
+
+## What You CAN Build
+- Chrome extensions (popup, background scripts, content scripts, options pages)
+- Browser action extensions
+- Page action extensions
+- Context menu extensions
+- DevTools extensions
+- Extensions with side panels
+
+## What You CANNOT Build
+- Web applications (use Lovable for that)
+- Mobile apps
+- Desktop apps
+- Firefox/Safari/Edge-specific extensions (Chrome only)
+- Manifest V2 extensions (deprecated)
+
+## Chrome Extension Structure
+Always follow this standard structure:
+\`\`\`
+extension/
+├── manifest.json          # Extension manifest (MV3)
+├── popup/
+│   ├── popup.html        # Popup UI
+│   ├── popup.css         # Popup styles
+│   └── popup.js          # Popup logic
+├── background/
+│   └── service-worker.js # Background service worker (MV3)
+├── content/
+│   └── content.js        # Content scripts
+├── options/
+│   ├── options.html      # Options page
+│   └── options.js        # Options logic
+├── assets/
+│   └── icons/            # Extension icons (16, 32, 48, 128px)
+└── styles/
+    └── tailwind.css      # If using Tailwind
+\`\`\`
+
+## Manifest V3 Requirements
+ALWAYS use Manifest V3 format:
+- Use \`service_worker\` instead of \`background.scripts\`
+- Use \`action\` instead of \`browser_action\` or \`page_action\`
+- Declare permissions explicitly
+- Use \`chrome.scripting\` API for dynamic script injection
+
+## Code Guidelines
+1. **Keep it modular**: Separate concerns (popup, background, content scripts)
+2. **Error handling**: Always handle Chrome API errors gracefully
+3. **Permissions**: Request only necessary permissions
+4. **Storage**: Use chrome.storage.local or chrome.storage.sync appropriately
+5. **Message passing**: Use chrome.runtime.sendMessage for communication
+6. **Security**: Never use eval(), innerHTML with user content, or unsafe practices
+
+## Response Style
+- Be concise and direct
+- Provide working code examples
+- Explain Chrome-specific concepts when needed
+- Always consider extension security best practices
+- Test suggestions mentally before providing them
+
+## Debugging Help
+When users have issues:
+1. Check manifest.json for errors
+2. Verify permissions are declared
+3. Check service worker console for background script errors
+4. Check browser console for popup/content script errors
+5. Verify content script matches are correct
+
+## Common Patterns You Know Well
+- Tab manipulation (create, update, query, remove)
+- Storage operations (get, set, remove, clear)
+- Content script injection
+- Message passing between components
+- Context menu creation
+- Badge updates
+- Notifications
+- Alarms and scheduling
+- Web requests interception
+
+Reply in the same language as the user. Keep responses focused and actionable.`;
+
+/**
+ * Calls Gemini API to generate a response
+ * Uses Google AI Studio API (ai.google.dev)
+ * @param userMessage - The user's message
+ * @param conversationHistory - Previous messages for context
+ */
+async function callGeminiAPI(
+  userMessage: string,
+  conversationHistory: Message[]
+): Promise<string> {
+  // Gemini API key from env; tolerate quoted values
+  const rawApiKey = import.meta.env.VITE_GEMINI_API_KEY ?? "";
+  const apiKey = rawApiKey.replace(/^["'](.*)["']$/, "$1").trim();
+  
+  if (!apiKey) {
+    console.warn("Gemini API key not configured");
+    return "Gemini API key is not configured. Please set VITE_GEMINI_API_KEY in your .env file.";
+  }
+  
+  // Check if the API key looks valid (Google AI keys start with "AIza")
+  if (!apiKey.startsWith("AIza")) {
+    console.error("API key doesn't look like a valid Google AI key. It should start with 'AIza'");
+    return "Your API key doesn't appear to be a valid Google AI key. Please get a key from https://aistudio.google.com/app/apikey";
+  }
+  
+  console.log("Gemini API key loaded (first 8 chars):", apiKey.substring(0, 8) + "...");
+
+  // Build conversation - for multi-turn, include history
+  const contents = [];
+  
+  // Add conversation history if any
+  for (const msg of conversationHistory) {
+    contents.push({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.content }],
+    });
+  }
+
+  // Add the current user message
+  contents.push({
+    role: "user",
+    parts: [{ text: userMessage }],
+  });
+
+  // Models to try - using Google AI Studio model names
+  const modelsToTry = [
+    "gemini-2.0-flash-exp",  // Experimental flash
+    "gemini-2.0-flash",      // Latest flash model
+    "gemini-1.5-flash",      // Previous flash  
+    "gemini-1.5-pro",        // Pro model
+    "gemini-pro",            // Legacy pro
+  ];
+
+  let lastError = "";
+
+  for (const model of modelsToTry) {
+    try {
+      console.log(`Trying Gemini model: ${model}`);
+      
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      
+      const requestBody = {
+        contents,
+        systemInstruction: {
+          parts: [{ text: EXTENDR_SYSTEM_PROMPT }]
+        },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        },
+      };
+      
+      console.log("Request URL:", url.replace(apiKey, "API_KEY_HIDDEN"));
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log(`Response status for ${model}:`, response.status, response.statusText);
+
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { message: responseText };
+        }
+        console.error(`Gemini API error for ${model}:`, errorData);
+        lastError = errorData?.error?.message || errorData?.message || `HTTP ${response.status}`;
+        continue; // Try next model
+      }
+
+      const data = JSON.parse(responseText);
+      const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (generatedText) {
+        console.log("Successfully got response from model:", model);
+        return generatedText;
+      } else {
+        console.warn("No text in response for model:", model, data);
+        lastError = "No text generated";
+      }
+    } catch (err: any) {
+      console.error(`Error with model ${model}:`, err);
+      lastError = err.message || "Unknown error";
+      continue; // Try next model
+    }
+  }
+
+  // If all models failed
+  console.error("All Gemini models failed. Last error:", lastError);
+  return `I couldn't connect to the AI service. Error: ${lastError}. Please verify your API key at https://aistudio.google.com/app/apikey`;
+}
+
 export default function Build() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
   const [isLoading, setIsLoading] = useState(true);
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  const [user, setUser] = useState<any>(null);
+  
+  // Project state
+  const [project, setProject] = useState<Project | null>(null);
+  const [projectTitle, setProjectTitle] = useState("New Project");
+  
+  // Chat state
+  const [currentChat, setCurrentChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
-  const [projectTitle, setProjectTitle] = useState("Bolt AI Landing");
-  const [projectImage, setProjectImage] = useState<string | null>(null);
-  const [projectFeatures, setProjectFeatures] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
+  
+  // Extension code state
+  const [extensionCode, setExtensionCode] = useState({
+    html: "",
+    css: "",
+    js: "",
+    manifest: "",
+  });
 
-
+  // Scroll to bottom when messages change
   useEffect(() => {
-    // Check initial auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        // If not authenticated, redirect to home page
-        navigate("/");
-      } else {
-        // If authenticated, allow access to build page
-        setIsLoading(false);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-        // If there's a prompt from the hero section, add it
-        if (location.state?.prompt) {
-          setMessages([{ role: "user", content: location.state.prompt }]);
-          setIsThinking(true);
-          // Simulate AI thinking
-          setTimeout(() => {
-            setIsThinking(false);
-            setMessages((prev) => [
-              ...prev,
-              {
-                role: "assistant",
-                content: "I'm ready to help you build your app! Let me start by understanding your requirements...",
-              },
-            ]);
-          }, 2000);
-        } else if (location.state?.project) {
-          // Load existing project
-          setMessages(location.state.project.messages || []);
-          setProjectTitle(location.state.project.title);
-          setProjectImage(location.state.project.image);
-          setProjectFeatures(location.state.project.features || []);
+  /**
+   * Loads a project by ID from Supabase
+   */
+  async function loadProjectById(projectId: string, userId: string): Promise<Project | null> {
+    try {
+      console.log("Loading project by ID:", projectId);
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", projectId)
+        .eq("user_id", userId)
+        .single();
+      
+      if (error) {
+        console.error("Error loading project:", error);
+        return null;
+      }
+      return data as Project;
+    } catch (err: any) {
+      console.error("Error loading project:", err);
+      return null;
+    }
+  }
+
+  // Auth check and initial setup
+  useEffect(() => {
+    const initializeBuild = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/");
+        return;
+      }
+      
+      setUser(session.user);
+      const userId = session.user.id;
+      
+      // Priority 1: Check URL for project ID (survives page reload)
+      const projectIdFromUrl = searchParams.get("project");
+      
+      if (projectIdFromUrl) {
+        console.log("Loading project from URL param:", projectIdFromUrl);
+        const existingProject = await loadProjectById(projectIdFromUrl, userId);
+        if (existingProject) {
+          setProject(existingProject);
+          setProjectTitle(existingProject.title);
+          await loadOrCreateChat(userId, existingProject.id);
+          setIsLoading(false);
+          return;
         }
       }
-    });
+      
+      // Priority 2: Check navigation state (from clicking a project card)
+      if (location.state?.project) {
+        const proj = location.state.project as Project;
+        console.log("Loading project from navigation state:", proj.id);
+        setProject(proj);
+        setProjectTitle(proj.title);
+        
+        // Update URL with project ID so it survives reload
+        setSearchParams({ project: proj.id }, { replace: true });
+        
+        await loadOrCreateChat(userId, proj.id);
+        setIsLoading(false);
+        return;
+      }
+
+      // Priority 3: New project from hero prompt
+        if (location.state?.prompt) {
+        console.log("Creating new project from prompt");
+        const newProject = await createProject(userId, "New Project");
+        if (newProject) {
+          setProject(newProject);
+          setProjectTitle(newProject.title);
+          
+          // Update URL with new project ID
+          setSearchParams({ project: newProject.id }, { replace: true });
+          
+          // Create chat and send initial message
+          const chat = await createChat(userId, newProject.id, "Initial Chat");
+          if (chat) {
+            setCurrentChat(chat);
+            await sendMessage(location.state.prompt, chat.id, userId);
+          }
+        }
+        setIsLoading(false);
+        return;
+      }
+      
+      // Priority 4: No context - load most recent project or create new one
+      console.log("No project context, loading most recent project...");
+      const { data: recentProjects, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      
+      if (!error && recentProjects && recentProjects.length > 0) {
+        const recentProject = recentProjects[0] as Project;
+        console.log("Loaded most recent project:", recentProject.id);
+        setProject(recentProject);
+        setProjectTitle(recentProject.title);
+        setSearchParams({ project: recentProject.id }, { replace: true });
+        await loadOrCreateChat(userId, recentProject.id);
+      } else {
+        // No projects exist - create a new one
+        console.log("No existing projects, creating new one");
+        const newProject = await createProject(userId, "Untitled Project");
+        if (newProject) {
+          setProject(newProject);
+          setProjectTitle(newProject.title);
+          setSearchParams({ project: newProject.id }, { replace: true });
+          await loadOrCreateChat(userId, newProject.id);
+        }
+      }
+      
+      setIsLoading(false);
+    };
+
+    initializeBuild();
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
         navigate("/");
+      } else {
+        setUser(session.user);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, location]);
+  }, [navigate, location, searchParams, setSearchParams]);
 
+  /**
+   * Creates a new project in Supabase
+   */
+  async function createProject(userId: string, title: string): Promise<Project | null> {
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .insert({ user_id: userId, title })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Project;
+    } catch (err: any) {
+      console.error("Error creating project:", err);
+      toast({
+        title: "Error creating project",
+        description: err.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+  }
 
+  /**
+   * Loads existing chat for a project or creates a new one
+   */
+  async function loadOrCreateChat(userId: string, projectId: string) {
+    try {
+      console.log("Loading chat for project:", projectId);
+      
+      // Try to find existing chat
+      const { data: existingChats, error: fetchError } = await supabase
+        .from("chats")
+        .select("*")
+        .eq("project_id", projectId)
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      
+      if (fetchError) throw fetchError;
+      
+      console.log("Found existing chats:", existingChats?.length || 0);
+      
+      if (existingChats && existingChats.length > 0) {
+        const chat = existingChats[0] as Chat;
+        console.log("Using existing chat:", chat.id);
+        setCurrentChat(chat);
+        await loadMessages(chat.id);
+      } else {
+        // Create new chat
+        console.log("Creating new chat for project:", projectId);
+        const newChat = await createChat(userId, projectId, "Chat 1");
+        if (newChat) {
+          setCurrentChat(newChat);
+          setMessages([]);
+        }
+      }
+    } catch (err: any) {
+      console.error("Error loading chat:", err);
+      toast({
+        title: "Error loading chat",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  }
 
+  /**
+   * Creates a new chat in Supabase
+   */
+  async function createChat(userId: string, projectId: string, title: string): Promise<Chat | null> {
+    try {
+      const { data, error } = await supabase
+        .from("chats")
+        .insert({ user_id: userId, project_id: projectId, title })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Chat;
+    } catch (err: any) {
+      console.error("Error creating chat:", err);
+      toast({
+        title: "Error creating chat",
+        description: err.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Loads messages for a chat from Supabase
+   */
+  async function loadMessages(chatId: string) {
+    try {
+      console.log("Loading messages for chat:", chatId);
+      
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: true });
+      
+      if (error) throw error;
+      
+      console.log("Loaded messages count:", data?.length || 0);
+      if (data && data.length > 0) {
+        console.log("First message:", data[0]);
+        console.log("Last message:", data[data.length - 1]);
+      }
+      
+      setMessages((data as Message[]) || []);
+    } catch (err: any) {
+      console.error("Error loading messages:", err);
+      toast({
+        title: "Error loading messages",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  }
+
+  /**
+   * Sends a message and gets AI response
+   */
+  async function sendMessage(content: string, chatId: string, userId: string) {
+    if (!content.trim() || !chatId || !userId) {
+      console.error("sendMessage called with invalid params:", { content: !!content, chatId, userId });
+      return;
+    }
+    
+    console.log("Sending message to chat:", chatId);
+    setIsThinking(true);
+    
+    try {
+      // Save user message to Supabase
+      const { data: userMsg, error: userMsgError } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          user_id: userId,
+          content: content.trim(),
+          role: "user",
+        })
+        .select()
+        .single();
+      
+      if (userMsgError) {
+        console.error("Error saving user message:", userMsgError);
+        throw userMsgError;
+      }
+      
+      console.log("User message saved:", userMsg);
+      
+      // Update local state immediately
+      const newUserMessage = userMsg as Message;
+      setMessages((prev) => [...prev, newUserMessage]);
+      
+      // Update chat's updated_at
+      await supabase
+        .from("chats")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", chatId);
+      
+      // Get AI response from Gemini
+      let aiResponse: string;
+      try {
+        aiResponse = await callGeminiAPI(content.trim(), messages);
+      } catch (apiError: any) {
+        aiResponse = `I encountered an error while processing your request: ${apiError.message}. Please try again.`;
+      }
+      
+      // Save assistant message to Supabase
+      const { data: assistantMsg, error: assistantMsgError } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          user_id: userId,
+          content: aiResponse,
+          role: "assistant",
+        })
+        .select()
+        .single();
+      
+      if (assistantMsgError) {
+        console.error("Error saving assistant message:", assistantMsgError);
+        throw assistantMsgError;
+      }
+      
+      console.log("Assistant message saved:", assistantMsg);
+      
+      // Update local state
+      setMessages((prev) => [...prev, assistantMsg as Message]);
+      
+    } catch (err: any) {
+      console.error("Error sending message:", err);
+      toast({
+        title: "Error sending message",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsThinking(false);
+    }
+  }
+
+  /**
+   * Handle sending a message from the input box
+   */
+  function handleSendMessage(message: string, files?: File[]) {
+    if (!message.trim() || !currentChat || !user) return;
+    sendMessage(message, currentChat.id, user.id);
+  }
 
   if (isLoading) {
     return (
@@ -85,15 +649,10 @@ export default function Build() {
 
   return (
     <div className="h-screen w-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
-      {/* Top bar */}
-
-
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden bg-[#232323]">
         {/* Left sidebar - Chat */}
-        <div
-          className="bg-[#232323] flex flex-col w-1/3 min-w-[300px]"
-        >
+        <div className="bg-[#232323] flex flex-col w-1/3 min-w-[300px]">
           {/* Chat Top Bar */}
           <div className="h-12 flex items-center px-4">
             <DropdownMenu>
@@ -114,7 +673,7 @@ export default function Build() {
                 <DropdownMenuSeparator className="bg-[#2a2a2a] my-2" />
 
                 <div className="px-2 py-1.5 text-sm font-semibold text-gray-400">
-                  The's Lovable
+                  Extendr
                 </div>
 
                 <div className="mx-2 p-3 bg-[#161B1B] border border-[#2a2a2a] rounded-lg mb-2">
@@ -163,63 +722,32 @@ export default function Build() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-white custom-scrollbar">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
-                <p className="text-gray-500 text-sm">How can Bolt help you today? [or /command]</p>
+                <p className="text-gray-500 text-sm">How can I help you build today?</p>
               </div>
             ) : (
-              <div>
-                <div className="bg-[#161B1B] p-4 rounded-lg shadow-md mb-4">
-                  <h2 className="text-lg font-semibold mb-2">{projectTitle}</h2>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                    {projectFeatures.length > 0 ? (
-                      projectFeatures.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))
-                    ) : (
-                      <>
-                        <li>Clean, responsive game board with smooth animations</li>
-                        <li>Real-time player status display</li>
-                        <li>Score tracking for X, O, and draws</li>
-                        <li>Winning line highlighting with pulse animation</li>
-                        <li>Beautiful gradient UI with glass-morphism design</li>
-                        <li>Reset game and reset scores buttons</li>
-                        <li>Mobile-friendly responsive layout</li>
-                      </>
-                    )}
-                  </ul>
-                  <h3 className="text-md font-semibold mt-4 mb-2">How it works:</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                    <li>Players X and O take turns clicking squares</li>
-                    <li>First to get three in a row (horizontal, vertical, or diagonal) wins</li>
-                    <li>Scores update automatically</li>
-                    <li>Play as many games as you want</li>
-                  </ul>
-                  <p className="text-sm mt-4 text-gray-300">
-                    The app is production-ready and built with React + Vite. You can start playing immediately!
-                  </p>
-                  <div className="mt-4 p-3 bg-[#0C1111] rounded-md flex items-center justify-between">
-                    <span className="text-sm font-medium">Create modern Tic Tac Toe game</span>
-                    <span className="text-xs text-gray-500">Version 2</span>
-                  </div>
-                </div>
-                {messages.map((message, index) => (
+              <div className="space-y-4">
+                {messages.map((message) => (
                   <div
-                    key={index}
+                    key={message.id}
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${message.role === "user"
+                      className={`max-w-[85%] rounded-lg px-4 py-3 ${
+                        message.role === "user"
                         ? "bg-blue-600 text-white"
                         : "bg-[#2a2a2a] text-white"
                         }`}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     </div>
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
             )}
             {isThinking && (
@@ -237,104 +765,58 @@ export default function Build() {
           {/* Chat input */}
           <div className="p-4">
             <PromptInputBox
-              onSend={(message: string, files?: File[]) => {
-                if (message.trim()) {
-                  setMessages((prev) => [...prev, { role: "user", content: message }]);
-                  setIsThinking(true);
-
-                  // Simulate AI response
-                  setTimeout(() => {
-                    setIsThinking(false);
-                    setMessages((prev) => [
-                      ...prev,
-                      {
-                        role: "assistant",
-                        content: "I understand. Let me help you with that...",
-                      },
-                    ]);
-                  }, 2000);
-                }
-              }}
+              onSend={handleSendMessage}
               isLoading={isThinking}
-              placeholder="Build away..."
+              placeholder="Ask me anything about building your app..."
               className="bg-[#232323] border-[#3C4141] rounded-lg"
             />
           </div>
         </div>
 
-
-
         {/* Right side - Preview */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#232323]">
-          {/* Preview Top Bar - Aligned with Chat Top Bar */}
+          {/* Preview Top Bar */}
           <div className="h-12 flex items-center justify-between px-4 bg-[#232323]">
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-[#161b1b] border border-[#2a2a2a] rounded-lg p-1">
-              <div className="flex items-center relative gap-1">
-                <button
-                  onClick={() => setViewMode('preview')}
-                  className={`relative z-10 py-1 px-2 rounded-md transition-colors duration-200 ${viewMode === 'preview' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
-                    }`}
-                >
-                  {viewMode === 'preview' && (
-                    <motion.div
-                      layoutId="viewMode-indicator"
-                      className="absolute inset-0 bg-white/10 rounded-md shadow-sm"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                  <ScanEye className="w-4 h-4 relative z-10" />
-                </button>
-
-                <button
-                  onClick={() => setViewMode('code')}
-                  className={`relative z-10 py-1 px-2 rounded-md transition-colors duration-200 ${viewMode === 'code' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
-                    }`}
-                >
-                  {viewMode === 'code' && (
-                    <motion.div
-                      layoutId="viewMode-indicator"
-                      className="absolute inset-0 bg-white/10 rounded-md shadow-sm"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                  <FileCode className="w-4 h-4 relative z-10" />
-                </button>
-              </div>
+            {/* Title */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-white">Extension Preview</span>
+              <span className="text-xs text-gray-500">• Live</span>
             </div>
 
-            {/* Publish and User */}
+            {/* Actions */}
             <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-xs text-gray-400 hover:text-white hover:bg-[#2a2a2a] gap-1.5"
+                onClick={() => {
+                  // Download extension as ZIP (placeholder)
+                  console.log("Download extension");
+                }}
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export
+              </Button>
               <Button className="h-8 text-xs bg-primary hover:bg-primary/90 text-white px-3">
                 Publish
               </Button>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
-                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">B</div>
+                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">
+                  {user?.email?.charAt(0).toUpperCase() || "U"}
+                </div>
               </Button>
             </div>
           </div>
 
-          {/* Preview Content Card */}
-          <div className="flex-1 pr-4 pb-4 pl-4">
-            <div className="w-full h-full bg-[#0C1111] rounded-lg shadow-2xl border border-white/20 overflow-hidden flex flex-col">
-              <div className="flex-1 flex items-center justify-center w-full h-full bg-[#1a1a1a]">
-                {projectImage ? (
-                  <img
-                    src={projectImage}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-center">
-                    <p className="text-gray-500 text-lg">Your preview will appear here</p>
-                  </div>
-                )}
-              </div>
-            </div>
+          {/* Live Preview Component */}
+          <div className="flex-1 p-4 pt-0">
+            <ExtensionPreview
+              className="h-full border border-[#333] shadow-2xl"
+              onCodeChange={(code) => setExtensionCode(code)}
+            />
           </div>
         </div>
       </div>
     </div>
   );
 }
-

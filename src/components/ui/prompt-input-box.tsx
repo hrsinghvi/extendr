@@ -566,7 +566,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               className={cn("text-base min-h-[120px] py-3", textareaClassName)}
             />
             {input.trim() === "" && !isLoading && (
-              <div className="absolute top-3 left-3 pointer-events-none text-gray-400 text-base whitespace-pre">
+              <div className="absolute top-3 left-3 right-3 pointer-events-none text-gray-400 text-base break-words">
                 {animatedPlaceholder}
                 <span className="animate-pulse ml-0.5 inline-block leading-none" style={{ fontSize: '1.1em', lineHeight: '1.2' }}>|</span>
               </div>
