@@ -109,7 +109,7 @@ All colors MUST be HSL.
     -moz-osx-font-smoothing: grayscale;
     /* Prevent body from shrinking smaller than viewport */
     min-height: 100vh;
-    /* Prevent horizontal scroll */
+    /* Prevent horizontal scrolling */
     overflow-x: hidden;
     /* Prevent overscroll bounce */
     overscroll-behavior: none;

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { AuthProvider } from "@/context/AuthContext";
+import { GlobalErrorListener } from "./components/ui/GlobalErrorListener";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Features from "./pages/Features";
@@ -227,15 +228,16 @@ const AnimatedRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <SwipeHandler>
-            <AnimatedRoutes />
-          </SwipeHandler>
-        </BrowserRouter>
-      </TooltipProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <GlobalErrorListener />
+      <BrowserRouter>
+        <SwipeHandler>
+          <AnimatedRoutes />
+        </SwipeHandler>
+      </BrowserRouter>
+    </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

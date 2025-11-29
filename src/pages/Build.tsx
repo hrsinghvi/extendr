@@ -34,12 +34,12 @@ export default function Build() {
   useEffect(() => {
     // Wait for auth to finish loading
     if (authLoading) return;
-
+      
     // If not authenticated, redirect to home
     if (!isAuthenticated || !user) {
-      navigate("/");
-      return;
-    }
+        navigate("/");
+        return;
+      }
 
     // Only initialize once
     if (initialized) return;

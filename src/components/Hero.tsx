@@ -12,6 +12,10 @@ export function Hero() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
+  /**
+   * Handle prompt submission
+   * Shows auth modal if not authenticated, otherwise navigates to build page
+   */
   const handleSend = (message: string, files?: File[]) => {
     // Check if user is authenticated
     if (!isAuthenticated) {
@@ -24,12 +28,12 @@ export function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen flex flex-col overflow-x-hidden bg-[#050609]">
+    <section className="relative flex flex-col bg-[#050609]">
       {/* Radial gradient background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050609]" />
         <motion.div
-          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[150vw] h-[130vh]"
+          className="absolute -bottom-64 left-1/2 -translate-x-1/2 w-[150vw] h-[130vh]"
           style={{
             background:
               "radial-gradient(ellipse at center bottom, rgba(28,100,242,0.9) 0%, rgba(131,171,199,1.0) 30%, rgba(110,170,121,0.9) 60%, rgba(12,17,17,0) 80%)",
@@ -41,7 +45,7 @@ export function Hero() {
           transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
         />
         <motion.div
-          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[100vw] h-[90vh]"
+          className="absolute -bottom-64 left-1/2 -translate-x-1/2 w-[100vw] h-[90vh]"
           style={{
             background:
               "radial-gradient(ellipse at center bottom, rgba(56,189,248,0.9) 0%, rgba(131,171,199,0.7) 35%, rgba(110,170,121,0.25) 55%, rgba(90,150,101,0) 70%)",
@@ -90,6 +94,8 @@ export function Hero() {
           </motion.p>
         </div>
 
+        {/* Authenticated user badge removed for restart; header handles login state */}
+
         {/* AI Prompt Box */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -104,7 +110,7 @@ export function Hero() {
           />
         </motion.div>
 
-        {/* Recent Projects Section */}
+        {/* Recent Projects Section remains below the hero as part of the landing page */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -113,7 +119,6 @@ export function Hero() {
         >
           <RecentProjects />
         </motion.div>
-
       </div>
 
       {/* Auth Modal */}
