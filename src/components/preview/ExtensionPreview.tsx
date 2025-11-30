@@ -1,24 +1,22 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Code, Eye, FileCode, FileJson, Palette, Braces } from "lucide-react";
 import { CodeEditor } from "./CodeEditor";
 import { PreviewFrame } from "./PreviewFrame";
 
-interface ExtensionFile {
-  name: string;
-  language: "html" | "css" | "javascript" | "json";
-  content: string;
-  icon: React.ReactNode;
+export interface ExtensionFiles {
+  react: string;
+  html: string;
+  css: string;
+  js: string;
+  manifest: string;
 }
 
 interface ExtensionPreviewProps {
   className?: string;
-  initialHtml?: string;
-  initialCss?: string;
-  initialJs?: string;
-  initialManifest?: string;
-  onCodeChange?: (files: { html: string; css: string; js: string; manifest: string }) => void;
+  files?: ExtensionFiles;
+  onCodeChange?: (files: ExtensionFiles) => void;
 }
 
 const DEFAULT_HTML = `<div class="popup-container">
@@ -206,28 +204,82 @@ const DEFAULT_MANIFEST = `{
   }
 }`;
 
-type TabType = "preview" | "html" | "css" | "js" | "manifest";
+const DEFAULT_REACT = `import { useState } from "react";
+
+export function PopupApp() {
+  const [clickCount, setClickCount] = useState(0);
+
+  const handleClick = () => {
+    const next = clickCount + 1;
+    setClickCount(next);
+    chrome.storage?.local?.set({ clickCount: next });
+  };
+
+  return (
+    <div className="popup-container">
+      <header className="popup-header">
+        <h1>My Extension</h1>
+        <p className="subtitle">Built with Extendr</p>
+      </header>
+      <main className="popup-content">
+        <div className="feature-card">
+          <span className="icon">🚀</span>
+          <h3>Quick Actions</h3>
+          <p>Access your tools instantly</p>
+        </div>
+        <button className="primary-btn" onClick={handleClick}>
+          Clicked {clickCount} times
+        </button>
+      </main>
+      <footer className="popup-footer">
+        <span>v1.0.0</span>
+      </footer>
+    </div>
+  );
+}
+`;
+
+export const DEFAULT_EXTENSION_FILES: ExtensionFiles = {
+  react: DEFAULT_REACT,
+  html: DEFAULT_HTML,
+  css: DEFAULT_CSS,
+  js: DEFAULT_JS,
+  manifest: DEFAULT_MANIFEST,
+};
+
+type TabType = "preview" | "react" | "html" | "css" | "js" | "manifest";
 
 /**
  * Complete extension preview component with code editor and live preview
  */
 export function ExtensionPreview({
   className,
-  initialHtml = DEFAULT_HTML,
-  initialCss = DEFAULT_CSS,
-  initialJs = DEFAULT_JS,
-  initialManifest = DEFAULT_MANIFEST,
+  files,
   onCodeChange,
 }: ExtensionPreviewProps) {
   const [activeTab, setActiveTab] = useState<TabType>("preview");
-  const [html, setHtml] = useState(initialHtml);
-  const [css, setCss] = useState(initialCss);
-  const [js, setJs] = useState(initialJs);
-  const [manifest, setManifest] = useState(initialManifest);
+  const resolvedFiles = files ?? DEFAULT_EXTENSION_FILES;
+  const [reactCode, setReactCode] = useState(resolvedFiles.react);
+  const [html, setHtml] = useState(resolvedFiles.html);
+  const [css, setCss] = useState(resolvedFiles.css);
+  const [js, setJs] = useState(resolvedFiles.js);
+  const [manifest, setManifest] = useState(resolvedFiles.manifest);
+
+  useEffect(() => {
+    const next = files ?? DEFAULT_EXTENSION_FILES;
+    setReactCode((prev) => (prev !== next.react ? next.react : prev));
+    setHtml((prev) => (prev !== next.html ? next.html : prev));
+    setCss((prev) => (prev !== next.css ? next.css : prev));
+    setJs((prev) => (prev !== next.js ? next.js : prev));
+    setManifest((prev) => (prev !== next.manifest ? next.manifest : prev));
+  }, [files]);
 
   const handleCodeChange = useCallback(
-    (type: "html" | "css" | "js" | "manifest", value: string) => {
+    (type: keyof ExtensionFiles, value: string) => {
       switch (type) {
+        case "react":
+          setReactCode(value);
+          break;
         case "html":
           setHtml(value);
           break;
@@ -243,17 +295,19 @@ export function ExtensionPreview({
       }
 
       onCodeChange?.({
+        react: type === "react" ? value : reactCode,
         html: type === "html" ? value : html,
         css: type === "css" ? value : css,
         js: type === "js" ? value : js,
         manifest: type === "manifest" ? value : manifest,
       });
     },
-    [html, css, js, manifest, onCodeChange]
+    [reactCode, html, css, js, manifest, onCodeChange]
   );
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: "preview", label: "Preview", icon: <Eye className="w-4 h-4" /> },
+    { id: "react", label: "React", icon: <Code className="w-4 h-4" /> },
     { id: "html", label: "HTML", icon: <FileCode className="w-4 h-4" /> },
     { id: "css", label: "CSS", icon: <Palette className="w-4 h-4" /> },
     { id: "js", label: "JS", icon: <Braces className="w-4 h-4" /> },
@@ -287,6 +341,27 @@ export function ExtensionPreview({
           </button>
         ))}
       </div>
+
+      {/* React Tab Content */}
+      <AnimatePresence mode="wait">
+        {activeTab === "react" && (
+          <motion.div
+            key="react"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="h-full overflow-auto"
+          >
+            <CodeEditor
+              value={reactCode}
+              onChange={(v) => handleCodeChange("react", v)}
+              language="javascript"
+              placeholder="// React component for your popup"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content */}
       <div className="flex-1 overflow-hidden">

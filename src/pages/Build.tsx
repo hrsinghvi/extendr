@@ -38,7 +38,6 @@ interface Project {
   user_id: string;
   title: string;
   description?: string;
-  image_url?: string;
   is_published?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -359,7 +358,8 @@ export default function Build() {
       // Priority 3: New project from hero prompt
         if (location.state?.prompt) {
         console.log("Creating new project from prompt");
-        const newProject = await createProject(userId, "New Project");
+        const generatedTitle = generateProjectTitle(location.state.prompt);
+        const newProject = await createProject(userId, generatedTitle);
         if (newProject) {
           setProject(newProject);
           setProjectTitle(newProject.title);
@@ -422,6 +422,62 @@ export default function Build() {
 
     return () => subscription.unsubscribe();
   }, [navigate, location, searchParams, setSearchParams]);
+
+  /**
+   * Generates a project title based on user's prompt
+   */
+  function generateProjectTitle(prompt: string): string {
+    // Convert to lowercase for easier processing
+    const lowerPrompt = prompt.toLowerCase();
+    
+    // Common patterns and their corresponding titles
+    const patterns = [
+      { regex: /tic\s*tac\s*toe|tictactoe|noughts\s*and\s*crosses/, title: "Tic Tac Toe" },
+      { regex: /calculator|math|calculate/, title: "Calculator" },
+      { regex: /todo|task\s*list|to\s*do/, title: "Todo List" },
+      { regex: /weather|forecast|temperature/, title: "Weather App" },
+      { regex: /clock|timer|alarm/, title: "Clock" },
+      { regex: /notes|notebook|journal/, title: "Notes" },
+      { regex: /calendar|schedule|planner/, title: "Calendar" },
+      { regex: /game|play|gaming/, title: "Game" },
+      { regex: /chat|messenger|message/, title: "Chat App" },
+      { regex: /social|network|connect/, title: "Social Network" },
+      { regex: /music|player|song/, title: "Music Player" },
+      { regex: /video|youtube|stream/, title: "Video App" },
+      { regex: /photo|image|camera|gallery/, title: "Photo App" },
+      { regex: /blog|post|article/, title: "Blog" },
+      { regex: /shop|store|ecommerce|buy/, title: "Shop" },
+      { regex: /map|navigation|gps|location/, title: "Map" },
+      { regex: /dictionary|translate|language/, title: "Dictionary" },
+      { regex: /password|security|login|auth/, title: "Security" },
+      { regex: /file|document|pdf|word/, title: "Document App" },
+      { regex: /extension|chrome|browser/, title: "Browser Extension" }
+    ];
+    
+    // Check if prompt matches any pattern
+    for (const pattern of patterns) {
+      if (pattern.regex.test(lowerPrompt)) {
+        return pattern.title;
+      }
+    }
+    
+    // Extract first meaningful phrase (2-3 words)
+    const words = prompt.split(' ').filter(word => 
+      word.length > 2 && 
+      !['the', 'and', 'or', 'but', 'for', 'with', 'that', 'this', 'from', 'have', 'they', 'been'].includes(word.toLowerCase())
+    );
+    
+    if (words.length >= 2) {
+      // Take first 2-3 meaningful words and capitalize them
+      const titleWords = words.slice(0, Math.min(3, words.length))
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+      return titleWords.join(' ');
+    }
+    
+    // Fallback: use first word capitalized
+    const firstWord = prompt.trim().split(' ')[0];
+    return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+  }
 
   /**
    * Creates a new project in Supabase

@@ -117,7 +117,7 @@ export function RecentProjects() {
 
   if (authLoading || loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323] border border-[#2a2a2a]">
+      <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323]">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
@@ -127,7 +127,7 @@ export function RecentProjects() {
 
   if (!isAuthenticated) {
     return (
-      <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323] border border-[#2a2a2a]">
+      <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323]">
         <h2 className="text-xl font-semibold text-white mb-4">Recent Projects</h2>
         <div className="text-center py-12">
           <p className="text-gray-400">Sign in to see your recent projects.</p>
@@ -137,16 +137,7 @@ export function RecentProjects() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323] border border-[#2a2a2a]" style={{ position: "relative" }}>
-      <div aria-hidden="true" style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: gradientHeight + "px",
-        background: "linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0))",
-        pointerEvents: "none",
-      }} />
+    <div className="w-full max-w-7xl mx-auto mt-8 p-5 rounded-3xl bg-[#232323]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-white">Recent Projects</h2>
       </div>
@@ -182,36 +173,27 @@ export function RecentProjects() {
           {filteredProjects.map((project) => (
             <div
               key={project.id}
-              className="group cursor-pointer"
+              className="group cursor-pointer bg-[#1a1a1a] rounded-lg border border-[#333] p-4 flex items-start space-x-4 hover:border-[#555] transition-colors"
               onClick={() => navigate("/build", { state: { project } })}
             >
-              <div className="relative aspect-video rounded-xl overflow-hidden border border-[#2a2a2a] bg-[#161B1B] mb-3 group-hover:border-gray-600 transition-colors">
-                <img
-                  src={project.image_url ?? ""}
-                  alt={project.title ?? "Untitled"}
-                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                />
-                {project.is_published && (
-                  <Badge className="absolute bottom-3 left-3 bg-black/60 hover:bg-black/80 text-white border-none backdrop-blur-sm">
-                    Published
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-pink-600 flex items-center justify-center text-[10px] font-bold text-white">
-                      {project.title.charAt(0)}
-                    </div>
-                    <h3 className="font-medium text-white group-hover:text-primary transition-colors">
-                      {project.title}
-                    </h3>
-                    <Badge variant="secondary" className="text-[10px] h-5 px-1.5 bg-[#2a2a2a] text-orange-300 hover:bg-[#333]">
-                      Website
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-gray-500 pl-8">Updated {new Date(project.updated_at ?? project.created_at ?? Date.now()).toLocaleDateString()}</p>
+              <div className="flex-shrink-0 text-center">
+                {/* Icon container */}
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mx-auto mb-1">
+                  <span className="text-white text-lg">📦</span>
                 </div>
+                <p className="text-xs text-blue-400">Extension</p>
+              </div>
+              <div className="flex-grow">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors text-lg">
+                    {project.title}
+                  </h3>
+                  <span className="text-gray-400 text-sm">→</span>
+                </div>
+                <p className="text-sm text-gray-400 mb-2 line-clamp-2">
+                  {project.description || "A custom Chrome extension built with AI assistance."}
+                </p>
+                <p className="text-xs text-gray-500">Updated {new Date(project.updated_at ?? project.created_at ?? Date.now()).toLocaleDateString()}</p>
               </div>
             </div>
           ))}
