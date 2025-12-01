@@ -1,12 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Settings, Download } from "lucide-react";
-import {
-  ExtensionPreview,
-  type ExtensionFiles,
-  DEFAULT_EXTENSION_FILES,
-} from "@/components/preview";
 import { Button } from "@/components/ui/button";
 import { PromptInputBox } from "@/components/ui/prompt-input-box";
 import { AIMessage } from "@/components/AIMessage";
@@ -18,6 +13,22 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+
+// Preview system imports
+import { 
+  PreviewPanel, 
+  useWebContainer,
+  type FileMap
+} from "@/preview";
+import {
+  DEFAULT_MANIFEST,
+  DEFAULT_POPUP_HTML,
+  DEFAULT_POPUP_CSS,
+  DEFAULT_POPUP_JS,
+  DEFAULT_SERVICE_WORKER,
+  DEFAULT_CONTENT_SCRIPT,
+  DEFAULT_CONTENT_CSS
+} from "@/extensions/chrome_mv3";
 
 // Types for chat and messages
 interface Message {
@@ -58,7 +69,7 @@ You are the expert Chrome extension developer. You assist users by explaining co
 
 ## Technology Stack (STRICTLY ENFORCED)
 Extendr projects use ONLY these technologies:
-- **Languages**: TypeScript, HTML, CSS, React
+- **Languages**: TypeScript, HTML, CSS, JavaScript
 - **Styling**: Tailwind CSS, vanilla CSS
 - **Chrome APIs**: All Chrome Extension APIs (tabs, storage, runtime, scripting, etc.)
 - **Manifest**: Manifest V3 (MV3) - ALWAYS use Manifest V3, never V2
@@ -90,14 +101,10 @@ extension/
 ├── background/
 │   └── service-worker.js # Background service worker (MV3)
 ├── content/
-│   └── content.js        # Content scripts
-├── options/
-│   ├── options.html      # Options page
-│   └── options.js        # Options logic
-├── assets/
-│   └── icons/            # Extension icons (16, 32, 48, 128px)
-└── styles/
-    └── tailwind.css      # If using Tailwind
+│   ├── content.js        # Content scripts
+│   └── content.css       # Content styles
+└── assets/
+    └── icons/            # Extension icons (16, 32, 48, 128px)
 \`\`\`
 
 ## Manifest V3 Requirements
@@ -120,31 +127,30 @@ ALWAYS use Manifest V3 format:
 - Provide working code examples
 - Explain Chrome-specific concepts when needed
 - Always consider extension security best practices
-- Test suggestions mentally before providing them
-- Format responses for readability:
-  - Use proper spacing between paragraphs
-  - Use bullet points for lists and steps
-  - Use clear section headers when appropriate
-  - Avoid long, dense blocks of text
-- NEVER include a "How to use" section at the end of your responses
+- Format responses for readability
 
-## Output Format (VERY IMPORTANT)
-When you provide code, you MUST format your response to include a single JSON code block containing the complete code for all relevant files of the Chrome extension. This is critical for the live preview to work. Your explanatory text should come before or after this code block, but the code block itself must be self-contained.
+## Output Format (CRITICAL FOR LIVE PREVIEW)
+When you provide code for an extension, you MUST include a JSON code block with the complete file contents. This enables the live preview feature.
 
-The structure of the JSON object MUST be:
+Format your code output like this:
+
 \`\`\`json
 {
-  "react": "<FULL_REACT_COMPONENT_CODE_HERE>",
-  "html": "<FULL_POPUP_HTML_CODE_HERE>",
-  "css": "<FULL_CSS_CODE_HERE>",
-  "js": "<FULL_JAVASCRIPT_CODE_HERE>",
-  "manifest": "<FULL_MANIFEST_JSON_CODE_HERE>"
+  "manifest.json": "{ \\"manifest_version\\": 3, ... }",
+  "popup/popup.html": "<!DOCTYPE html>...",
+  "popup/popup.css": "/* styles */...",
+  "popup/popup.js": "// popup script...",
+  "background/service-worker.js": "// background script...",
+  "content/content.js": "// content script...",
+  "content/content.css": "/* content styles */..."
 }
 \`\`\`
 
-- **Always provide the full code for each file.** Do not provide partial snippets, diffs, or instructions to modify code. Replace the entire file content with the new version.
-- If a file is not needed for the extension, provide an empty string for its value (e.g., \`"js": ""\`).
-- Ensure the JSON is valid. Do not include comments inside the JSON structure.
+IMPORTANT:
+- Always provide COMPLETE file contents, not snippets
+- Use proper JSON escaping for string values
+- Include ALL files needed for the extension to work
+- The manifest.json value should be a JSON string (double-escaped)
 
 ## Debugging Help
 When users have issues:
@@ -154,30 +160,63 @@ When users have issues:
 4. Check browser console for popup/content script errors
 5. Verify content script matches are correct
 
-## Common Patterns You Know Well
-- Tab manipulation (create, update, query, remove)
-- Storage operations (get, set, remove, clear)
-- Content script injection
-- Message passing between components
-- Context menu creation
-- Badge updates
-- Notifications
-- Alarms and scheduling
-- Web requests interception
-
 Reply in the same language as the user. Keep responses focused and actionable.`;
 
 /**
+ * Parse extension files from AI response
+ */
+function parseExtensionFiles(response: string): FileMap | null {
+  try {
+    // Look for JSON code block
+    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+    if (!jsonMatch) return null;
+
+    const jsonStr = jsonMatch[1].trim();
+    const parsed = JSON.parse(jsonStr);
+
+    // Validate it's an object with file paths
+    if (typeof parsed !== 'object' || parsed === null) return null;
+
+    // Convert to FileMap
+    const files: FileMap = {};
+    for (const [path, content] of Object.entries(parsed)) {
+      if (typeof content === 'string') {
+        files[path] = content;
+      } else if (typeof content === 'object') {
+        // Handle manifest.json as object
+        files[path] = JSON.stringify(content, null, 2);
+      }
+    }
+
+    return Object.keys(files).length > 0 ? files : null;
+  } catch (error) {
+    console.error('Failed to parse extension files:', error);
+    return null;
+  }
+}
+
+/**
+ * Get default extension files
+ */
+function getDefaultExtensionFiles(): FileMap {
+  return {
+    'manifest.json': JSON.stringify(DEFAULT_MANIFEST, null, 2),
+    'popup/popup.html': DEFAULT_POPUP_HTML,
+    'popup/popup.css': DEFAULT_POPUP_CSS,
+    'popup/popup.js': DEFAULT_POPUP_JS,
+    'background/service-worker.js': DEFAULT_SERVICE_WORKER,
+    'content/content.js': DEFAULT_CONTENT_SCRIPT,
+    'content/content.css': DEFAULT_CONTENT_CSS
+  };
+}
+
+/**
  * Calls Gemini API to generate a response
- * Uses Google AI Studio API (ai.google.dev)
- * @param userMessage - The user's message
- * @param conversationHistory - Previous messages for context
  */
 async function callGeminiAPI(
   userMessage: string,
   conversationHistory: Message[]
 ): Promise<string> {
-  // Gemini API key from env; tolerate quoted values
   const rawApiKey = import.meta.env.VITE_GEMINI_API_KEY ?? "";
   const apiKey = rawApiKey.replace(/^["'](.*)["']$/, "$1").trim();
   
@@ -186,18 +225,13 @@ async function callGeminiAPI(
     return "Gemini API key is not configured. Please set VITE_GEMINI_API_KEY in your .env file.";
   }
   
-  // Check if the API key looks valid (Google AI keys start with "AIza")
   if (!apiKey.startsWith("AIza")) {
-    console.error("API key doesn't look like a valid Google AI key. It should start with 'AIza'");
+    console.error("API key doesn't look like a valid Google AI key");
     return "Your API key doesn't appear to be a valid Google AI key. Please get a key from https://aistudio.google.com/app/apikey";
   }
   
-  console.log("Gemini API key loaded (first 8 chars):", apiKey.substring(0, 8) + "...");
-
-  // Build conversation - for multi-turn, include history
   const contents = [];
   
-  // Add conversation history if any
   for (const msg of conversationHistory) {
     contents.push({
       role: msg.role === "user" ? "user" : "model",
@@ -205,27 +239,23 @@ async function callGeminiAPI(
     });
   }
 
-  // Add the current user message
   contents.push({
     role: "user",
     parts: [{ text: userMessage }],
   });
 
-  // Models to try - using Google AI Studio model names
   const modelsToTry = [
-    "gemini-2.0-flash-exp",  // Experimental flash
-    "gemini-2.0-flash",      // Latest flash model
-    "gemini-1.5-flash",      // Previous flash  
-    "gemini-1.5-pro",        // Pro model
-    "gemini-pro",            // Legacy pro
+    "gemini-2.0-flash-exp",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-pro",
   ];
 
   let lastError = "";
 
   for (const model of modelsToTry) {
     try {
-      console.log(`Trying Gemini model: ${model}`);
-      
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       
       const requestBody = {
@@ -239,15 +269,11 @@ async function callGeminiAPI(
         },
       };
       
-      console.log("Request URL:", url.replace(apiKey, "API_KEY_HIDDEN"));
-      
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-
-      console.log(`Response status for ${model}:`, response.status, response.statusText);
 
       const responseText = await response.text();
 
@@ -258,30 +284,24 @@ async function callGeminiAPI(
         } catch {
           errorData = { message: responseText };
         }
-        console.error(`Gemini API error for ${model}:`, errorData);
         lastError = errorData?.error?.message || errorData?.message || `HTTP ${response.status}`;
-        continue; // Try next model
+        continue;
       }
 
       const data = JSON.parse(responseText);
       const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       
       if (generatedText) {
-        console.log("Successfully got response from model:", model);
         return generatedText;
       } else {
-        console.warn("No text in response for model:", model, data);
         lastError = "No text generated";
       }
     } catch (err: any) {
-      console.error(`Error with model ${model}:`, err);
       lastError = err.message || "Unknown error";
-      continue; // Try next model
+      continue;
     }
   }
 
-  // If all models failed
-  console.error("All Gemini models failed. Last error:", lastError);
   return `I couldn't connect to the AI service. Error: ${lastError}. Please verify your API key at https://aistudio.google.com/app/apikey`;
 }
 
@@ -304,9 +324,30 @@ export default function Build() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   
-  // Extension code state
-  const [extensionCode, setExtensionCode] =
-    useState<ExtensionFiles>(DEFAULT_EXTENSION_FILES);
+  // Extension files state
+  const [extensionFiles, setExtensionFiles] = useState<FileMap>(getDefaultExtensionFiles());
+
+  // WebContainer hook
+  const {
+    status,
+    previewUrl,
+    logs,
+    build,
+    stop,
+    clearLogs,
+    updateFiles
+  } = useWebContainer({
+    onPreviewUrl: (url) => {
+      console.log('Preview URL:', url);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Build Error',
+        description: error,
+        variant: 'destructive'
+      });
+    }
+  });
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -318,7 +359,6 @@ export default function Build() {
    */
   async function loadProjectById(projectId: string, userId: string): Promise<Project | null> {
     try {
-      console.log("Loading project by ID:", projectId);
       const { data, error } = await supabase
         .from("projects")
         .select("*")
@@ -350,11 +390,9 @@ export default function Build() {
       setUser(session.user);
       const userId = session.user.id;
       
-      // Priority 1: Check URL for project ID (survives page reload)
       const projectIdFromUrl = searchParams.get("project");
       
       if (projectIdFromUrl) {
-        console.log("Loading project from URL param:", projectIdFromUrl);
         const existingProject = await loadProjectById(projectIdFromUrl, userId);
         if (existingProject) {
           setProject(existingProject);
@@ -365,34 +403,23 @@ export default function Build() {
         }
       }
       
-      // Priority 2: Check navigation state (from clicking a project card)
       if (location.state?.project) {
         const proj = location.state.project as Project;
-        console.log("Loading project from navigation state:", proj.id);
         setProject(proj);
         setProjectTitle(proj.title);
-        
-        // Update URL with project ID so it survives reload
         setSearchParams({ project: proj.id }, { replace: true });
-        
         await loadOrCreateChat(userId, proj.id);
         setIsLoading(false);
         return;
       }
 
-      // Priority 3: New project from hero prompt
         if (location.state?.prompt) {
-        console.log("Creating new project from prompt");
         const generatedTitle = generateProjectTitle(location.state.prompt);
         const newProject = await createProject(userId, generatedTitle);
         if (newProject) {
           setProject(newProject);
           setProjectTitle(newProject.title);
-          
-          // Update URL with new project ID
           setSearchParams({ project: newProject.id }, { replace: true });
-          
-          // Create chat and send initial message
           const chat = await createChat(userId, newProject.id, "Initial Chat");
           if (chat) {
             setCurrentChat(chat);
@@ -403,8 +430,6 @@ export default function Build() {
         return;
       }
       
-      // Priority 4: No context - load most recent project or create new one
-      console.log("No project context, loading most recent project...");
       const { data: recentProjects, error } = await supabase
         .from("projects")
         .select("*")
@@ -414,14 +439,11 @@ export default function Build() {
       
       if (!error && recentProjects && recentProjects.length > 0) {
         const recentProject = recentProjects[0] as Project;
-        console.log("Loaded most recent project:", recentProject.id);
         setProject(recentProject);
         setProjectTitle(recentProject.title);
         setSearchParams({ project: recentProject.id }, { replace: true });
         await loadOrCreateChat(userId, recentProject.id);
       } else {
-        // No projects exist - create a new one
-        console.log("No existing projects, creating new one");
         const newProject = await createProject(userId, "Untitled Project");
         if (newProject) {
           setProject(newProject);
@@ -436,7 +458,6 @@ export default function Build() {
 
     initializeBuild();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
         navigate("/");
@@ -452,54 +473,41 @@ export default function Build() {
    * Generates a project title based on user's prompt
    */
   function generateProjectTitle(prompt: string): string {
-    // Convert to lowercase for easier processing
     const lowerPrompt = prompt.toLowerCase();
     
-    // Common patterns and their corresponding titles
     const patterns = [
-      { regex: /tic\s*tac\s*toe|tictactoe|noughts\s*and\s*crosses/, title: "Tic Tac Toe" },
+      { regex: /tic\s*tac\s*toe|tictactoe/, title: "Tic Tac Toe" },
       { regex: /calculator|math|calculate/, title: "Calculator" },
       { regex: /todo|task\s*list|to\s*do/, title: "Todo List" },
       { regex: /weather|forecast|temperature/, title: "Weather App" },
       { regex: /clock|timer|alarm/, title: "Clock" },
       { regex: /notes|notebook|journal/, title: "Notes" },
-      { regex: /calendar|schedule|planner/, title: "Calendar" },
-      { regex: /game|play|gaming/, title: "Game" },
-      { regex: /chat|messenger|message/, title: "Chat App" },
-      { regex: /social|network|connect/, title: "Social Network" },
-      { regex: /music|player|song/, title: "Music Player" },
-      { regex: /video|youtube|stream/, title: "Video App" },
-      { regex: /photo|image|camera|gallery/, title: "Photo App" },
-      { regex: /blog|post|article/, title: "Blog" },
-      { regex: /shop|store|ecommerce|buy/, title: "Shop" },
-      { regex: /map|navigation|gps|location/, title: "Map" },
-      { regex: /dictionary|translate|language/, title: "Dictionary" },
-      { regex: /password|security|login|auth/, title: "Security" },
-      { regex: /file|document|pdf|word/, title: "Document App" },
+      { regex: /tab|tabs/, title: "Tab Manager" },
+      { regex: /bookmark/, title: "Bookmark Manager" },
+      { regex: /screenshot/, title: "Screenshot Tool" },
+      { regex: /dark\s*mode|theme/, title: "Theme Switcher" },
+      { regex: /password|security/, title: "Password Tool" },
+      { regex: /ad\s*block|blocker/, title: "Ad Blocker" },
       { regex: /extension|chrome|browser/, title: "Browser Extension" }
     ];
     
-    // Check if prompt matches any pattern
     for (const pattern of patterns) {
       if (pattern.regex.test(lowerPrompt)) {
         return pattern.title;
       }
     }
     
-    // Extract first meaningful phrase (2-3 words)
     const words = prompt.split(' ').filter(word => 
       word.length > 2 && 
-      !['the', 'and', 'or', 'but', 'for', 'with', 'that', 'this', 'from', 'have', 'they', 'been'].includes(word.toLowerCase())
+      !['the', 'and', 'or', 'but', 'for', 'with', 'that', 'this', 'from', 'have'].includes(word.toLowerCase())
     );
     
     if (words.length >= 2) {
-      // Take first 2-3 meaningful words and capitalize them
       const titleWords = words.slice(0, Math.min(3, words.length))
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
       return titleWords.join(' ');
     }
     
-    // Fallback: use first word capitalized
     const firstWord = prompt.trim().split(' ')[0];
     return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
   }
@@ -529,31 +537,30 @@ export default function Build() {
   }
 
   /**
-   * Loads existing chat for a project or creates a new one
+   * Save project files to Supabase
    */
-  async function saveProjectFiles(projectId: string, files: ExtensionFiles) {
+  async function saveProjectFiles(projectId: string, files: FileMap) {
     try {
       const { error } = await supabase
         .from('project_files')
-        .upsert({ project_id: projectId, files: files as any, updated_at: new Date().toISOString() }, { onConflict: 'project_id' });
+        .upsert({ 
+          project_id: projectId, 
+          files: files as any, 
+          updated_at: new Date().toISOString() 
+        }, { onConflict: 'project_id' });
 
       if (error) throw error;
-      console.log('Project files saved successfully for project:', projectId);
+      console.log('Project files saved successfully');
     } catch (err: any) {
       console.error('Error saving project files:', err);
-      toast({
-        title: 'Error saving code',
-        description: err.message,
-        variant: 'destructive',
-      });
     }
   }
 
+  /**
+   * Loads existing chat for a project or creates a new one
+   */
   async function loadOrCreateChat(userId: string, projectId: string) {
     try {
-      console.log("Loading chat for project:", projectId);
-      
-      // Try to find existing chat
       const { data: existingChats, error: fetchError } = await supabase
         .from("chats")
         .select("*")
@@ -564,33 +571,16 @@ export default function Build() {
       
       if (fetchError) throw fetchError;
       
-      console.log("Found existing chats:", existingChats?.length || 0);
-      
       if (existingChats && existingChats.length > 0) {
         const chat = existingChats[0] as Chat;
-        console.log("Using existing chat:", chat.id);
         setCurrentChat(chat);
         await loadMessages(chat.id);
-        // Also load the project files
-        const { data: filesData, error: filesError } = await supabase
-          .from('project_files')
-          .select('files')
-          .eq('project_id', projectId)
-          .single();
-
-        if (filesError && filesError.code !== 'PGRST116') { // Ignore 'not found' errors
-          console.error('Error loading project files:', filesError);
-        } else if (filesData) {
-          setExtensionCode(filesData.files as unknown as ExtensionFiles);
-        }
       } else {
-        // Create new chat
-        console.log("Creating new chat for project:", projectId);
         const newChat = await createChat(userId, projectId, "Chat 1");
         if (newChat) {
           setCurrentChat(newChat);
           setMessages([]);
-        setExtensionCode(DEFAULT_EXTENSION_FILES); // Reset code for new chat
+          setExtensionFiles(getDefaultExtensionFiles());
         }
       }
     } catch (err: any) {
@@ -632,8 +622,6 @@ export default function Build() {
    */
   async function loadMessages(chatId: string) {
     try {
-      console.log("Loading messages for chat:", chatId);
-      
       const { data, error } = await supabase
         .from("messages")
         .select("*")
@@ -642,13 +630,20 @@ export default function Build() {
       
       if (error) throw error;
       
-      console.log("Loaded messages count:", data?.length || 0);
-      if (data && data.length > 0) {
-        console.log("First message:", data[0]);
-        console.log("Last message:", data[data.length - 1]);
-      }
-      
       setMessages((data as Message[]) || []);
+      
+      // Try to extract files from the last assistant message
+      if (data && data.length > 0) {
+        for (let i = data.length - 1; i >= 0; i--) {
+          if (data[i].role === 'assistant') {
+            const files = parseExtensionFiles(data[i].content);
+            if (files) {
+              setExtensionFiles(prev => ({ ...prev, ...files }));
+              break;
+            }
+          }
+        }
+      }
     } catch (err: any) {
       console.error("Error loading messages:", err);
       toast({
@@ -663,16 +658,12 @@ export default function Build() {
    * Sends a message and gets AI response
    */
   async function sendMessage(content: string, chatId: string, userId: string) {
-    if (!content.trim() || !chatId || !userId) {
-      console.error("sendMessage called with invalid params:", { content: !!content, chatId, userId });
-      return;
-    }
+    if (!content.trim() || !chatId || !userId) return;
     
-    console.log("Sending message to chat:", chatId);
     setIsThinking(true);
     
     try {
-      // Save user message to Supabase
+      // Save user message
       const { data: userMsg, error: userMsgError } = await supabase
         .from("messages")
         .insert({
@@ -684,32 +675,26 @@ export default function Build() {
         .select()
         .single();
       
-      if (userMsgError) {
-        console.error("Error saving user message:", userMsgError);
-        throw userMsgError;
-      }
+      if (userMsgError) throw userMsgError;
       
-      console.log("User message saved:", userMsg);
-      
-      // Update local state immediately
       const newUserMessage = userMsg as Message;
       setMessages((prev) => [...prev, newUserMessage]);
       
-      // Update chat's updated_at
+      // Update chat timestamp
       await supabase
         .from("chats")
         .update({ updated_at: new Date().toISOString() })
         .eq("id", chatId);
       
-      // Get AI response from Gemini
+      // Get AI response
       let aiResponse: string;
       try {
         aiResponse = await callGeminiAPI(content.trim(), messages);
       } catch (apiError: any) {
-        aiResponse = `I encountered an error while processing your request: ${apiError.message}. Please try again.`;
+        aiResponse = `I encountered an error: ${apiError.message}. Please try again.`;
       }
       
-      // Save assistant message to Supabase
+      // Save assistant message
       const { data: assistantMsg, error: assistantMsgError } = await supabase
         .from("messages")
         .insert({
@@ -721,26 +706,29 @@ export default function Build() {
         .select()
         .single();
       
-      if (assistantMsgError) {
-        console.error("Error saving assistant message:", assistantMsgError);
-        throw assistantMsgError;
-      }
+      if (assistantMsgError) throw assistantMsgError;
       
-      console.log("Assistant message saved:", assistantMsg);
-      
-      // Update local state with new message
       setMessages((prev) => [...prev, assistantMsg as Message]);
 
-      // Parse code from AI response and update extension state
-      const newCode = parseCodeFromResponse(aiResponse);
-      if (newCode) {
-        console.log('Parsed new code from AI response, updating state:', newCode);
-        setExtensionCode(newCode);
+      // Parse extension files from response
+      const parsedFiles = parseExtensionFiles(aiResponse);
+      if (parsedFiles) {
+        const updatedFiles = { ...extensionFiles, ...parsedFiles };
+        setExtensionFiles(updatedFiles);
+        
+        // Save to project
         if (project) {
-          await saveProjectFiles(project.id, newCode);
+          await saveProjectFiles(project.id, updatedFiles);
         }
+        
+        // Update WebContainer files
+        await updateFiles(parsedFiles, true);
+        
+        toast({
+          title: "Extension Updated",
+          description: "Code has been updated. Click 'Build & Run' to preview.",
+        });
       }
-
       
     } catch (err: any) {
       console.error("Error sending message:", err);
@@ -757,43 +745,43 @@ export default function Build() {
   /**
    * Handle sending a message from the input box
    */
-    /**
-   * Parses the code block from the AI's response string.
-   */
-  function parseCodeFromResponse(response: string): ExtensionFiles | null {
-    const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
-    const match = response.match(codeBlockRegex);
-
-    if (match && match[1]) {
-      try {
-        const parsed = JSON.parse(match[1]);
-        // Basic validation to ensure it has the expected keys
-        if (
-          'react' in parsed &&
-          'html' in parsed &&
-          'css' in parsed &&
-          'js' in parsed &&
-          'manifest' in parsed
-        ) {
-          return parsed as ExtensionFiles;
-        }
-        console.warn("Parsed JSON from AI response is missing required keys.", parsed);
-        return null;
-      } catch (error) {
-        console.error("Failed to parse JSON from AI response:", error);
-        return null;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Handle sending a message from the input box
-   */
   function handleSendMessage(message: string, files?: File[]) {
     if (!message.trim() || !currentChat || !user) return;
     sendMessage(message, currentChat.id, user.id);
   }
+
+  /**
+   * Handle file changes from the editor
+   */
+  const handleFilesChange = useCallback((newFiles: FileMap) => {
+    setExtensionFiles(newFiles);
+    
+    // Debounced save to project
+    if (project) {
+      saveProjectFiles(project.id, newFiles);
+    }
+  }, [project]);
+
+  /**
+   * Handle build button click
+   */
+  const handleBuild = useCallback(() => {
+    build(extensionFiles, true);
+  }, [build, extensionFiles]);
+
+  /**
+   * Handle stop button click
+   */
+  const handleStop = useCallback(() => {
+    stop();
+  }, [stop]);
+
+  /**
+   * Handle rebuild
+   */
+  const handleRebuild = useCallback(() => {
+    build(extensionFiles, false);
+  }, [build, extensionFiles]);
 
   if (isLoading) {
     return (
@@ -808,14 +796,14 @@ export default function Build() {
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden bg-[#232323]">
         {/* Left sidebar - Chat */}
-        <div className="bg-[#232323] flex flex-col w-1/3 min-w-[300px]">
+        <div className="bg-[#232323] flex flex-col w-[400px] min-w-[350px] max-w-[500px] border-r border-gray-800">
           {/* Chat Top Bar */}
-          <div className="h-12 flex items-center px-4">
+          <div className="h-12 flex items-center px-4 border-b border-gray-800">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 hover:bg-white/5 p-1.5 rounded-lg transition-colors text-left focus:outline-none">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white text-xs">{projectTitle}</span>
+                    <span className="font-semibold text-white text-sm">{projectTitle}</span>
                     <ChevronDown className="w-3 h-3 text-gray-400" />
                   </div>
                 </button>
@@ -841,10 +829,10 @@ export default function Build() {
                     </div>
                   </div>
                   <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden mb-2">
-                    <div className="h-full bg-blue-600 w-[60%]"></div>
+                    <div className="h-full bg-purple-600 w-[60%]"></div>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    <div className="w-2 h-2 rounded-full bg-purple-600"></div>
                     Daily credits used first
                   </div>
                 </div>
@@ -882,8 +870,29 @@ export default function Build() {
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-white custom-scrollbar">
             {messages.length === 0 ? (
-              <div className="h-full flex items-center justify-center">
-                <p className="text-gray-500 text-sm">How can I help you build today?</p>
+              <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                  <span className="text-2xl">🚀</span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Build Your Extension</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Describe the Chrome extension you want to create and I'll help you build it.
+                </p>
+                <div className="space-y-2 text-left w-full max-w-xs">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">Try asking:</p>
+                  <button 
+                    onClick={() => handleSendMessage("Create a simple tab counter extension that shows how many tabs are open")}
+                    className="w-full text-left text-sm text-gray-300 hover:text-white hover:bg-white/5 p-2 rounded-lg transition-colors"
+                  >
+                    "Create a tab counter extension"
+                  </button>
+                  <button 
+                    onClick={() => handleSendMessage("Build a dark mode toggle extension for any website")}
+                    className="w-full text-left text-sm text-gray-300 hover:text-white hover:bg-white/5 p-2 rounded-lg transition-colors"
+                  >
+                    "Build a dark mode toggle extension"
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -893,9 +902,9 @@ export default function Build() {
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-lg px-4 py-3 ${
+                      className={`max-w-[90%] rounded-lg px-4 py-3 ${
                         message.role === "user"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-purple-600 text-white"
                         : "bg-[#2a2a2a] text-white"
                         }`}
                     >
@@ -913,9 +922,9 @@ export default function Build() {
             {isThinking && (
               <div className="flex items-center gap-2 text-gray-400">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
                 </div>
                 <span className="text-sm">Thinking...</span>
               </div>
@@ -923,58 +932,65 @@ export default function Build() {
           </div>
 
           {/* Chat input */}
-          <div className="p-4">
+          <div className="p-4 border-t border-gray-800">
             <PromptInputBox
               onSend={handleSendMessage}
               isLoading={isThinking}
-              placeholder="Ask me anything about building your app..."
-              className="bg-[#232323] border-[#3C4141] rounded-lg"
+              placeholder="Describe your extension idea..."
+              className="bg-[#1a1a1a] border-[#3C4141] rounded-lg"
             />
           </div>
         </div>
 
-        {/* Right side - Preview */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#232323]">
+        {/* Right side - Preview Panel */}
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Preview Top Bar */}
-          <div className="h-12 flex items-center justify-between px-4 bg-[#232323]">
-            {/* Title */}
+          <div className="h-12 flex items-center justify-between px-4 bg-[#232323] border-b border-gray-800">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-white">Extension Preview</span>
-              <span className="text-xs text-gray-500">• Live</span>
+              <span className="text-xs text-gray-500">• WebContainers</span>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-2">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="h-8 text-xs text-gray-400 hover:text-white hover:bg-[#2a2a2a] gap-1.5"
                 onClick={() => {
-                  // Download extension as ZIP (placeholder)
-                  console.log("Download extension");
+                  // Download extension as ZIP
+                  toast({
+                    title: "Export Coming Soon",
+                    description: "Extension export will be available soon.",
+                  });
                 }}
               >
                 <Download className="w-3.5 h-3.5" />
                 Export
               </Button>
-              <Button className="h-8 text-xs bg-primary hover:bg-primary/90 text-white px-3">
+              <Button className="h-8 text-xs bg-purple-600 hover:bg-purple-700 text-white px-3">
                 Publish
               </Button>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
-                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-medium">
                   {user?.email?.charAt(0).toUpperCase() || "U"}
                 </div>
               </Button>
             </div>
           </div>
 
-          {/* Live Preview Component */}
-          <div className="flex-1 p-4 pt-0">
-            <ExtensionPreview
-              className="h-full border border-[#333] shadow-2xl"
-              files={extensionCode}
-                          />
-          </div>
+          {/* Preview Panel */}
+          <PreviewPanel
+            files={extensionFiles}
+            onFilesChange={handleFilesChange}
+            status={status}
+            previewUrl={previewUrl}
+            logs={logs}
+            onBuild={handleBuild}
+            onRun={handleRebuild}
+            onStop={handleStop}
+            onClearLogs={clearLogs}
+            className="flex-1"
+          />
         </div>
       </div>
     </div>

@@ -1,8 +1,19 @@
-export { CodeEditor } from "./CodeEditor";
-export { PreviewFrame } from "./PreviewFrame";
-export {
-  ExtensionPreview,
-  DEFAULT_EXTENSION_FILES,
-  type ExtensionFiles,
-} from "./ExtensionPreview";
+/**
+ * Legacy Preview Module
+ * 
+ * Re-exports from the new preview system for backwards compatibility.
+ */
 
+export { 
+  PreviewPanel,
+  FileTree,
+  CodeEditor,
+  Terminal,
+  PreviewFrame,
+  LogPanel
+} from '@/preview';
+
+export type { 
+  FileMap,
+  ExtensionFiles 
+} from '@/preview';
