@@ -2,9 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Settings, Download } from "lucide-react";
-import { ExtensionPreview } from "@/components/preview";
+import {
+  ExtensionPreview,
+  type ExtensionFiles,
+  DEFAULT_EXTENSION_FILES,
+} from "@/components/preview";
 import { Button } from "@/components/ui/button";
 import { PromptInputBox } from "@/components/ui/prompt-input-box";
+import { AIMessage } from "@/components/AIMessage";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -53,7 +58,7 @@ You are the expert Chrome extension developer. You assist users by explaining co
 
 ## Technology Stack (STRICTLY ENFORCED)
 Extendr projects use ONLY these technologies:
-- **Languages**: JavaScript, TypeScript, HTML, CSS
+- **Languages**: TypeScript, HTML, CSS, React
 - **Styling**: Tailwind CSS, vanilla CSS
 - **Chrome APIs**: All Chrome Extension APIs (tabs, storage, runtime, scripting, etc.)
 - **Manifest**: Manifest V3 (MV3) - ALWAYS use Manifest V3, never V2
@@ -116,6 +121,30 @@ ALWAYS use Manifest V3 format:
 - Explain Chrome-specific concepts when needed
 - Always consider extension security best practices
 - Test suggestions mentally before providing them
+- Format responses for readability:
+  - Use proper spacing between paragraphs
+  - Use bullet points for lists and steps
+  - Use clear section headers when appropriate
+  - Avoid long, dense blocks of text
+- NEVER include a "How to use" section at the end of your responses
+
+## Output Format (VERY IMPORTANT)
+When you provide code, you MUST format your response to include a single JSON code block containing the complete code for all relevant files of the Chrome extension. This is critical for the live preview to work. Your explanatory text should come before or after this code block, but the code block itself must be self-contained.
+
+The structure of the JSON object MUST be:
+\`\`\`json
+{
+  "react": "<FULL_REACT_COMPONENT_CODE_HERE>",
+  "html": "<FULL_POPUP_HTML_CODE_HERE>",
+  "css": "<FULL_CSS_CODE_HERE>",
+  "js": "<FULL_JAVASCRIPT_CODE_HERE>",
+  "manifest": "<FULL_MANIFEST_JSON_CODE_HERE>"
+}
+\`\`\`
+
+- **Always provide the full code for each file.** Do not provide partial snippets, diffs, or instructions to modify code. Replace the entire file content with the new version.
+- If a file is not needed for the extension, provide an empty string for its value (e.g., \`"js": ""\`).
+- Ensure the JSON is valid. Do not include comments inside the JSON structure.
 
 ## Debugging Help
 When users have issues:
@@ -276,12 +305,8 @@ export default function Build() {
   const [isThinking, setIsThinking] = useState(false);
   
   // Extension code state
-  const [extensionCode, setExtensionCode] = useState({
-    html: "",
-    css: "",
-    js: "",
-    manifest: "",
-  });
+  const [extensionCode, setExtensionCode] =
+    useState<ExtensionFiles>(DEFAULT_EXTENSION_FILES);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -506,6 +531,24 @@ export default function Build() {
   /**
    * Loads existing chat for a project or creates a new one
    */
+  async function saveProjectFiles(projectId: string, files: ExtensionFiles) {
+    try {
+      const { error } = await supabase
+        .from('project_files')
+        .upsert({ project_id: projectId, files: files as any, updated_at: new Date().toISOString() }, { onConflict: 'project_id' });
+
+      if (error) throw error;
+      console.log('Project files saved successfully for project:', projectId);
+    } catch (err: any) {
+      console.error('Error saving project files:', err);
+      toast({
+        title: 'Error saving code',
+        description: err.message,
+        variant: 'destructive',
+      });
+    }
+  }
+
   async function loadOrCreateChat(userId: string, projectId: string) {
     try {
       console.log("Loading chat for project:", projectId);
@@ -528,6 +571,18 @@ export default function Build() {
         console.log("Using existing chat:", chat.id);
         setCurrentChat(chat);
         await loadMessages(chat.id);
+        // Also load the project files
+        const { data: filesData, error: filesError } = await supabase
+          .from('project_files')
+          .select('files')
+          .eq('project_id', projectId)
+          .single();
+
+        if (filesError && filesError.code !== 'PGRST116') { // Ignore 'not found' errors
+          console.error('Error loading project files:', filesError);
+        } else if (filesData) {
+          setExtensionCode(filesData.files as unknown as ExtensionFiles);
+        }
       } else {
         // Create new chat
         console.log("Creating new chat for project:", projectId);
@@ -535,6 +590,7 @@ export default function Build() {
         if (newChat) {
           setCurrentChat(newChat);
           setMessages([]);
+        setExtensionCode(DEFAULT_EXTENSION_FILES); // Reset code for new chat
         }
       }
     } catch (err: any) {
@@ -672,8 +728,19 @@ export default function Build() {
       
       console.log("Assistant message saved:", assistantMsg);
       
-      // Update local state
+      // Update local state with new message
       setMessages((prev) => [...prev, assistantMsg as Message]);
+
+      // Parse code from AI response and update extension state
+      const newCode = parseCodeFromResponse(aiResponse);
+      if (newCode) {
+        console.log('Parsed new code from AI response, updating state:', newCode);
+        setExtensionCode(newCode);
+        if (project) {
+          await saveProjectFiles(project.id, newCode);
+        }
+      }
+
       
     } catch (err: any) {
       console.error("Error sending message:", err);
@@ -685,6 +752,39 @@ export default function Build() {
     } finally {
       setIsThinking(false);
     }
+  }
+
+  /**
+   * Handle sending a message from the input box
+   */
+    /**
+   * Parses the code block from the AI's response string.
+   */
+  function parseCodeFromResponse(response: string): ExtensionFiles | null {
+    const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
+    const match = response.match(codeBlockRegex);
+
+    if (match && match[1]) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        // Basic validation to ensure it has the expected keys
+        if (
+          'react' in parsed &&
+          'html' in parsed &&
+          'css' in parsed &&
+          'js' in parsed &&
+          'manifest' in parsed
+        ) {
+          return parsed as ExtensionFiles;
+        }
+        console.warn("Parsed JSON from AI response is missing required keys.", parsed);
+        return null;
+      } catch (error) {
+        console.error("Failed to parse JSON from AI response:", error);
+        return null;
+      }
+    }
+    return null;
   }
 
   /**
@@ -799,7 +899,11 @@ export default function Build() {
                         : "bg-[#2a2a2a] text-white"
                         }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.role === 'assistant' ? (
+                        <AIMessage content={message.content} />
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -868,8 +972,8 @@ export default function Build() {
           <div className="flex-1 p-4 pt-0">
             <ExtensionPreview
               className="h-full border border-[#333] shadow-2xl"
-              onCodeChange={(code) => setExtensionCode(code)}
-            />
+              files={extensionCode}
+                          />
           </div>
         </div>
       </div>

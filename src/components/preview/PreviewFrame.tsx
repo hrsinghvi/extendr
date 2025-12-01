@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { RefreshCw, ExternalLink, Smartphone, Monitor, Tablet } from "lucide-react";
+import { transform } from 'sucrase';
 
 interface PreviewFrameProps {
+  react: string;
   html: string;
   css: string;
   javascript: string;
@@ -23,6 +25,7 @@ const VIEWPORT_SIZES: Record<ViewportSize, { width: number; height: number; labe
  * Renders HTML/CSS/JS safely in an isolated environment
  */
 export function PreviewFrame({
+  react,
   html,
   css,
   javascript,
@@ -40,8 +43,47 @@ export function PreviewFrame({
    * Includes error handling and console capture
    */
   const buildPreviewDocument = useCallback(() => {
+    let transpiledJs = javascript;
+    if (react.trim()) {
+      try {
+        const fullReactCode = `
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+
+          ${react}
+
+          const container = document.getElementById('root');
+          if (container) {
+            const root = createRoot(container);
+            root.render(<App />);
+          } else {
+            console.error('Could not find root element to mount React app.');
+          }
+        `;
+
+        const transformed = transform(fullReactCode, {
+          transforms: ['jsx', 'typescript', 'imports'],
+          jsxPragma: 'React.createElement',
+          jsxFragmentPragma: 'React.Fragment',
+          production: true, // Minify and optimize
+        });
+
+        transpiledJs = transformed.code;
+      } catch (e: any) {
+        console.error("Sucrase transformation failed:", e);
+        setError(`React/JSX Transpilation Error: ${e.message}`);
+        // Inject a script to display the error in the preview itself
+        transpiledJs = `
+          document.body.innerHTML = '<div style="color: red; font-family: monospace; padding: 1rem;">'
+            + '<h2>React Transpilation Error</h2>'
+            + '<pre>${e.message.replace(/\'/g, "\\'")}</pre>'
+          + '</div>';
+        `;
+      }
+    }
+
     // Escape script content to prevent XSS while still allowing execution in sandbox
-    const safeJS = javascript
+    const safeJS = transpiledJs
       .replace(/<\/script>/gi, "<\\/script>")
       .replace(/<!--/g, "<\\!--");
 
@@ -100,9 +142,11 @@ export function PreviewFrame({
   </style>
 </head>
 <body>
-  <div class="extension-popup">
+  <div class="extension-popup" id="root">
     ${html}
   </div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
   <script>
     // Capture and display errors
@@ -207,7 +251,7 @@ export function PreviewFrame({
   </script>
 </body>
 </html>`;
-  }, [html, css, javascript, title]);
+  }, [react, html, css, javascript, title]);
 
   /**
    * Updates the iframe content
@@ -238,7 +282,7 @@ export function PreviewFrame({
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeout);
-  }, [html, css, javascript, updatePreview]);
+  }, [react, html, css, javascript, updatePreview]);
 
   const handleRefresh = () => {
     updatePreview();

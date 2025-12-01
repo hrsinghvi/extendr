@@ -16,27 +16,27 @@ export type Database = {
     Tables: {
       chats: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
-          project_id: string | null
+          project_id: string
           title: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          project_id?: string | null
+          project_id: string
           title: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          project_id?: string | null
+          project_id?: string
           title?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -51,25 +51,25 @@ export type Database = {
       }
       messages: {
         Row: {
-          chat_id: string | null
+          chat_id: string
           content: string
-          created_at: string | null
+          created_at: string
           id: string
           role: string
           user_id: string
         }
         Insert: {
-          chat_id?: string | null
+          chat_id: string
           content: string
-          created_at?: string | null
+          created_at?: string
           id?: string
-          role?: string
+          role: string
           user_id: string
         }
         Update: {
-          chat_id?: string | null
+          chat_id?: string
           content?: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           role?: string
           user_id?: string
@@ -84,32 +84,64 @@ export type Database = {
           },
         ]
       }
-      projects: {
+      project_files: {
         Row: {
           created_at: string | null
+          files: Json
+          id: string
+          project_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          files: Json
+          id?: string
+          project_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          files?: Json
+          id?: string
+          project_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
           description: string | null
           id: string
           is_published: boolean | null
           title: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: string
           is_published?: boolean | null
           title: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: string
           is_published?: boolean | null
           title?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
