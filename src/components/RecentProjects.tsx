@@ -1,7 +1,8 @@
-import { Search } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
+import { CATEGORIES, determineCategoryFromText, type ProjectCategory } from "@/lib/categories";
 import {
   Select,
   SelectContent,
@@ -110,10 +111,66 @@ export function RecentProjects() {
     };
   }, [authLoading, isAuthenticated, user?.id, toast, projects.length]);
 
+  // Auto-categorize projects
+  useEffect(() => {
+    if (loading || !projects.length) return;
+    
+    const uncategorized = projects.filter(p => !p.category);
+    if (uncategorized.length === 0) return;
+
+    const updateCategories = async () => {
+      const updates = uncategorized.map(async (p) => {
+        const category = determineCategoryFromText((p.title || "") + " " + (p.description || ""));
+        
+        // Update DB
+        await supabase
+          .from('projects')
+          .update({ category })
+          .eq('id', p.id);
+          
+        return { id: p.id, category };
+      });
+
+      const results = await Promise.all(updates);
+      
+      // Update local state
+      setProjects(current => current.map(p => {
+        const update = results.find(r => r.id === p.id);
+        return update ? { ...p, category: update.category } : p;
+      }));
+    };
+
+    updateCategories();
+  }, [projects, loading]);
+
   // Filtering
   const filteredProjects = projects.filter(p =>
     (p.title ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+      
+      if (error) throw error;
+
+      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+      toast({
+        title: "Project deleted",
+        description: "The project has been successfully deleted.",
+      });
+    } catch (err: any) {
+      console.error("Error deleting project:", err);
+      toast({
+        title: "Error deleting project",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (authLoading || loading) {
     return (
@@ -170,25 +227,40 @@ export function RecentProjects() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
+          {filteredProjects.map((project) => {
+            const categoryName = project.category || determineCategoryFromText((project.title || "") + " " + (project.description || ""));
+            const CategoryIcon = CATEGORIES[categoryName as ProjectCategory] || CATEGORIES["Other"];
+            
+            return (
             <div
               key={project.id}
               className="group cursor-pointer bg-[#1a1a1a] rounded-lg border border-[#333] p-4 flex items-start space-x-4 hover:border-[#555] transition-colors"
               onClick={() => navigate("/build", { state: { project } })}
             >
-              <div className="flex-shrink-0 text-center">
+              <div className="flex-shrink-0 text-center w-16">
                 {/* Icon container */}
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mx-auto mb-1">
-                  <span className="text-white text-lg">📦</span>
+                <div className="w-12 h-12 bg-gradient-to-r from-[#5A9665] to-[#5f87a3] rounded-lg flex items-center justify-center mx-auto mb-1 shadow-lg">
+                  <CategoryIcon className="text-white w-6 h-6" />
                 </div>
-                <p className="text-xs text-blue-400">Extension</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider truncate w-full text-center mt-1 px-1">{categoryName}</p>
               </div>
               <div className="flex-grow">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors text-lg">
                     {project.title}
                   </h3>
-                  <span className="text-gray-400 text-sm">→</span>
+                  <button
+                    className="text-gray-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-red-500/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm("Are you sure you want to delete this project?")) {
+                        handleDeleteProject(project.id);
+                      }
+                    }}
+                    title="Delete project"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
                 <p className="text-sm text-gray-400 mb-2 line-clamp-2">
                   {project.description || "A custom Chrome extension built with AI assistance."}
@@ -196,7 +268,8 @@ export function RecentProjects() {
                 <p className="text-xs text-gray-500">Updated {new Date(project.updated_at ?? project.created_at ?? Date.now()).toLocaleDateString()}</p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

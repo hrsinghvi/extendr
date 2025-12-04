@@ -34,16 +34,6 @@ export const GradientBackground = () => (
           <stop offset="0%" style={{ stopColor: '#5f87a3', stopOpacity: 0.9 }} />
           <stop offset="100%" style={{ stopColor: '#5f87a3', stopOpacity: 0.6 }} />
         </radialGradient>
-        {/* Top right - #6a76a6 */}
-        <radialGradient id="grad3" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" style={{ stopColor: '#6a76a6', stopOpacity: 0.9 }} />
-          <stop offset="100%" style={{ stopColor: '#6a76a6', stopOpacity: 0.6 }} />
-        </radialGradient>
-        {/* Bottom right - #b0866a */}
-        <radialGradient id="grad4" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" style={{ stopColor: '#b0866a', stopOpacity: 0.9 }} />
-          <stop offset="100%" style={{ stopColor: '#b0866a', stopOpacity: 0.6 }} />
-        </radialGradient>
         <filter id="blur1" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="35" />
         </filter>

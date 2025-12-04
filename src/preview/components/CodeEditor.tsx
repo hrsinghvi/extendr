@@ -97,6 +97,8 @@ export function CodeEditor({
 }: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLPreElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [localValue, setLocalValue] = useState(value);
 
   // Detect language from filename if not provided
@@ -110,11 +112,19 @@ export function CodeEditor({
     setLocalValue(value);
   }, [value]);
 
-  // Sync scroll between textarea and highlight layer
+  // Sync scroll between textarea, highlight layer, and line numbers
   const handleScroll = useCallback(() => {
-    if (textareaRef.current && highlightRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    if (textareaRef.current) {
+      const scrollTop = textareaRef.current.scrollTop;
+      const scrollLeft = textareaRef.current.scrollLeft;
+      
+      if (highlightRef.current) {
+        highlightRef.current.scrollTop = scrollTop;
+        highlightRef.current.scrollLeft = scrollLeft;
+      }
+      if (lineNumbersRef.current) {
+        lineNumbersRef.current.scrollTop = scrollTop;
+      }
     }
   }, []);
 
@@ -151,9 +161,16 @@ export function CodeEditor({
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   return (
-    <div className={cn('relative flex h-full bg-[#1a1a1a] font-mono text-sm', className)}>
-      {/* Line numbers */}
-      <div className="flex-shrink-0 py-3 px-2 text-right text-gray-600 select-none border-r border-gray-800 bg-[#151515]">
+    <div 
+      ref={containerRef}
+      className={cn('relative flex h-full bg-[#1a1a1a] font-mono text-sm overflow-hidden', className)}
+    >
+      {/* Line numbers - synced scroll */}
+      <div 
+        ref={lineNumbersRef}
+        className="flex-shrink-0 py-3 px-2 text-right text-gray-600 select-none border-r border-gray-800 bg-[#151515] overflow-hidden"
+        style={{ minWidth: '3rem' }}
+      >
         {lineNumbers.map(num => (
           <div key={num} className="leading-6 h-6">
             {num}
@@ -166,7 +183,7 @@ export function CodeEditor({
         {/* Syntax highlighted layer */}
         <pre
           ref={highlightRef}
-          className="absolute inset-0 p-3 overflow-auto pointer-events-none whitespace-pre-wrap break-words leading-6 text-gray-300"
+          className="absolute inset-0 p-3 overflow-hidden pointer-events-none whitespace-pre break-words leading-6 text-gray-300"
           aria-hidden="true"
           dangerouslySetInnerHTML={{
             __html: highlightCode(localValue, detectedLanguage) + '\n'
@@ -183,10 +200,10 @@ export function CodeEditor({
           readOnly={readOnly}
           spellCheck={false}
           className={cn(
-            'absolute inset-0 w-full h-full p-3 resize-none',
+            'absolute inset-0 w-full h-full p-3 resize-none overflow-auto',
             'bg-transparent text-transparent caret-white',
             'focus:outline-none leading-6',
-            'whitespace-pre-wrap break-words',
+            'whitespace-pre break-words',
             readOnly && 'cursor-default'
           )}
         />
@@ -196,4 +213,3 @@ export function CodeEditor({
 }
 
 export default CodeEditor;
-

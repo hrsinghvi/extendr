@@ -3,143 +3,201 @@
  * 
  * Manages WebContainer lifecycle for running Chrome extension previews.
  * Uses StackBlitz WebContainers API to provide a Node.js environment in the browser.
+ * 
+ * @see https://webcontainers.io/guides/quickstart
  */
 
 import { WebContainer } from '@webcontainer/api';
 import type { FileSystemTree, WebContainerProcess } from '@webcontainer/api';
-import { 
-  bridge, 
-  MessageType, 
-  BuildStatus, 
-  LogLevel 
-} from './postMessageBridge';
 import type { FileMap } from './types';
 
-/**
- * WebContainer instance (singleton)
- */
+// ============================================================================
+// Types
+// ============================================================================
+
+export type TerminalWriter = (data: string) => void;
+export type StatusCallback = (status: WebContainerStatus) => void;
+export type ErrorCallback = (error: string, details?: string) => void;
+export type UrlCallback = (url: string) => void;
+
+export interface WebContainerStatus {
+  phase: 'idle' | 'booting' | 'mounting' | 'installing' | 'starting' | 'running' | 'error';
+  message: string;
+  progress?: number;
+}
+
+// ============================================================================
+// State
+// ============================================================================
+
 let webcontainerInstance: WebContainer | null = null;
 let bootPromise: Promise<WebContainer> | null = null;
-
-/**
- * Current running process
- */
 let currentProcess: WebContainerProcess | null = null;
+let serverUrl: string | null = null;
 
-/**
- * Terminal write callback
- */
-type TerminalWriter = (data: string) => void;
+// Callbacks
 let terminalWriter: TerminalWriter | null = null;
+let statusCallback: StatusCallback | null = null;
+let errorCallback: ErrorCallback | null = null;
+let urlCallback: UrlCallback | null = null;
 
-/**
- * Set terminal writer callback
- */
+// ============================================================================
+// Callback Setters
+// ============================================================================
+
 export function setTerminalWriter(writer: TerminalWriter | null): void {
   terminalWriter = writer;
 }
 
-/**
- * Write to terminal
- */
+export function setStatusCallback(callback: StatusCallback | null): void {
+  statusCallback = callback;
+}
+
+export function setErrorCallback(callback: ErrorCallback | null): void {
+  errorCallback = callback;
+}
+
+export function setUrlCallback(callback: UrlCallback | null): void {
+  urlCallback = callback;
+}
+
+// ============================================================================
+// Internal Helpers
+// ============================================================================
+
 function writeToTerminal(data: string): void {
-  terminalWriter?.(data);
-  bridge.send(MessageType.TERMINAL_OUTPUT, { data });
+  if (terminalWriter) {
+    terminalWriter(data);
+  }
+  // Also log to console for debugging
+  console.log('[WebContainer Terminal]', data.replace(/\r\n/g, '\n').trim());
 }
 
-/**
- * Log a message
- */
-function log(level: LogLevel, message: string, source?: string): void {
-  bridge.send(MessageType.LOG, { level, message, source });
-  
-  // Also write to terminal for visibility
-  const prefix = {
-    [LogLevel.DEBUG]: '\x1b[90m[DEBUG]\x1b[0m',
-    [LogLevel.INFO]: '\x1b[36m[INFO]\x1b[0m',
-    [LogLevel.WARN]: '\x1b[33m[WARN]\x1b[0m',
-    [LogLevel.ERROR]: '\x1b[31m[ERROR]\x1b[0m'
-  }[level];
-  
-  writeToTerminal(`${prefix} ${message}\r\n`);
+function updateStatus(phase: WebContainerStatus['phase'], message: string, progress?: number): void {
+  const status: WebContainerStatus = { phase, message, progress };
+  console.log(`[WebContainer Status] ${phase}: ${message}`);
+  statusCallback?.(status);
 }
 
+function reportError(error: string, details?: string): void {
+  console.error(`[WebContainer Error] ${error}`, details || '');
+  writeToTerminal(`\x1b[31m[ERROR]\x1b[0m ${error}\r\n`);
+  if (details) {
+    writeToTerminal(`\x1b[90m${details}\x1b[0m\r\n`);
+  }
+  errorCallback?.(error, details);
+  updateStatus('error', error);
+}
+
+// ============================================================================
+// WebContainer Boot
+// ============================================================================
+
 /**
- * Boot WebContainer
+ * Boot WebContainer instance
+ * This is the first step - must be called before any other operations
  */
 export async function bootWebContainer(): Promise<WebContainer> {
-  // Return existing instance
+  // Return existing instance if already booted
   if (webcontainerInstance) {
+    console.log('[WebContainer] Already booted, returning existing instance');
     return webcontainerInstance;
   }
 
-  // Return pending boot
+  // Return pending boot promise if boot is in progress
   if (bootPromise) {
+    console.log('[WebContainer] Boot in progress, waiting...');
     return bootPromise;
   }
 
-  log(LogLevel.INFO, 'Booting WebContainer...', 'webcontainer');
-  bridge.send(MessageType.BUILD_PROGRESS, {
-    status: BuildStatus.INSTALLING,
-    message: 'Booting WebContainer...',
-    progress: 0
-  });
+  updateStatus('booting', 'Initializing WebContainer...', 0);
+  writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Booting...\r\n');
 
-  bootPromise = WebContainer.boot({
-    coep: 'credentialless'
-  });
+  bootPromise = (async () => {
+    try {
+      // Check if we're in a secure context (required for WebContainers)
+      if (!window.isSecureContext) {
+        throw new Error('WebContainers require a secure context (HTTPS or localhost)');
+      }
 
-  try {
-    webcontainerInstance = await bootPromise;
-    log(LogLevel.INFO, 'WebContainer booted successfully', 'webcontainer');
-    
-    // Listen for server-ready events
-    webcontainerInstance.on('server-ready', (port, url) => {
-      log(LogLevel.INFO, `Server ready on port ${port}: ${url}`, 'webcontainer');
-      bridge.send(MessageType.PREVIEW_URL, { url });
-      bridge.send(MessageType.EXTENSION_RUNNING, { previewUrl: url });
-    });
-
-    // Listen for errors
-    webcontainerInstance.on('error', (error) => {
-      log(LogLevel.ERROR, `WebContainer error: ${error.message}`, 'webcontainer');
-      bridge.send(MessageType.BUILD_ERROR, {
-        error: error.message,
-        details: error.stack
+      // Check for required headers
+      // Note: We can't directly check headers, but we can try to boot and catch errors
+      console.log('[WebContainer] Attempting to boot with credentialless COEP...');
+      
+      const instance = await WebContainer.boot({
+        coep: 'credentialless' // More permissive than 'require-corp'
       });
-    });
 
-    return webcontainerInstance;
-  } catch (error: any) {
-    bootPromise = null;
-    log(LogLevel.ERROR, `Failed to boot WebContainer: ${error.message}`, 'webcontainer');
-    bridge.send(MessageType.BUILD_ERROR, {
-      error: 'Failed to boot WebContainer',
-      details: error.message
-    });
-    throw error;
-  }
+      console.log('[WebContainer] Boot successful!');
+      writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Boot successful!\r\n');
+
+      // Set up server-ready listener
+      instance.on('server-ready', (port: number, url: string) => {
+        console.log(`[WebContainer] Server ready on port ${port}: ${url}`);
+        writeToTerminal(`\x1b[1;32m[WebContainer]\x1b[0m Server ready at ${url}\r\n`);
+        serverUrl = url;
+        urlCallback?.(url);
+        updateStatus('running', 'Running', 100);
+      });
+
+      // Set up error listener
+      instance.on('error', (error: { message: string }) => {
+        reportError('WebContainer error', error.message);
+      });
+
+      webcontainerInstance = instance;
+      updateStatus('idle', 'WebContainer ready', 10);
+      
+      return instance;
+    } catch (error: any) {
+      bootPromise = null;
+      
+      // Provide helpful error messages
+      let errorMessage = error.message || 'Unknown error';
+      let details = '';
+      
+      if (errorMessage.includes('SharedArrayBuffer')) {
+        errorMessage = 'WebContainers require Cross-Origin Isolation headers';
+        details = 'Your server needs to send these headers:\n' +
+          'Cross-Origin-Embedder-Policy: require-corp (or credentialless)\n' +
+          'Cross-Origin-Opener-Policy: same-origin';
+      } else if (errorMessage.includes('secure context')) {
+        details = 'WebContainers only work on HTTPS or localhost';
+      }
+      
+      reportError(errorMessage, details);
+      throw error;
+    }
+  })();
+
+  return bootPromise;
 }
 
+// ============================================================================
+// File System Operations
+// ============================================================================
+
 /**
- * Convert flat file map to WebContainer file system tree
+ * Convert flat file map to WebContainer FileSystemTree
  */
 export function fileMapToFileSystemTree(files: FileMap): FileSystemTree {
   const tree: FileSystemTree = {};
 
-  for (const [path, contents] of Object.entries(files)) {
-    const parts = path.split('/');
+  for (const [filePath, contents] of Object.entries(files)) {
+    const parts = filePath.split('/').filter(p => p.length > 0);
     let current = tree;
 
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
-      const isLast = i === parts.length - 1;
+      const isLastPart = i === parts.length - 1;
 
-      if (isLast) {
+      if (isLastPart) {
+        // It's a file
         current[part] = {
           file: { contents }
         };
       } else {
+        // It's a directory
         if (!current[part]) {
           current[part] = { directory: {} };
         }
@@ -158,311 +216,368 @@ export function fileMapToFileSystemTree(files: FileMap): FileSystemTree {
 export async function mountFiles(files: FileMap): Promise<void> {
   const wc = await bootWebContainer();
   
-  log(LogLevel.INFO, `Mounting ${Object.keys(files).length} files...`, 'webcontainer');
-  bridge.send(MessageType.BUILD_PROGRESS, {
-    status: BuildStatus.INSTALLING,
-    message: 'Mounting files...',
-    progress: 10
-  });
+  const fileCount = Object.keys(files).length;
+  updateStatus('mounting', `Mounting ${fileCount} files...`, 15);
+  writeToTerminal(`\x1b[1;36m[WebContainer]\x1b[0m Mounting ${fileCount} files...\r\n`);
 
-  const tree = fileMapToFileSystemTree(files);
-  await wc.mount(tree);
-
-  log(LogLevel.INFO, 'Files mounted successfully', 'webcontainer');
+  try {
+    const tree = fileMapToFileSystemTree(files);
+    await wc.mount(tree);
+    
+    writeToTerminal(`\x1b[1;32m[WebContainer]\x1b[0m Files mounted successfully\r\n`);
+    console.log('[WebContainer] Files mounted:', Object.keys(files));
+  } catch (error: any) {
+    reportError('Failed to mount files', error.message);
+    throw error;
+  }
 }
 
 /**
- * Write a single file
+ * Write a single file to WebContainer
  */
 export async function writeFile(path: string, contents: string): Promise<void> {
   const wc = await bootWebContainer();
-  await wc.fs.writeFile(path, contents);
-  log(LogLevel.DEBUG, `Updated file: ${path}`, 'webcontainer');
+  
+  try {
+    // Ensure parent directories exist
+    const parts = path.split('/');
+    if (parts.length > 1) {
+      const dirPath = parts.slice(0, -1).join('/');
+      await wc.fs.mkdir(dirPath, { recursive: true });
+    }
+    
+    await wc.fs.writeFile(path, contents);
+    console.log(`[WebContainer] Wrote file: ${path}`);
+  } catch (error: any) {
+    reportError(`Failed to write file: ${path}`, error.message);
+    throw error;
+  }
 }
 
 /**
- * Read a file
+ * Read a file from WebContainer
  */
 export async function readFile(path: string): Promise<string> {
   const wc = await bootWebContainer();
   return await wc.fs.readFile(path, 'utf-8');
 }
 
+// ============================================================================
+// Process Management
+// ============================================================================
+
 /**
  * Run a command in WebContainer
  */
 export async function runCommand(
   command: string,
-  args: string[] = [],
-  options?: { cwd?: string }
+  args: string[] = []
 ): Promise<number> {
   const wc = await bootWebContainer();
+  
+  const fullCommand = `${command} ${args.join(' ')}`.trim();
+  writeToTerminal(`\x1b[1;33m$\x1b[0m ${fullCommand}\r\n`);
+  console.log(`[WebContainer] Running: ${fullCommand}`);
 
-  log(LogLevel.INFO, `Running: ${command} ${args.join(' ')}`, 'webcontainer');
-  writeToTerminal(`\x1b[1;32m$\x1b[0m ${command} ${args.join(' ')}\r\n`);
+  try {
+    const process = await wc.spawn(command, args);
+    currentProcess = process;
 
-  const process = await wc.spawn(command, args, {
-    cwd: options?.cwd
-  });
-
-  currentProcess = process;
-
-  // Stream output to terminal
-  process.output.pipeTo(
-    new WritableStream({
-      write(data) {
-        writeToTerminal(data);
+    // Pipe output to terminal
+    const outputReader = process.output.getReader();
+    
+    (async () => {
+      try {
+        while (true) {
+          const { done, value } = await outputReader.read();
+          if (done) break;
+          writeToTerminal(value);
+        }
+      } catch (e) {
+        // Stream closed, ignore
       }
-    })
-  );
+    })();
 
-  const exitCode = await process.exit;
-  currentProcess = null;
-
-  if (exitCode !== 0) {
-    log(LogLevel.WARN, `Command exited with code ${exitCode}`, 'webcontainer');
+    const exitCode = await process.exit;
+    currentProcess = null;
+    
+    console.log(`[WebContainer] Command exited with code: ${exitCode}`);
+    
+    if (exitCode !== 0) {
+      writeToTerminal(`\x1b[33m[WebContainer]\x1b[0m Command exited with code ${exitCode}\r\n`);
+    }
+    
+    return exitCode;
+  } catch (error: any) {
+    currentProcess = null;
+    reportError(`Command failed: ${fullCommand}`, error.message);
+    throw error;
   }
-
-  return exitCode;
 }
 
 /**
- * Kill current process
+ * Start a long-running process (like dev server)
+ */
+export async function startProcess(
+  command: string,
+  args: string[] = []
+): Promise<WebContainerProcess> {
+  const wc = await bootWebContainer();
+  
+  const fullCommand = `${command} ${args.join(' ')}`.trim();
+  writeToTerminal(`\x1b[1;33m$\x1b[0m ${fullCommand}\r\n`);
+  console.log(`[WebContainer] Starting: ${fullCommand}`);
+
+  const process = await wc.spawn(command, args);
+  currentProcess = process;
+
+  // Pipe output to terminal (non-blocking)
+  const outputReader = process.output.getReader();
+  
+  (async () => {
+    try {
+      while (true) {
+        const { done, value } = await outputReader.read();
+        if (done) break;
+        writeToTerminal(value);
+      }
+    } catch (e) {
+      // Stream closed, ignore
+    }
+  })();
+
+  // Handle process exit
+  process.exit.then((exitCode) => {
+    console.log(`[WebContainer] Process exited with code: ${exitCode}`);
+    if (currentProcess === process) {
+      currentProcess = null;
+    }
+  });
+
+  return process;
+}
+
+/**
+ * Kill current running process
  */
 export function killProcess(): void {
   if (currentProcess) {
+    console.log('[WebContainer] Killing current process');
     currentProcess.kill();
     currentProcess = null;
-    log(LogLevel.INFO, 'Process killed', 'webcontainer');
+    writeToTerminal('\x1b[1;31m[WebContainer]\x1b[0m Process terminated\r\n');
   }
 }
 
+// ============================================================================
+// Build & Run Extension
+// ============================================================================
+
 /**
- * Install dependencies
+ * Install npm dependencies
  */
 export async function installDependencies(): Promise<boolean> {
-  log(LogLevel.INFO, 'Installing dependencies...', 'webcontainer');
-  bridge.send(MessageType.BUILD_PROGRESS, {
-    status: BuildStatus.INSTALLING,
-    message: 'Installing dependencies...',
-    progress: 20
-  });
+  updateStatus('installing', 'Installing dependencies...', 30);
+  writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Installing dependencies...\r\n');
 
-  const exitCode = await runCommand('npm', ['install']);
-
-  if (exitCode !== 0) {
-    bridge.send(MessageType.BUILD_ERROR, {
-      error: 'Failed to install dependencies',
-      details: `npm install exited with code ${exitCode}`
-    });
+  try {
+    const exitCode = await runCommand('npm', ['install']);
+    
+    if (exitCode !== 0) {
+      reportError('npm install failed', `Exit code: ${exitCode}`);
+      return false;
+    }
+    
+    updateStatus('installing', 'Dependencies installed', 60);
+    return true;
+  } catch (error: any) {
+    reportError('Failed to install dependencies', error.message);
     return false;
   }
-
-  bridge.send(MessageType.BUILD_PROGRESS, {
-    status: BuildStatus.BUILDING,
-    message: 'Dependencies installed',
-    progress: 50
-  });
-
-  return true;
 }
 
 /**
- * Start development server
+ * Start the Vite development server
  */
-export async function startDevServer(): Promise<string | null> {
-  log(LogLevel.INFO, 'Starting development server...', 'webcontainer');
-  bridge.send(MessageType.BUILD_PROGRESS, {
-    status: BuildStatus.BUILDING,
-    message: 'Starting development server...',
-    progress: 70
-  });
+export async function startDevServer(): Promise<void> {
+  updateStatus('starting', 'Starting development server...', 80);
+  writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Starting dev server...\r\n');
 
-  const wc = await bootWebContainer();
-
-  // Start the dev server (non-blocking)
-  const process = await wc.spawn('npm', ['run', 'dev']);
-  currentProcess = process;
-
-  // Stream output
-  process.output.pipeTo(
-    new WritableStream({
-      write(data) {
-        writeToTerminal(data);
-      }
-    })
-  );
-
-  // Wait for server-ready event (handled in boot listener)
-  // Return null here, URL will be sent via PREVIEW_URL message
-  return null;
+  try {
+    // Start Vite dev server
+    await startProcess('npm', ['run', 'dev']);
+    
+    // The server-ready event will update the status and URL
+  } catch (error: any) {
+    reportError('Failed to start dev server', error.message);
+    throw error;
+  }
 }
 
 /**
- * Build extension for preview
+ * Build and run extension preview
  * 
- * Creates a simple Vite project that serves the extension popup
- * for live preview purposes.
+ * This sets up a Vite project to serve the extension's popup HTML
  */
 export async function buildExtension(files: FileMap, installDeps = true): Promise<void> {
+  console.log('[WebContainer] buildExtension called with files:', Object.keys(files));
+  
   try {
-    // Mount extension files
-    await mountFiles(files);
-
-    // Create package.json for the preview project
+    // Step 1: Boot WebContainer
+    await bootWebContainer();
+    
+    // Step 2: Create project structure
+    updateStatus('mounting', 'Setting up project...', 20);
+    
+    // Create package.json
     const packageJson = {
       name: 'extension-preview',
       version: '1.0.0',
       type: 'module',
       scripts: {
-        dev: 'vite --port 3111 --host',
-        build: 'vite build',
-        preview: 'vite preview'
+        dev: 'vite --host'
       },
       devDependencies: {
         vite: '^5.0.0'
       }
     };
 
-    await writeFile('package.json', JSON.stringify(packageJson, null, 2));
-
-    // Create vite.config.js
-    const viteConfig = `
-import { defineConfig } from 'vite';
+    // Create vite.config.js that serves popup/index.html
+    const viteConfig = `import { defineConfig } from 'vite';
 
 export default defineConfig({
-  root: './popup',
+  root: '.',
   server: {
-    port: 3111,
-    host: true
+    host: true,
+    port: 3000
   },
   build: {
-    outDir: '../dist'
+    outDir: 'dist'
   }
 });
 `;
-    await writeFile('vite.config.js', viteConfig);
 
-    // Create index.html in popup folder if it doesn't exist
-    if (!files['popup/index.html'] && files['popup/popup.html']) {
-      // Rename popup.html to index.html for Vite
-      await writeFile('popup/index.html', files['popup/popup.html']);
+    // Create an index.html that loads the popup
+    // We need to create a proper HTML file for Vite to serve
+    let indexHtml = files['popup/popup.html'] || files['popup/index.html'];
+    
+    if (!indexHtml) {
+      // Create a basic index.html if none exists
+      indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extension Preview</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 20px;
+      background: #1a1a1a;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Extension Preview</h1>
+  <p>No popup.html found. Add your extension files to see the preview.</p>
+</body>
+</html>`;
     }
 
+    // Mount all the extension files plus our project files
+    const allFiles: FileMap = {
+      ...files,
+      'package.json': JSON.stringify(packageJson, null, 2),
+      'vite.config.js': viteConfig,
+      'index.html': indexHtml // Root index.html for Vite
+    };
+
+    await mountFiles(allFiles);
+
+    // Step 3: Install dependencies
     if (installDeps) {
       const success = await installDependencies();
-      if (!success) return;
+      if (!success) {
+        return;
+      }
     }
 
-    // Start dev server
+    // Step 4: Start dev server
     await startDevServer();
 
-    bridge.send(MessageType.BUILD_PROGRESS, {
-      status: BuildStatus.RUNNING,
-      message: 'Extension preview running',
-      progress: 100
-    });
-
-    bridge.send(MessageType.BUILD_COMPLETE, {});
-
   } catch (error: any) {
-    log(LogLevel.ERROR, `Build failed: ${error.message}`, 'webcontainer');
-    bridge.send(MessageType.BUILD_ERROR, {
-      error: 'Build failed',
-      details: error.message
-    });
+    reportError('Build failed', error.message);
   }
 }
 
 /**
- * Update files and rebuild
+ * Update files in WebContainer (for hot reload)
  */
-export async function updateFiles(files: FileMap, partial = true): Promise<void> {
+export async function updateFilesInContainer(files: FileMap): Promise<void> {
+  console.log('[WebContainer] Updating files:', Object.keys(files));
+  
   try {
-    if (partial) {
-      // Update individual files
-      for (const [path, contents] of Object.entries(files)) {
-        await writeFile(path, contents);
-      }
-    } else {
-      // Remount all files
-      await mountFiles(files);
+    for (const [path, contents] of Object.entries(files)) {
+      await writeFile(path, contents);
     }
-
-    bridge.send(MessageType.FILES_UPDATED, {
-      updatedPaths: Object.keys(files)
-    });
-
-    log(LogLevel.INFO, `Updated ${Object.keys(files).length} files`, 'webcontainer');
+    
+    // Also update index.html if popup.html changed
+    if (files['popup/popup.html']) {
+      await writeFile('index.html', files['popup/popup.html']);
+    }
+    
+    writeToTerminal(`\x1b[1;32m[WebContainer]\x1b[0m Updated ${Object.keys(files).length} files\r\n`);
   } catch (error: any) {
-    log(LogLevel.ERROR, `Failed to update files: ${error.message}`, 'webcontainer');
-    bridge.send(MessageType.ERROR, {
-      error: 'Failed to update files',
-      code: 'UPDATE_FAILED'
-    });
+    reportError('Failed to update files', error.message);
   }
 }
 
 /**
  * Stop the extension preview
  */
-export async function stopExtension(): Promise<void> {
+export function stopExtension(): void {
   killProcess();
-  bridge.send(MessageType.EXTENSION_STOPPED, {});
-  log(LogLevel.INFO, 'Extension stopped', 'webcontainer');
+  serverUrl = null;
+  updateStatus('idle', 'Extension stopped');
 }
 
-/**
- * Get WebContainer instance
- */
+// ============================================================================
+// Getters
+// ============================================================================
+
 export function getWebContainer(): WebContainer | null {
   return webcontainerInstance;
 }
 
-/**
- * Teardown WebContainer
- */
+export function getServerUrl(): string | null {
+  return serverUrl;
+}
+
+export function isBooted(): boolean {
+  return webcontainerInstance !== null;
+}
+
+// ============================================================================
+// Teardown
+// ============================================================================
+
 export async function teardown(): Promise<void> {
   killProcess();
   
   if (webcontainerInstance) {
+    console.log('[WebContainer] Tearing down...');
     await webcontainerInstance.teardown();
     webcontainerInstance = null;
     bootPromise = null;
-    log(LogLevel.INFO, 'WebContainer torn down', 'webcontainer');
+    serverUrl = null;
+    writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Torn down\r\n');
   }
 }
 
-/**
- * Setup message handlers for bridge communication
- */
-export function setupBridgeHandlers(): () => void {
-  const unsubBuild = bridge.on(MessageType.BUILD_EXTENSION, async (msg) => {
-    const { files, installDeps } = msg.payload;
-    await buildExtension(files, installDeps);
-  });
-
-  const unsubUpdate = bridge.on(MessageType.UPDATE_FILES, async (msg) => {
-    const { files, partial } = msg.payload;
-    await updateFiles(files, partial);
-  });
-
-  const unsubRun = bridge.on(MessageType.RUN_EXTENSION, async () => {
-    await startDevServer();
-  });
-
-  const unsubStop = bridge.on(MessageType.STOP_EXTENSION, async () => {
-    await stopExtension();
-  });
-
-  // Return cleanup function
-  return () => {
-    unsubBuild();
-    unsubUpdate();
-    unsubRun();
-    unsubStop();
-  };
-}
+// ============================================================================
+// Export default
+// ============================================================================
 
 export default {
   bootWebContainer,
@@ -470,16 +585,20 @@ export default {
   writeFile,
   readFile,
   runCommand,
+  startProcess,
   killProcess,
   installDependencies,
   startDevServer,
   buildExtension,
-  updateFiles,
+  updateFilesInContainer,
   stopExtension,
   getWebContainer,
+  getServerUrl,
+  isBooted,
   teardown,
-  setupBridgeHandlers,
   setTerminalWriter,
+  setStatusCallback,
+  setErrorCallback,
+  setUrlCallback,
   fileMapToFileSystemTree
 };
-

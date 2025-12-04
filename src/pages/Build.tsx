@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Settings, Download } from "lucide-react";
@@ -18,26 +18,38 @@ import {
 import { 
   PreviewPanel, 
   useWebContainer,
+  writeFile as wcWriteFile,
+  readFile as wcReadFile,
+  runCommand as wcRunCommand,
   type FileMap
 } from "@/preview";
 import {
-  DEFAULT_MANIFEST,
-  DEFAULT_POPUP_HTML,
-  DEFAULT_POPUP_CSS,
-  DEFAULT_POPUP_JS,
-  DEFAULT_SERVICE_WORKER,
-  DEFAULT_CONTENT_SCRIPT,
-  DEFAULT_CONTENT_CSS
+  DEFAULT_MANIFEST
 } from "@/extensions/chrome_mv3";
 
-// Types for chat and messages
-interface Message {
+// AI Service imports
+import {
+  AIService,
+  createToolContext,
+  type ToolCall,
+  type ToolResult,
+  type Message as AIMessage_Type,
+  type ToolContext
+} from "@/lib/ai";
+import { determineCategoryFromText } from "@/lib/categories";
+
+// Types for chat and messages (from Supabase)
+interface DBMessage {
   id: string;
   chat_id: string;
   user_id: string;
   content: string;
   role: "user" | "assistant";
   created_at: string;
+  // New fields for tool tracking
+  tool_calls?: string; // JSON string of tool calls
+  tool_results?: string; // JSON string of tool results
+  modified_files?: string[]; // Files modified during this message
 }
 
 interface Chat {
@@ -60,249 +72,12 @@ interface Project {
 }
 
 /**
- * Extendr System Prompt - Tailored for Chrome Extension Development
- */
-const EXTENDR_SYSTEM_PROMPT = `You are Extendr, an AI assistant specialized in creating and modifying Chrome extensions. You help users build Chrome extensions by chatting with them and providing code guidance in real-time.
-
-## Core Identity
-You are the expert Chrome extension developer. You assist users by explaining concepts, writing code, debugging issues, and guiding them through the Chrome extension development process.
-
-## Technology Stack (STRICTLY ENFORCED)
-Extendr projects use ONLY these technologies:
-- **Languages**: TypeScript, HTML, CSS, JavaScript
-- **Styling**: Tailwind CSS, vanilla CSS
-- **Chrome APIs**: All Chrome Extension APIs (tabs, storage, runtime, scripting, etc.)
-- **Manifest**: Manifest V3 (MV3) - ALWAYS use Manifest V3, never V2
-
-## What You CAN Build
-- Chrome extensions (popup, background scripts, content scripts, options pages)
-- Browser action extensions
-- Page action extensions
-- Context menu extensions
-- DevTools extensions
-- Extensions with side panels
-
-## What You CANNOT Build
-- Web applications (use Lovable for that)
-- Mobile apps
-- Desktop apps
-- Firefox/Safari/Edge-specific extensions (Chrome only)
-- Manifest V2 extensions (deprecated)
-
-## Chrome Extension Structure
-Always follow this standard structure:
-\`\`\`
-extension/
-├── manifest.json          # Extension manifest (MV3)
-├── popup/
-│   ├── popup.html        # Popup UI
-│   ├── popup.css         # Popup styles
-│   └── popup.js          # Popup logic
-├── background/
-│   └── service-worker.js # Background service worker (MV3)
-├── content/
-│   ├── content.js        # Content scripts
-│   └── content.css       # Content styles
-└── assets/
-    └── icons/            # Extension icons (16, 32, 48, 128px)
-\`\`\`
-
-## Manifest V3 Requirements
-ALWAYS use Manifest V3 format:
-- Use \`service_worker\` instead of \`background.scripts\`
-- Use \`action\` instead of \`browser_action\` or \`page_action\`
-- Declare permissions explicitly
-- Use \`chrome.scripting\` API for dynamic script injection
-
-## Code Guidelines
-1. **Keep it modular**: Separate concerns (popup, background, content scripts)
-2. **Error handling**: Always handle Chrome API errors gracefully
-3. **Permissions**: Request only necessary permissions
-4. **Storage**: Use chrome.storage.local or chrome.storage.sync appropriately
-5. **Message passing**: Use chrome.runtime.sendMessage for communication
-6. **Security**: Never use eval(), innerHTML with user content, or unsafe practices
-
-## Response Style
-- Be concise and direct
-- Provide working code examples
-- Explain Chrome-specific concepts when needed
-- Always consider extension security best practices
-- Format responses for readability
-
-## Output Format (CRITICAL FOR LIVE PREVIEW)
-When you provide code for an extension, you MUST include a JSON code block with the complete file contents. This enables the live preview feature.
-
-Format your code output like this:
-
-\`\`\`json
-{
-  "manifest.json": "{ \\"manifest_version\\": 3, ... }",
-  "popup/popup.html": "<!DOCTYPE html>...",
-  "popup/popup.css": "/* styles */...",
-  "popup/popup.js": "// popup script...",
-  "background/service-worker.js": "// background script...",
-  "content/content.js": "// content script...",
-  "content/content.css": "/* content styles */..."
-}
-\`\`\`
-
-IMPORTANT:
-- Always provide COMPLETE file contents, not snippets
-- Use proper JSON escaping for string values
-- Include ALL files needed for the extension to work
-- The manifest.json value should be a JSON string (double-escaped)
-
-## Debugging Help
-When users have issues:
-1. Check manifest.json for errors
-2. Verify permissions are declared
-3. Check service worker console for background script errors
-4. Check browser console for popup/content script errors
-5. Verify content script matches are correct
-
-Reply in the same language as the user. Keep responses focused and actionable.`;
-
-/**
- * Parse extension files from AI response
- */
-function parseExtensionFiles(response: string): FileMap | null {
-  try {
-    // Look for JSON code block
-    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-    if (!jsonMatch) return null;
-
-    const jsonStr = jsonMatch[1].trim();
-    const parsed = JSON.parse(jsonStr);
-
-    // Validate it's an object with file paths
-    if (typeof parsed !== 'object' || parsed === null) return null;
-
-    // Convert to FileMap
-    const files: FileMap = {};
-    for (const [path, content] of Object.entries(parsed)) {
-      if (typeof content === 'string') {
-        files[path] = content;
-      } else if (typeof content === 'object') {
-        // Handle manifest.json as object
-        files[path] = JSON.stringify(content, null, 2);
-      }
-    }
-
-    return Object.keys(files).length > 0 ? files : null;
-  } catch (error) {
-    console.error('Failed to parse extension files:', error);
-    return null;
-  }
-}
-
-/**
  * Get default extension files
  */
 function getDefaultExtensionFiles(): FileMap {
   return {
-    'manifest.json': JSON.stringify(DEFAULT_MANIFEST, null, 2),
-    'popup/popup.html': DEFAULT_POPUP_HTML,
-    'popup/popup.css': DEFAULT_POPUP_CSS,
-    'popup/popup.js': DEFAULT_POPUP_JS,
-    'background/service-worker.js': DEFAULT_SERVICE_WORKER,
-    'content/content.js': DEFAULT_CONTENT_SCRIPT,
-    'content/content.css': DEFAULT_CONTENT_CSS
+    'manifest.json': JSON.stringify(DEFAULT_MANIFEST, null, 2)
   };
-}
-
-/**
- * Calls Gemini API to generate a response
- */
-async function callGeminiAPI(
-  userMessage: string,
-  conversationHistory: Message[]
-): Promise<string> {
-  const rawApiKey = import.meta.env.VITE_GEMINI_API_KEY ?? "";
-  const apiKey = rawApiKey.replace(/^["'](.*)["']$/, "$1").trim();
-  
-  if (!apiKey) {
-    console.warn("Gemini API key not configured");
-    return "Gemini API key is not configured. Please set VITE_GEMINI_API_KEY in your .env file.";
-  }
-  
-  if (!apiKey.startsWith("AIza")) {
-    console.error("API key doesn't look like a valid Google AI key");
-    return "Your API key doesn't appear to be a valid Google AI key. Please get a key from https://aistudio.google.com/app/apikey";
-  }
-  
-  const contents = [];
-  
-  for (const msg of conversationHistory) {
-    contents.push({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.content }],
-    });
-  }
-
-  contents.push({
-    role: "user",
-    parts: [{ text: userMessage }],
-  });
-
-  const modelsToTry = [
-    "gemini-2.0-flash-exp",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-pro",
-  ];
-
-  let lastError = "";
-
-  for (const model of modelsToTry) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      
-      const requestBody = {
-        contents,
-        systemInstruction: {
-          parts: [{ text: EXTENDR_SYSTEM_PROMPT }]
-        },
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-        },
-      };
-      
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          errorData = { message: responseText };
-        }
-        lastError = errorData?.error?.message || errorData?.message || `HTTP ${response.status}`;
-        continue;
-      }
-
-      const data = JSON.parse(responseText);
-      const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (generatedText) {
-        return generatedText;
-      } else {
-        lastError = "No text generated";
-      }
-    } catch (err: any) {
-      lastError = err.message || "Unknown error";
-      continue;
-    }
-  }
-
-  return `I couldn't connect to the AI service. Error: ${lastError}. Please verify your API key at https://aistudio.google.com/app/apikey`;
 }
 
 export default function Build() {
@@ -321,26 +96,45 @@ export default function Build() {
   
   // Chat state
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<DBMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  
+  // Tool execution state
+  const [currentToolCalls, setCurrentToolCalls] = useState<ToolCall[]>([]);
+  const [thinkingMessage, setThinkingMessage] = useState("Thinking...");
   
   // Extension files state
   const [extensionFiles, setExtensionFiles] = useState<FileMap>(getDefaultExtensionFiles());
+  
+  // Ref to track files for tool context
+  const extensionFilesRef = useRef<FileMap>(extensionFiles);
+  useEffect(() => {
+    extensionFilesRef.current = extensionFiles;
+  }, [extensionFiles]);
 
   // WebContainer hook
   const {
     status,
+    statusMessage,
     previewUrl,
+    error: wcError,
     logs,
     build,
     stop,
     clearLogs,
-    updateFiles
+    updateFiles,
+    connectTerminal,
+    isBooted
   } = useWebContainer({
     onPreviewUrl: (url) => {
-      console.log('Preview URL:', url);
+      console.log('[Build] Preview URL received:', url);
+      toast({
+        title: 'Preview Ready',
+        description: 'Your extension preview is now running.',
+      });
     },
     onError: (error) => {
+      console.error('[Build] WebContainer error:', error);
       toast({
         title: 'Build Error',
         description: error,
@@ -349,10 +143,112 @@ export default function Build() {
     }
   });
 
+  // Terminal writer ref
+  const terminalWriterRef = useRef<((data: string) => void) | null>(null);
+
+  /**
+   * Create tool context for AI service
+   */
+  const toolContext = useMemo((): ToolContext => {
+    return createToolContext(
+      {
+        writeFile: async (path: string, content: string) => {
+          try {
+            await wcWriteFile(path, content);
+          } catch (e) {
+            // If WebContainer isn't ready, just update state
+            console.log('[Build] WebContainer not ready, updating state only');
+          }
+        },
+        readFile: async (path: string) => {
+          try {
+            return await wcReadFile(path);
+          } catch (e) {
+            // Fall back to state
+            const files = extensionFilesRef.current;
+            if (files[path]) return files[path];
+            throw new Error(`File not found: ${path}`);
+          }
+        },
+        runCommand: async (cmd: string, args: string[] = []) => {
+          try {
+            return await wcRunCommand(cmd, args);
+          } catch (e) {
+            return 1; // Error exit code
+          }
+        },
+        build: async (files: FileMap, installDeps?: boolean) => {
+          // Update state first
+          setExtensionFiles(files);
+          // Then trigger build
+          await build(files, installDeps ?? true);
+        },
+        stop: () => stop(),
+        isRunning: () => status === 'running',
+        writeToTerminal: (data: string) => {
+          if (terminalWriterRef.current) {
+            terminalWriterRef.current(data);
+          }
+        },
+        getLogs: () => logs.map(l => l.message),
+        clearLogs: () => clearLogs()
+      },
+      {
+        getFiles: () => extensionFilesRef.current,
+        setFiles: (files: FileMap) => setExtensionFiles(files)
+      }
+    );
+  }, [build, stop, status, logs, clearLogs]);
+
+  /**
+   * Create AI service instance
+   */
+  const aiService = useMemo(() => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY ?? "";
+    const cleanKey = apiKey.replace(/^["'](.*)["']$/, "$1").trim();
+    
+    if (!cleanKey) {
+      console.warn('[Build] No API key configured');
+      return null;
+    }
+    
+    // Detect provider type from key
+    let providerType: 'gemini' | 'openai' | 'claude' = 'gemini';
+    if (cleanKey.startsWith('sk-ant-')) {
+      providerType = 'claude';
+    } else if (cleanKey.startsWith('sk-')) {
+      providerType = 'openai';
+    }
+    
+    return new AIService({
+      provider: {
+        type: providerType,
+        apiKey: cleanKey
+      },
+      onToolCall: (tc) => {
+        console.log('[Build] Tool call:', tc.name);
+        setCurrentToolCalls(prev => [...prev, tc]);
+        setThinkingMessage(`Using ${tc.name.replace('ext_', '')}...`);
+      },
+      onToolResult: (tr) => {
+        console.log('[Build] Tool result:', tr.name, tr.success);
+      }
+    });
+  }, []);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  /**
+   * Handle terminal ready - connect it to WebContainer
+   */
+  const handleTerminalReady = useCallback((writer: (data: string) => void) => {
+    console.log('[Build] Terminal ready, connecting to WebContainer');
+    terminalWriterRef.current = writer;
+    connectTerminal(writer);
+  }, [connectTerminal]);
 
   /**
    * Loads a project by ID from Supabase
@@ -380,6 +276,7 @@ export default function Build() {
   // Auth check and initial setup
   useEffect(() => {
     const initializeBuild = async () => {
+      try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -392,7 +289,9 @@ export default function Build() {
       
       const projectIdFromUrl = searchParams.get("project");
       
+        // Case 1: Project ID in URL
       if (projectIdFromUrl) {
+          console.log('[Build] Loading project from URL:', projectIdFromUrl);
         const existingProject = await loadProjectById(projectIdFromUrl, userId);
         if (existingProject) {
           setProject(existingProject);
@@ -403,7 +302,9 @@ export default function Build() {
         }
       }
       
+        // Case 2: Project passed via location state
       if (location.state?.project) {
+          console.log('[Build] Loading project from state');
         const proj = location.state.project as Project;
         setProject(proj);
         setProjectTitle(proj.title);
@@ -413,23 +314,49 @@ export default function Build() {
         return;
       }
 
+        // Case 3: Prompt passed via location state - create new project
         if (location.state?.prompt) {
+          console.log('[Build] Creating new project from prompt');
         const generatedTitle = generateProjectTitle(location.state.prompt);
-        const newProject = await createProject(userId, generatedTitle);
-        if (newProject) {
+        const newProject = await createProject(userId, generatedTitle, location.state.prompt);
+          
+          if (!newProject) {
+            console.error('[Build] Failed to create project');
+            toast({
+              title: "Error",
+              description: "Failed to create project. Please try again.",
+              variant: "destructive"
+            });
+            setIsLoading(false);
+            return;
+          }
+          
           setProject(newProject);
           setProjectTitle(newProject.title);
           setSearchParams({ project: newProject.id }, { replace: true });
+          
           const chat = await createChat(userId, newProject.id, "Initial Chat");
-          if (chat) {
-            setCurrentChat(chat);
-            await sendMessage(location.state.prompt, chat.id, userId);
+          if (!chat) {
+            console.error('[Build] Failed to create chat');
+            toast({
+              title: "Error", 
+              description: "Failed to create chat. Please try again.",
+              variant: "destructive"
+            });
+            setIsLoading(false);
+            return;
           }
-        }
-        setIsLoading(false);
+          
+            setCurrentChat(chat);
+          setIsLoading(false); // Show UI before sending message
+          
+          // Send the initial message (this will set isThinking)
+            await sendMessage(location.state.prompt, chat.id, userId);
         return;
       }
       
+        // Case 4: No context - load most recent project or create new one
+        console.log('[Build] Loading recent project or creating new one');
       const { data: recentProjects, error } = await supabase
         .from("projects")
         .select("*")
@@ -454,6 +381,15 @@ export default function Build() {
       }
       
       setIsLoading(false);
+      } catch (err: any) {
+        console.error('[Build] Initialization error:', err);
+        toast({
+          title: "Error",
+          description: err.message || "Failed to initialize. Please refresh.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
     };
 
     initializeBuild();
@@ -515,11 +451,12 @@ export default function Build() {
   /**
    * Creates a new project in Supabase
    */
-  async function createProject(userId: string, title: string): Promise<Project | null> {
+  async function createProject(userId: string, title: string, description?: string): Promise<Project | null> {
+    const category = determineCategoryFromText(title + " " + (description || ""));
     try {
       const { data, error } = await supabase
         .from("projects")
-        .insert({ user_id: userId, title })
+        .insert({ user_id: userId, title, description, category })
         .select()
         .single();
       
@@ -550,9 +487,9 @@ export default function Build() {
         }, { onConflict: 'project_id' });
 
       if (error) throw error;
-      console.log('Project files saved successfully');
+      console.log('[Build] Project files saved');
     } catch (err: any) {
-      console.error('Error saving project files:', err);
+      console.error('[Build] Error saving project files:', err);
     }
   }
 
@@ -630,18 +567,19 @@ export default function Build() {
       
       if (error) throw error;
       
-      setMessages((data as Message[]) || []);
+      setMessages((data as DBMessage[]) || []);
       
-      // Try to extract files from the last assistant message
-      if (data && data.length > 0) {
-        for (let i = data.length - 1; i >= 0; i--) {
-          if (data[i].role === 'assistant') {
-            const files = parseExtensionFiles(data[i].content);
-            if (files) {
-              setExtensionFiles(prev => ({ ...prev, ...files }));
-              break;
-            }
-          }
+      // Load project files if they exist
+      if (project) {
+        const { data: fileData } = await supabase
+          .from('project_files')
+          .select('files')
+          .eq('project_id', project.id)
+          .single();
+        
+        if (fileData?.files) {
+          console.log('[Build] Loaded project files from database');
+          setExtensionFiles(fileData.files as FileMap);
         }
       }
     } catch (err: any) {
@@ -655,12 +593,23 @@ export default function Build() {
   }
 
   /**
-   * Sends a message and gets AI response
+   * Sends a message and gets AI response using the tool-based AI service
    */
   async function sendMessage(content: string, chatId: string, userId: string) {
     if (!content.trim() || !chatId || !userId) return;
     
+    if (!aiService) {
+      toast({
+        title: "API Key Required",
+        description: "Please configure your AI API key in the .env file.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsThinking(true);
+    setCurrentToolCalls([]);
+    setThinkingMessage("Thinking...");
     
     try {
       // Save user message
@@ -677,7 +626,7 @@ export default function Build() {
       
       if (userMsgError) throw userMsgError;
       
-      const newUserMessage = userMsg as Message;
+      const newUserMessage = userMsg as DBMessage;
       setMessages((prev) => [...prev, newUserMessage]);
       
       // Update chat timestamp
@@ -686,48 +635,55 @@ export default function Build() {
         .update({ updated_at: new Date().toISOString() })
         .eq("id", chatId);
       
-      // Get AI response
-      let aiResponse: string;
-      try {
-        aiResponse = await callGeminiAPI(content.trim(), messages);
-      } catch (apiError: any) {
-        aiResponse = `I encountered an error: ${apiError.message}. Please try again.`;
-      }
+      // Convert DB messages to AI message format for context
+      const aiHistory: AIMessage_Type[] = messages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      }));
       
-      // Save assistant message
+      // Call AI service with tool support
+      const result = await aiService.chat(content.trim(), aiHistory, toolContext);
+      
+      console.log('[Build] AI result:', {
+        toolCalls: result.toolCalls.length,
+        modifiedFiles: result.modifiedFiles,
+        buildTriggered: result.buildTriggered
+      });
+      
+          // Save assistant message with tool info
       const { data: assistantMsg, error: assistantMsgError } = await supabase
         .from("messages")
         .insert({
           chat_id: chatId,
           user_id: userId,
-          content: aiResponse,
+          content: result.response,
           role: "assistant",
+          tool_calls: result.toolCalls.length > 0 ? result.toolCalls : null,
+          modified_files: result.modifiedFiles.length > 0 ? result.modifiedFiles : null
         })
         .select()
         .single();
       
       if (assistantMsgError) throw assistantMsgError;
       
-      setMessages((prev) => [...prev, assistantMsg as Message]);
+      setMessages((prev) => [...prev, assistantMsg as DBMessage]);
 
-      // Parse extension files from response
-      const parsedFiles = parseExtensionFiles(aiResponse);
-      if (parsedFiles) {
-        const updatedFiles = { ...extensionFiles, ...parsedFiles };
-        setExtensionFiles(updatedFiles);
-        
-        // Save to project
-        if (project) {
-          await saveProjectFiles(project.id, updatedFiles);
-        }
-        
-        // Update WebContainer files
-        await updateFiles(parsedFiles, true);
+      // Save files to project if any were modified
+      if (result.modifiedFiles.length > 0 && project) {
+        await saveProjectFiles(project.id, extensionFilesRef.current);
         
         toast({
-          title: "Extension Updated",
-          description: "Code has been updated. Click 'Build & Run' to preview.",
+          title: "Files Created",
+          description: `Created ${result.modifiedFiles.length} file(s). ${result.buildTriggered ? 'Building preview...' : 'Click Build & Run to preview.'}`,
         });
+      }
+      
+      // If build wasn't triggered by AI but files were modified, suggest building
+      if (result.modifiedFiles.length > 0 && !result.buildTriggered) {
+        // Auto-build after file creation
+        setTimeout(() => {
+          build(extensionFilesRef.current, true);
+        }, 500);
       }
       
     } catch (err: any) {
@@ -739,6 +695,8 @@ export default function Build() {
       });
     } finally {
       setIsThinking(false);
+      setCurrentToolCalls([]);
+      setThinkingMessage("Thinking...");
     }
   }
 
@@ -756,7 +714,7 @@ export default function Build() {
   const handleFilesChange = useCallback((newFiles: FileMap) => {
     setExtensionFiles(newFiles);
     
-    // Debounced save to project
+    // Save to project
     if (project) {
       saveProjectFiles(project.id, newFiles);
     }
@@ -766,6 +724,7 @@ export default function Build() {
    * Handle build button click
    */
   const handleBuild = useCallback(() => {
+    console.log('[Build] handleBuild called with', Object.keys(extensionFiles).length, 'files');
     build(extensionFiles, true);
   }, [build, extensionFiles]);
 
@@ -829,10 +788,10 @@ export default function Build() {
                     </div>
                   </div>
                   <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden mb-2">
-                    <div className="h-full bg-purple-600 w-[60%]"></div>
+                    <div className="h-full bg-[#5A9665] w-[60%]"></div>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <div className="w-2 h-2 rounded-full bg-purple-600"></div>
+                    <div className="w-2 h-2 rounded-full bg-[#5A9665]"></div>
                     Daily credits used first
                   </div>
                 </div>
@@ -871,7 +830,7 @@ export default function Build() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-white custom-scrollbar">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-r from-[#5A9665] to-[#5f87a3] flex items-center justify-center">
                   <span className="text-2xl">🚀</span>
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Build Your Extension</h3>
@@ -904,12 +863,16 @@ export default function Build() {
                     <div
                       className={`max-w-[90%] rounded-lg px-4 py-3 ${
                         message.role === "user"
-                        ? "bg-purple-600 text-white"
+                        ? "bg-[#5A9665] text-white"
                         : "bg-[#2a2a2a] text-white"
                         }`}
                     >
                       {message.role === 'assistant' ? (
-                        <AIMessage content={message.content} />
+                        <AIMessage 
+                          content={message.content}
+                          modifiedFiles={message.modified_files}
+                          toolCalls={message.tool_calls ? (typeof message.tool_calls === 'string' ? JSON.parse(message.tool_calls) : message.tool_calls) : undefined}
+                        />
                       ) : (
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       )}
@@ -920,13 +883,27 @@ export default function Build() {
               </div>
             )}
             {isThinking && (
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="flex items-start gap-3 text-gray-400">
+                <div className="bg-[#2a2a2a] rounded-lg px-4 py-3">
+                  <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce [animation-delay:0.4s]"></div>
                 </div>
-                <span className="text-sm">Thinking...</span>
+                    <span className="text-sm">{thinkingMessage}</span>
+                  </div>
+                  {currentToolCalls.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      {currentToolCalls.map((tc, i) => (
+                        <div key={i} className="flex items-center gap-1">
+                          <span className="text-green-400">✓</span>
+                          <span>{tc.name.replace('ext_', '')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -943,53 +920,35 @@ export default function Build() {
         </div>
 
         {/* Right side - Preview Panel */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Preview Top Bar */}
-          <div className="h-12 flex items-center justify-between px-4 bg-[#232323] border-b border-gray-800">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-white">Extension Preview</span>
-              <span className="text-xs text-gray-500">• WebContainers</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 text-xs text-gray-400 hover:text-white hover:bg-[#2a2a2a] gap-1.5"
-                onClick={() => {
-                  // Download extension as ZIP
-                  toast({
-                    title: "Export Coming Soon",
-                    description: "Extension export will be available soon.",
-                  });
-                }}
-              >
-                <Download className="w-3.5 h-3.5" />
-                Export
-              </Button>
-              <Button className="h-8 text-xs bg-purple-600 hover:bg-purple-700 text-white px-3">
-                Publish
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-medium">
-                  {user?.email?.charAt(0).toUpperCase() || "U"}
-                </div>
-              </Button>
-            </div>
-          </div>
-
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Preview Panel */}
           <PreviewPanel
             files={extensionFiles}
             onFilesChange={handleFilesChange}
             status={status}
+            statusMessage={statusMessage}
             previewUrl={previewUrl}
+            error={wcError}
             logs={logs}
             onBuild={handleBuild}
             onRun={handleRebuild}
             onStop={handleStop}
             onClearLogs={clearLogs}
+            onTerminalReady={handleTerminalReady}
             className="flex-1"
+            userEmail={user?.email}
+            onExport={() => {
+              toast({
+                title: "Export Coming Soon",
+                description: "Extension export will be available soon.",
+              });
+            }}
+            onPublish={() => {
+              toast({
+                title: "Publish Coming Soon",
+                description: "Extension publishing will be available soon.",
+              });
+            }}
           />
         </div>
       </div>

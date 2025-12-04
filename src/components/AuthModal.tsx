@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleGoogleAuth = async () => {
     setIsLoading(true);
@@ -20,12 +22,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/build`,
+          redirectTo: window.location.origin,
         },
       });
       if (error) throw error;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error with Google auth:", error);
+      toast({
+        title: "Login Error",
+        description: error.message || "An unexpected error occurred during login.",
+        variant: "destructive",
+      });
       setIsLoading(false);
     }
   };

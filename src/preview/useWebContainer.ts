@@ -2,20 +2,35 @@
  * useWebContainer Hook
  * 
  * React hook for managing WebContainer state and operations.
+ * Connects the WebContainer bridge to React state and the Terminal component.
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   bootWebContainer,
   buildExtension,
-  updateFiles as wcUpdateFiles,
+  updateFilesInContainer,
   stopExtension,
   teardown,
   setTerminalWriter,
-  setupBridgeHandlers
+  setStatusCallback,
+  setErrorCallback,
+  setUrlCallback,
+  isBooted as checkIsBooted,
+  type WebContainerStatus
 } from './webcontainerBridge';
-import { bridge, MessageType, BuildStatus, LogLevel } from './postMessageBridge';
-import type { FileMap, LogEntry, PreviewState } from './types';
+import type { FileMap, LogEntry } from './types';
+
+// Re-export BuildStatus for convenience
+export enum BuildStatus {
+  IDLE = 'idle',
+  BOOTING = 'booting',
+  MOUNTING = 'mounting',
+  INSTALLING = 'installing',
+  STARTING = 'starting',
+  RUNNING = 'running',
+  ERROR = 'error'
+}
 
 /**
  * Hook options
@@ -35,6 +50,7 @@ interface UseWebContainerReturn {
   isBooted: boolean;
   isLoading: boolean;
   status: BuildStatus;
+  statusMessage: string;
   previewUrl: string | null;
   error: string | null;
   logs: LogEntry[];
@@ -42,13 +58,14 @@ interface UseWebContainerReturn {
   // Actions
   boot: () => Promise<void>;
   build: (files: FileMap, installDeps?: boolean) => Promise<void>;
-  updateFiles: (files: FileMap, partial?: boolean) => Promise<void>;
-  stop: () => Promise<void>;
+  updateFiles: (files: FileMap) => Promise<void>;
+  stop: () => void;
   destroy: () => Promise<void>;
   clearLogs: () => void;
   
-  // Terminal
-  setTerminalWriter: (writer: ((data: string) => void) | null) => void;
+  // Terminal connection
+  connectTerminal: (writer: (data: string) => void) => void;
+  disconnectTerminal: () => void;
 }
 
 /**
@@ -60,16 +77,17 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
   const [isBooted, setIsBooted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<BuildStatus>(BuildStatus.IDLE);
+  const [statusMessage, setStatusMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   
-  const cleanupRef = useRef<(() => void) | null>(null);
+  const terminalWriterRef = useRef<((data: string) => void) | null>(null);
 
   /**
    * Add a log entry
    */
-  const addLog = useCallback((level: LogLevel, message: string, source?: string) => {
+  const addLog = useCallback((level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string) => {
     const entry: LogEntry = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       level,
@@ -82,79 +100,78 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
   }, []);
 
   /**
-   * Set up message handlers
+   * Connect terminal writer
+   */
+  const connectTerminal = useCallback((writer: (data: string) => void) => {
+    console.log('[useWebContainer] Connecting terminal writer');
+    terminalWriterRef.current = writer;
+    setTerminalWriter(writer);
+  }, []);
+
+  /**
+   * Disconnect terminal writer
+   */
+  const disconnectTerminal = useCallback(() => {
+    console.log('[useWebContainer] Disconnecting terminal writer');
+    terminalWriterRef.current = null;
+    setTerminalWriter(null);
+  }, []);
+
+  /**
+   * Set up callbacks on mount
    */
   useEffect(() => {
-    // Initialize bridge
-    bridge.init();
-
-    // Set up WebContainer bridge handlers
-    cleanupRef.current = setupBridgeHandlers();
-
-    // Listen for build progress
-    const unsubProgress = bridge.on(MessageType.BUILD_PROGRESS, (msg) => {
-      const { status: newStatus, message } = msg.payload;
-      setStatus(newStatus);
-      setError(null);
-      addLog(LogLevel.INFO, message, 'build');
-    });
-
-    // Listen for build complete
-    const unsubComplete = bridge.on(MessageType.BUILD_COMPLETE, (msg) => {
-      setStatus(BuildStatus.RUNNING);
-      setIsLoading(false);
-      addLog(LogLevel.INFO, 'Build complete', 'build');
-    });
-
-    // Listen for build errors
-    const unsubError = bridge.on(MessageType.BUILD_ERROR, (msg) => {
-      const { error: errMsg, details } = msg.payload;
-      setStatus(BuildStatus.ERROR);
-      setError(errMsg);
-      setIsLoading(false);
-      addLog(LogLevel.ERROR, errMsg, 'build');
-      if (details) {
-        addLog(LogLevel.ERROR, details, 'build');
+    // Status callback
+    setStatusCallback((wcStatus: WebContainerStatus) => {
+      const statusMap: Record<string, BuildStatus> = {
+        'idle': BuildStatus.IDLE,
+        'booting': BuildStatus.BOOTING,
+        'mounting': BuildStatus.MOUNTING,
+        'installing': BuildStatus.INSTALLING,
+        'starting': BuildStatus.STARTING,
+        'running': BuildStatus.RUNNING,
+        'error': BuildStatus.ERROR
+      };
+      
+      setStatus(statusMap[wcStatus.phase] || BuildStatus.IDLE);
+      setStatusMessage(wcStatus.message);
+      
+      if (wcStatus.phase === 'running') {
+        setIsLoading(false);
       }
-      onError?.(errMsg);
+      
+      if (wcStatus.phase === 'error') {
+        setIsLoading(false);
+      }
+      
+      addLog('info', wcStatus.message, 'webcontainer');
     });
 
-    // Listen for preview URL
-    const unsubPreviewUrl = bridge.on(MessageType.PREVIEW_URL, (msg) => {
-      setPreviewUrl(msg.payload.url);
-      onPreviewUrl?.(msg.payload.url);
+    // Error callback
+    setErrorCallback((errorMsg: string, details?: string) => {
+      setError(errorMsg);
+      setIsLoading(false);
+      addLog('error', errorMsg, 'webcontainer');
+      if (details) {
+        addLog('error', details, 'webcontainer');
+      }
+      onError?.(errorMsg);
     });
 
-    // Listen for extension running
-    const unsubRunning = bridge.on(MessageType.EXTENSION_RUNNING, (msg) => {
-      setStatus(BuildStatus.RUNNING);
-      setPreviewUrl(msg.payload.previewUrl);
-      onPreviewUrl?.(msg.payload.previewUrl);
-    });
-
-    // Listen for extension stopped
-    const unsubStopped = bridge.on(MessageType.EXTENSION_STOPPED, () => {
-      setStatus(BuildStatus.IDLE);
-      setPreviewUrl(null);
-    });
-
-    // Listen for logs
-    const unsubLog = bridge.on(MessageType.LOG, (msg) => {
-      const { level, message, source } = msg.payload;
-      addLog(level as LogLevel, message, source);
+    // URL callback
+    setUrlCallback((url: string) => {
+      console.log('[useWebContainer] Preview URL received:', url);
+      setPreviewUrl(url);
+      setIsLoading(false);
+      onPreviewUrl?.(url);
     });
 
     // Cleanup
     return () => {
-      unsubProgress();
-      unsubComplete();
-      unsubError();
-      unsubPreviewUrl();
-      unsubRunning();
-      unsubStopped();
-      unsubLog();
-      cleanupRef.current?.();
-      bridge.destroy();
+      setStatusCallback(null);
+      setErrorCallback(null);
+      setUrlCallback(null);
+      setTerminalWriter(null);
     };
   }, [addLog, onError, onPreviewUrl]);
 
@@ -162,76 +179,69 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
    * Boot WebContainer
    */
   const boot = useCallback(async () => {
-    if (isBooted) return;
+    if (checkIsBooted()) {
+      setIsBooted(true);
+      return;
+    }
     
     setIsLoading(true);
-    addLog(LogLevel.INFO, 'Booting WebContainer...', 'system');
+    setError(null);
+    addLog('info', 'Booting WebContainer...', 'system');
     
     try {
       await bootWebContainer();
       setIsBooted(true);
-      addLog(LogLevel.INFO, 'WebContainer ready', 'system');
+      addLog('info', 'WebContainer ready', 'system');
       onReady?.();
     } catch (err: any) {
       setError(err.message);
-      addLog(LogLevel.ERROR, `Boot failed: ${err.message}`, 'system');
-      onError?.(err.message);
+      addLog('error', `Boot failed: ${err.message}`, 'system');
     } finally {
       setIsLoading(false);
     }
-  }, [isBooted, addLog, onReady, onError]);
+  }, [addLog, onReady]);
 
   /**
    * Build extension
    */
   const build = useCallback(async (files: FileMap, installDeps = true) => {
+    console.log('[useWebContainer] build() called with', Object.keys(files).length, 'files');
+    
     setIsLoading(true);
     setError(null);
-    setStatus(BuildStatus.INSTALLING);
-    addLog(LogLevel.INFO, 'Starting build...', 'build');
+    setPreviewUrl(null);
+    addLog('info', 'Starting build...', 'build');
     
     try {
-      // Boot if not already booted
-      if (!isBooted) {
-        await bootWebContainer();
-        setIsBooted(true);
-      }
-      
       await buildExtension(files, installDeps);
+      // Status and URL will be updated via callbacks
     } catch (err: any) {
       setError(err.message);
-      setStatus(BuildStatus.ERROR);
-      addLog(LogLevel.ERROR, `Build failed: ${err.message}`, 'build');
-      onError?.(err.message);
+      addLog('error', `Build failed: ${err.message}`, 'build');
       setIsLoading(false);
     }
-  }, [isBooted, addLog, onError]);
+  }, [addLog]);
 
   /**
    * Update files
    */
-  const updateFiles = useCallback(async (files: FileMap, partial = true) => {
+  const updateFiles = useCallback(async (files: FileMap) => {
     try {
-      await wcUpdateFiles(files, partial);
-      addLog(LogLevel.INFO, `Updated ${Object.keys(files).length} files`, 'files');
+      await updateFilesInContainer(files);
+      addLog('info', `Updated ${Object.keys(files).length} files`, 'files');
     } catch (err: any) {
-      addLog(LogLevel.ERROR, `Update failed: ${err.message}`, 'files');
-      onError?.(err.message);
+      addLog('error', `Update failed: ${err.message}`, 'files');
     }
-  }, [addLog, onError]);
+  }, [addLog]);
 
   /**
    * Stop extension
    */
-  const stop = useCallback(async () => {
-    try {
-      await stopExtension();
-      setStatus(BuildStatus.IDLE);
-      setPreviewUrl(null);
-      addLog(LogLevel.INFO, 'Extension stopped', 'system');
-    } catch (err: any) {
-      addLog(LogLevel.ERROR, `Stop failed: ${err.message}`, 'system');
-    }
+  const stop = useCallback(() => {
+    stopExtension();
+    setStatus(BuildStatus.IDLE);
+    setPreviewUrl(null);
+    addLog('info', 'Extension stopped', 'system');
   }, [addLog]);
 
   /**
@@ -243,9 +253,9 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
       setIsBooted(false);
       setStatus(BuildStatus.IDLE);
       setPreviewUrl(null);
-      addLog(LogLevel.INFO, 'WebContainer destroyed', 'system');
+      addLog('info', 'WebContainer destroyed', 'system');
     } catch (err: any) {
-      addLog(LogLevel.ERROR, `Teardown failed: ${err.message}`, 'system');
+      addLog('error', `Teardown failed: ${err.message}`, 'system');
     }
   }, [addLog]);
 
@@ -269,6 +279,7 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
     isBooted,
     isLoading,
     status,
+    statusMessage,
     previewUrl,
     error,
     logs,
@@ -278,9 +289,9 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
     stop,
     destroy,
     clearLogs,
-    setTerminalWriter
+    connectTerminal,
+    disconnectTerminal
   };
 }
 
 export default useWebContainer;
-

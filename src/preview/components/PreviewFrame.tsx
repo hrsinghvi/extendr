@@ -134,9 +134,9 @@ export function PreviewFrame({
         {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-[#1a1a1a] z-10">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-gray-600 border-t-purple-500 rounded-full animate-spin" />
-              <p className="text-sm text-gray-400">Loading preview...</p>
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#5A9665] to-[#5f87a3] animate-pulse shadow-[0_0_15px_rgba(90,150,101,0.5)]" />
+              <p className="text-sm font-medium text-gray-400">Your extension will appear here</p>
             </div>
           </div>
         )}

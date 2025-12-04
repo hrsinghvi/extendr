@@ -4,27 +4,6 @@
  * Main entry point for the preview system.
  */
 
-// PostMessage bridge
-export {
-  PostMessageBridge,
-  bridge,
-  MessageType,
-  LogLevel,
-  BuildStatus,
-  PROTOCOL_VERSION,
-  CHANNEL,
-  createMessage,
-  isValidMessage,
-  isCompatibleVersion
-} from './postMessageBridge';
-
-export type {
-  BaseMessage,
-  Message,
-  MessagePayloads,
-  MessageHandler
-} from './postMessageBridge';
-
 // Types
 export type {
   ExtensionFiles,
@@ -50,7 +29,7 @@ export {
 
 // Hooks
 export { usePreview } from './usePreview';
-export { useWebContainer } from './useWebContainer';
+export { useWebContainer, BuildStatus } from './useWebContainer';
 
 // WebContainer bridge
 export {
@@ -63,13 +42,24 @@ export {
   installDependencies,
   startDevServer,
   buildExtension,
-  updateFiles as wcUpdateFiles,
+  updateFilesInContainer,
   stopExtension,
   getWebContainer,
   teardown,
-  setupBridgeHandlers,
   setTerminalWriter,
-  fileMapToFileSystemTree
+  setStatusCallback,
+  setErrorCallback,
+  setUrlCallback,
+  fileMapToFileSystemTree,
+  isBooted
+} from './webcontainerBridge';
+
+export type {
+  TerminalWriter,
+  StatusCallback,
+  ErrorCallback,
+  UrlCallback,
+  WebContainerStatus
 } from './webcontainerBridge';
 
 // Components
@@ -82,4 +72,3 @@ export {
   LogPanel,
   PreviewPanel
 } from './components';
-

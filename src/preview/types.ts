@@ -4,7 +4,7 @@
  * Shared type definitions for the preview system.
  */
 
-import { BuildStatus } from './postMessageBridge';
+// BuildStatus is defined in useWebContainer.ts to avoid circular deps
 
 /**
  * Extension file structure
@@ -57,7 +57,7 @@ export interface FileTreeNode {
  * Preview state
  */
 export interface PreviewState {
-  status: BuildStatus;
+  status: string; // BuildStatus enum value
   previewUrl: string | null;
   error: string | null;
   logs: LogEntry[];

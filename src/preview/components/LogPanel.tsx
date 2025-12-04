@@ -161,7 +161,7 @@ export function LogPanel({ logs, onClear, className }: LogPanelProps) {
                     {formatTime(log.timestamp)}
                   </span>
                   {log.source && (
-                    <span className="text-purple-400 flex-shrink-0">
+                    <span className="text-[#5A9665] flex-shrink-0">
                       [{log.source}]
                     </span>
                   )}
