@@ -417,7 +417,9 @@ export async function startDevServer(): Promise<void> {
 /**
  * Build and run extension preview
  * 
- * This sets up a Vite project to serve the extension's popup HTML
+ * This sets up a Vite project to serve the extension's popup HTML.
+ * If the AI provides its own config files (package.json, vite.config.ts, index.html),
+ * they will be used instead of the defaults.
  */
 export async function buildExtension(files: FileMap, installDeps = true): Promise<void> {
   console.log('[WebContainer] buildExtension called with files:', Object.keys(files));
@@ -429,21 +431,38 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
     // Step 2: Create project structure
     updateStatus('mounting', 'Setting up project...', 20);
     
-    // Create package.json
-    const packageJson = {
-      name: 'extension-preview',
-      version: '1.0.0',
-      type: 'module',
-      scripts: {
-        dev: 'vite --host'
-      },
-      devDependencies: {
-        vite: '^5.0.0'
-      }
-    };
+    // Check if project config files already exist in the provided files
+    const hasPackageJson = !!files['package.json'];
+    const hasViteConfig = !!files['vite.config.js'] || !!files['vite.config.ts'];
+    const hasIndexHtml = !!files['index.html'];
+    
+    console.log('[WebContainer] Config detection:', { hasPackageJson, hasViteConfig, hasIndexHtml });
+    
+    // Start with all provided files
+    const allFiles: FileMap = { ...files };
+    
+    // Only create default package.json if not provided
+    if (!hasPackageJson) {
+      const defaultPackageJson = {
+        name: 'extension-preview',
+        version: '1.0.0',
+        type: 'module',
+        scripts: {
+          dev: 'vite --host'
+        },
+        devDependencies: {
+          vite: '^5.0.0'
+        }
+      };
+      allFiles['package.json'] = JSON.stringify(defaultPackageJson, null, 2);
+      console.log('[WebContainer] Using default package.json');
+    } else {
+      console.log('[WebContainer] Using AI-provided package.json');
+    }
 
-    // Create vite.config.js that serves popup/index.html
-    const viteConfig = `import { defineConfig } from 'vite';
+    // Only create default vite.config.js if not provided
+    if (!hasViteConfig) {
+      const defaultViteConfig = `import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: '.',
@@ -456,14 +475,20 @@ export default defineConfig({
   }
 });
 `;
+      allFiles['vite.config.js'] = defaultViteConfig;
+      console.log('[WebContainer] Using default vite.config.js');
+    } else {
+      console.log('[WebContainer] Using AI-provided vite config');
+    }
 
-    // Create an index.html that loads the popup
-    // We need to create a proper HTML file for Vite to serve
-    let indexHtml = files['popup/popup.html'] || files['popup/index.html'];
-    
-    if (!indexHtml) {
-      // Create a basic index.html if none exists
-      indexHtml = `<!DOCTYPE html>
+    // Only create index.html if not provided
+    if (!hasIndexHtml) {
+      // Try to use popup files as fallback
+      let indexHtml = files['popup/popup.html'] || files['popup/index.html'] || files['src/index.html'];
+      
+      if (!indexHtml) {
+        // Create a basic index.html if none exists
+        indexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -475,23 +500,30 @@ export default defineConfig({
       padding: 20px;
       background: #1a1a1a;
       color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .loading {
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>Extension Preview</h1>
-  <p>No popup.html found. Add your extension files to see the preview.</p>
+  <div class="loading">
+    <h1>Extension Preview</h1>
+    <p>Waiting for files... The AI is setting up your project.</p>
+  </div>
 </body>
 </html>`;
+      }
+      allFiles['index.html'] = indexHtml;
+      console.log('[WebContainer] Using default/fallback index.html');
+    } else {
+      console.log('[WebContainer] Using AI-provided index.html');
     }
-
-    // Mount all the extension files plus our project files
-    const allFiles: FileMap = {
-      ...files,
-      'package.json': JSON.stringify(packageJson, null, 2),
-      'vite.config.js': viteConfig,
-      'index.html': indexHtml // Root index.html for Vite
-    };
 
     await mountFiles(allFiles);
 

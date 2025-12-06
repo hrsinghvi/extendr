@@ -33,6 +33,7 @@ export class AIService {
   private onToolCall?: (toolCall: ToolCall) => void;
   private onToolResult?: (result: ToolResult) => void;
   private onStreamChunk?: (chunk: string) => void;
+  private cancelled: boolean = false;
   
   constructor(options: AIServiceOptions) {
     this.provider = createProvider(options.provider);
@@ -40,6 +41,20 @@ export class AIService {
     this.onToolCall = options.onToolCall;
     this.onToolResult = options.onToolResult;
     this.onStreamChunk = options.onStreamChunk;
+  }
+
+  /**
+   * Cancel the current AI operation
+   */
+  cancel(): void {
+    this.cancelled = true;
+  }
+
+  /**
+   * Reset cancellation state (for new requests)
+   */
+  reset(): void {
+    this.cancelled = false;
   }
   
   /**
@@ -73,10 +88,22 @@ export class AIService {
     // Get system prompt
     const systemPrompt = getSystemPrompt();
     
+    // Reset cancellation state for new request
+    this.cancelled = false;
+    
     // Iteration loop - AI may make multiple tool calls
     let iterations = 0;
+    let consecutiveErrors = 0;
+    const maxConsecutiveErrors = 3;
     
     while (iterations < this.maxIterations) {
+      // Check for cancellation
+      if (this.cancelled) {
+        console.log('[AIService] Operation cancelled by user');
+        result.response = 'Operation cancelled.';
+        break;
+      }
+      
       iterations++;
       console.log(`[AIService] Iteration ${iterations}`);
       
@@ -86,10 +113,20 @@ export class AIService {
         
         // Handle different response types
         if (response.type === 'error') {
+          consecutiveErrors++;
           result.errors.push(response.error || 'Unknown error');
-          result.response = `I encountered an error: ${response.error}`;
-          break;
+          
+          if (consecutiveErrors >= maxConsecutiveErrors) {
+            result.response = `I encountered ${consecutiveErrors} consecutive errors. Stopping to prevent infinite loops. Last error: ${response.error}`;
+            break;
+          }
+          
+          // Continue to retry, but track the error
+          continue;
         }
+        
+        // Reset error counter on success
+        consecutiveErrors = 0;
         
         if (response.type === 'text') {
           // Final text response - we're done
@@ -150,10 +187,17 @@ export class AIService {
         break;
         
       } catch (error: any) {
+        consecutiveErrors++;
         console.error('[AIService] Error:', error);
         result.errors.push(error.message);
-        result.response = `I encountered an error: ${error.message}`;
-        break;
+        
+        if (consecutiveErrors >= maxConsecutiveErrors) {
+          result.response = `I encountered ${consecutiveErrors} consecutive errors. Stopping to prevent infinite loops. Last error: ${error.message}`;
+          break;
+        }
+        
+        // Continue to retry
+        continue;
       }
     }
     
@@ -162,9 +206,48 @@ export class AIService {
       result.response += '\n\n(Note: Reached maximum iterations. Some operations may be incomplete.)';
     }
     
+    // Generate user-friendly summary if we have actions to report
+    if (result.modifiedFiles.length > 0 || result.buildTriggered) {
+      const summary = this.generateUserFriendlySummary(result);
+      if (summary && (!result.response || result.response.trim() === '')) {
+        result.response = summary;
+      } else if (summary) {
+        result.response = result.response + '\n\n' + summary;
+      }
+    }
+    
     return result;
   }
   
+  /**
+   * Generate a user-friendly summary of what was done
+   */
+  private generateUserFriendlySummary(result: AIServiceResult): string {
+    const parts: string[] = [];
+    
+    // File operations
+    if (result.modifiedFiles.length > 0) {
+      const fileCount = result.modifiedFiles.length;
+      if (fileCount === 1) {
+        parts.push(`Created 1 file for your extension`);
+      } else {
+        parts.push(`Created ${fileCount} files for your extension`);
+      }
+    }
+    
+    // Build status
+    if (result.buildTriggered) {
+      parts.push(`Built and started your extension preview`);
+    }
+    
+    // Errors
+    if (result.errors.length > 0 && result.errors.length <= 2) {
+      parts.push(`Encountered ${result.errors.length} issue(s) that may need attention`);
+    }
+    
+    return parts.length > 0 ? parts.join('. ') + '.' : '';
+  }
+
   /**
    * Check if the service is configured
    */

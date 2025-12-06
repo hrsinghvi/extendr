@@ -104,55 +104,24 @@ const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
         {explanatoryText}
       </ReactMarkdown>
       
-      {/* Tool activity summary */}
-      {hasToolActivity && (
+      {/* Tool activity summary - Only show file operations */}
+      {filesCreated.length > 0 && (
         <div className="mt-4 bg-gray-800/50 rounded-lg p-3 not-prose">
           {/* Files created/modified */}
-          {filesCreated.length > 0 && (
-            <div className="mb-3">
-              <h4 className="font-semibold text-xs text-gray-400 mb-2 flex items-center gap-1.5">
-                <FileCode className="w-3.5 h-3.5" />
-                Files created
-              </h4>
-              <ul className="space-y-1 list-none p-0 m-0">
-                {filesCreated.map(file => (
-              <li key={file} className="flex items-center gap-2 text-xs text-gray-300">
-                    <span className="text-green-400">+</span>
-                    <span className="font-mono">{file}</span>
-              </li>
-            ))}
-          </ul>
-            </div>
-          )}
-          
-          {/* Tool calls breakdown */}
-          {groupedToolCalls && Object.keys(groupedToolCalls).length > 0 && (
-            <div>
-              {/* Build/Preview tools */}
-              {groupedToolCalls.build && (
-                <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-                  <Play className="w-3 h-3 text-[#5A9665]" />
-                  <span>Preview started</span>
-                </div>
-              )}
-              
-              {/* Package operations */}
-              {groupedToolCalls.packages && (
-                <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-                  <Package className="w-3 h-3 text-blue-400" />
-                  <span>{groupedToolCalls.packages.length} package(s) installed</span>
-                </div>
-              )}
-              
-              {/* Commands run */}
-              {groupedToolCalls.commands && (
-                <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-                  <Terminal className="w-3 h-3 text-yellow-400" />
-                  <span>{groupedToolCalls.commands.length} command(s) executed</span>
-                </div>
-              )}
-            </div>
-          )}
+          <div>
+            <h4 className="font-semibold text-xs text-gray-400 mb-2 flex items-center gap-1.5">
+              <FileCode className="w-3.5 h-3.5" />
+              Files created
+            </h4>
+            <ul className="space-y-1 list-none p-0 m-0">
+              {filesCreated.map(file => (
+                <li key={file} className="flex items-center gap-2 text-xs text-gray-300">
+                  <span className="text-green-400">+</span>
+                  <span className="font-mono">{file}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>

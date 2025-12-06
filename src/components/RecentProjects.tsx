@@ -14,6 +14,7 @@ import { Badge } from "./ui/badge";
 import { supabase } from "../integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { createAIServiceFromEnv, type ToolContext } from "@/lib/ai";
 
 // Dummy data removed; data now loaded from MCP (public.projects) per-auth user
 // We intentionally fetch the current session via Supabase client (no AuthContext dependency)
@@ -33,6 +34,7 @@ export function RecentProjects() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("last-edited");
+  const [generatingDescriptions, setGeneratingDescriptions] = useState<Set<string>>(new Set());
 
   // Redirect to landing page on login
   useEffect(() => {
@@ -141,6 +143,77 @@ export function RecentProjects() {
     };
 
     updateCategories();
+  }, [projects, loading]);
+
+  // Auto-generate descriptions
+  useEffect(() => {
+    if (loading || !projects.length) return;
+
+    // Filter projects that need a description (empty or using the UI default fallback text)
+    // Note: The UI default text "A custom Chrome extension..." is rendered when description is falsy.
+    // So we just check for falsy description here.
+    const projectsToUpdate = projects.filter(p => {
+      return (!p.description || p.description.trim() === "") && !generatingDescriptions.has(p.id);
+    });
+
+    if (projectsToUpdate.length === 0) return;
+
+    const updateDescriptions = async () => {
+      // Mark as updating
+      setGeneratingDescriptions(prev => {
+        const next = new Set(prev);
+        projectsToUpdate.forEach(p => next.add(p.id));
+        return next;
+      });
+
+      const aiService = createAIServiceFromEnv();
+      if (!aiService) return;
+
+      // Dummy context for AI service (we're not using tools here)
+      const dummyToolContext: ToolContext = {
+          writeFile: async () => {},
+          readFile: async () => "",
+          deleteFile: async () => {},
+          listFiles: async () => [],
+          getFiles: () => ({}),
+          setFiles: () => {},
+          updateFile: () => {},
+          build: async () => {},
+          stop: () => {},
+          isRunning: () => false,
+          runCommand: async () => ({ exitCode: 0, output: "" }),
+          getLogs: () => [],
+          clearLogs: () => {},
+          writeToTerminal: () => {}
+      };
+
+      // Process one by one to avoid rate limits
+      for (const p of projectsToUpdate) {
+          try {
+              const prompt = `Generate a short description (max 9 words) for a Chrome extension called "${p.title}". It should be personally tailored to the project name. Do not use quotes.`;
+              // Use chat with empty history
+              const result = await aiService.chat(prompt, [], dummyToolContext);
+              const description = result.response.trim();
+
+              if (description) {
+                  // Update DB
+                  await supabase
+                    .from('projects')
+                    .update({ description })
+                    .eq('id', p.id);
+                  
+                  // Update local state
+                  setProjects(current => current.map(curr => 
+                      curr.id === p.id ? { ...curr, description } : curr
+                  ));
+              }
+          } catch (e) {
+              console.error("Error generating description for", p.title, e);
+          }
+      }
+    };
+
+    updateDescriptions();
   }, [projects, loading]);
 
   // Filtering

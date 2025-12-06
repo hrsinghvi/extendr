@@ -261,7 +261,7 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
             ref={ref}
             className={cn(
               "rounded-3xl border border-[#444444] bg-[#1F2023] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.24)] transition-all duration-300",
-              isLoading && "border-red-500/70",
+              isLoading && "border-[#5A9665]",
               className
             )}
             onDragOver={onDragOver}
@@ -360,13 +360,14 @@ const PromptInputAction: React.FC<PromptInputActionProps> = ({
 // Main PromptInputBox Component
 interface PromptInputBoxProps {
   onSend?: (message: string, files?: File[]) => void;
+  onStop?: () => void;
   isLoading?: boolean;
   placeholder?: string;
   className?: string;
   textareaClassName?: string;
 }
 export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref: React.Ref<HTMLDivElement>) => {
-  const { onSend = () => { }, isLoading = false, placeholder = "Type your message here...", className, textareaClassName } = props;
+  const { onSend = () => { }, onStop, isLoading = false, placeholder = "Type your message here...", className, textareaClassName } = props;
   const [input, setInput] = React.useState("");
   const [files, setFiles] = React.useState<File[]>([]);
   const [filePreviews, setFilePreviews] = React.useState<{ [key: string]: string }>({});
@@ -611,14 +612,20 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               size="icon"
               className={cn(
                 "h-8 w-8 rounded-full transition-all duration-200",
-                hasContent
+                isLoading
+                  ? "bg-white hover:bg-white/80 text-[#1F2023]"
+                  : hasContent
                   ? "bg-white hover:bg-white/80 text-[#1F2023]"
                   : "bg-transparent hover:bg-gray-600/30 text-[#9CA3AF] hover:text-[#D1D5DB] opacity-50 cursor-not-allowed"
               )}
               onClick={() => {
-                if (hasContent) handleSubmit();
+                if (isLoading && onStop) {
+                  onStop();
+                } else if (hasContent) {
+                  handleSubmit();
+                }
               }}
-              disabled={isLoading || !hasContent}
+              disabled={!isLoading && !hasContent}
             >
               {isLoading ? (
                 <Square className="h-4 w-4 fill-[#1F2023] animate-pulse" />

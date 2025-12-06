@@ -208,8 +208,6 @@ export function PreviewPanel({
             </div>
           )}
 
-          <StatusBadge status={status} message={statusMessage} />
-
           <div className="h-6 w-px bg-gray-700" />
 
           <Button 

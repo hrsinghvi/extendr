@@ -23,10 +23,6 @@ import {
   runCommand as wcRunCommand,
   type FileMap
 } from "@/preview";
-import {
-  DEFAULT_MANIFEST
-} from "@/extensions/chrome_mv3";
-
 // AI Service imports
 import {
   AIService,
@@ -73,11 +69,10 @@ interface Project {
 
 /**
  * Get default extension files
+ * Returns empty to let the AI create everything from scratch
  */
 function getDefaultExtensionFiles(): FileMap {
-  return {
-    'manifest.json': JSON.stringify(DEFAULT_MANIFEST, null, 2)
-  };
+  return {};
 }
 
 export default function Build() {
@@ -128,10 +123,7 @@ export default function Build() {
   } = useWebContainer({
     onPreviewUrl: (url) => {
       console.log('[Build] Preview URL received:', url);
-      toast({
-        title: 'Preview Ready',
-        description: 'Your extension preview is now running.',
-      });
+      // Toast removed as per user request
     },
     onError: (error) => {
       console.error('[Build] WebContainer error:', error);
@@ -145,6 +137,12 @@ export default function Build() {
 
   // Terminal writer ref
   const terminalWriterRef = useRef<((data: string) => void) | null>(null);
+  
+  // Stop/cancel ref for AI operations
+  const stopRef = useRef<boolean>(false);
+  
+  // Debounce ref for file saves
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * Create tool context for AI service
@@ -402,7 +400,13 @@ export default function Build() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      // Clean up save timeout on unmount
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [navigate, location, searchParams, setSearchParams]);
 
   /**
@@ -473,23 +477,55 @@ export default function Build() {
     }
   }
 
+  // Debounce ref for file saves
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   /**
-   * Save project files to Supabase
+   * Save project files to Supabase with debouncing and retry logic
    */
-  async function saveProjectFiles(projectId: string, files: FileMap) {
-    try {
-      const { error } = await supabase
-        .from('project_files')
-        .upsert({ 
-          project_id: projectId, 
-          files: files as any, 
-          updated_at: new Date().toISOString() 
-        }, { onConflict: 'project_id' });
+  async function saveProjectFiles(projectId: string, files: FileMap, immediate = false) {
+    // Clear existing timeout if not immediate
+    if (!immediate && saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    const saveFiles = async (retryCount = 0) => {
+      try {
+        const { error } = await supabase
+          .from('project_files')
+          .upsert({ 
+            project_id: projectId, 
+            files: files as any, 
+            updated_at: new Date().toISOString() 
+          }, { onConflict: 'project_id' });
 
-      if (error) throw error;
-      console.log('[Build] Project files saved');
-    } catch (err: any) {
-      console.error('[Build] Error saving project files:', err);
+        if (error) throw error;
+        console.log('[Build] Project files saved successfully');
+      } catch (err: any) {
+        console.error('[Build] Error saving project files:', err);
+        
+        // Retry up to 2 times with exponential backoff
+        if (retryCount < 2) {
+          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+          console.log(`[Build] Retrying save in ${delay}ms (attempt ${retryCount + 1})`);
+          setTimeout(() => saveFiles(retryCount + 1), delay);
+        } else {
+          toast({
+            title: "Failed to save files",
+            description: "Your changes may not be saved. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+    
+    if (immediate) {
+      await saveFiles();
+    } else {
+      // Debounce saves by 1 second
+      saveTimeoutRef.current = setTimeout(() => {
+        saveFiles();
+      }, 1000);
     }
   }
 
@@ -610,6 +646,8 @@ export default function Build() {
     setIsThinking(true);
     setCurrentToolCalls([]);
     setThinkingMessage("Thinking...");
+    stopRef.current = false;
+    aiService.reset();
     
     try {
       // Save user message
@@ -642,7 +680,16 @@ export default function Build() {
       }));
       
       // Call AI service with tool support
+      // Check for cancellation before proceeding
+      if (stopRef.current) {
+        throw new Error('Operation cancelled');
+      }
       const result = await aiService.chat(content.trim(), aiHistory, toolContext);
+      
+      // Check again after completion
+      if (stopRef.current) {
+        throw new Error('Operation cancelled');
+      }
       
       console.log('[Build] AI result:', {
         toolCalls: result.toolCalls.length,
@@ -668,14 +715,11 @@ export default function Build() {
       
       setMessages((prev) => [...prev, assistantMsg as DBMessage]);
 
-      // Save files to project if any were modified
+      // Save files to project if any were modified (immediate save after AI completes)
       if (result.modifiedFiles.length > 0 && project) {
-        await saveProjectFiles(project.id, extensionFilesRef.current);
-        
-        toast({
-          title: "Files Created",
-          description: `Created ${result.modifiedFiles.length} file(s). ${result.buildTriggered ? 'Building preview...' : 'Click Build & Run to preview.'}`,
-        });
+        // Update the files ref first to ensure we have the latest
+        extensionFilesRef.current = { ...extensionFilesRef.current, ...extensionFiles };
+        await saveProjectFiles(project.id, extensionFilesRef.current, true);
       }
       
       // If build wasn't triggered by AI but files were modified, suggest building
@@ -688,16 +732,38 @@ export default function Build() {
       
     } catch (err: any) {
       console.error("Error sending message:", err);
-      toast({
-        title: "Error sending message",
-        description: err.message,
-        variant: "destructive",
-      });
+      if (stopRef.current || err.message === 'Operation cancelled') {
+        toast({
+          title: "Operation stopped",
+          description: "The AI operation was cancelled.",
+        });
+      } else {
+        toast({
+          title: "Error sending message",
+          description: err.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsThinking(false);
       setCurrentToolCalls([]);
       setThinkingMessage("Thinking...");
+      stopRef.current = false;
     }
+  }
+
+  /**
+   * Handle stopping AI operations
+   */
+  function handleStop() {
+    console.log('[Build] Stop requested');
+    stopRef.current = true;
+    if (aiService) {
+      aiService.cancel();
+    }
+    setIsThinking(false);
+    setCurrentToolCalls([]);
+    setThinkingMessage("Thinking...");
   }
 
   /**
@@ -714,9 +780,9 @@ export default function Build() {
   const handleFilesChange = useCallback((newFiles: FileMap) => {
     setExtensionFiles(newFiles);
     
-    // Save to project
+    // Save to project (debounced)
     if (project) {
-      saveProjectFiles(project.id, newFiles);
+      saveProjectFiles(project.id, newFiles, false);
     }
   }, [project]);
 
@@ -912,6 +978,7 @@ export default function Build() {
           <div className="p-4 border-t border-gray-800">
             <PromptInputBox
               onSend={handleSendMessage}
+              onStop={handleStop}
               isLoading={isThinking}
               placeholder="Describe your extension idea..."
               className="bg-[#1a1a1a] border-[#3C4141] rounded-lg"
