@@ -216,6 +216,7 @@ interface PromptInputProps {
   onValueChange?: (value: string) => void;
   maxHeight?: number | string;
   onSubmit?: () => void;
+  onStop?: () => void;
   children: React.ReactNode;
   className?: string;
   disabled?: boolean;
@@ -261,7 +262,7 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
             ref={ref}
             className={cn(
               "rounded-3xl border border-[#444444] bg-[#1F2023] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.24)] transition-all duration-300",
-              isLoading && "border-[#5A9665]",
+              isLoading && "border-[#5A9665]/70",
               className
             )}
             onDragOver={onDragOver}
@@ -612,9 +613,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               size="icon"
               className={cn(
                 "h-8 w-8 rounded-full transition-all duration-200",
-                isLoading
-                  ? "bg-white hover:bg-white/80 text-[#1F2023]"
-                  : hasContent
+                hasContent
                   ? "bg-white hover:bg-white/80 text-[#1F2023]"
                   : "bg-transparent hover:bg-gray-600/30 text-[#9CA3AF] hover:text-[#D1D5DB] opacity-50 cursor-not-allowed"
               )}
@@ -625,7 +624,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                   handleSubmit();
                 }
               }}
-              disabled={!isLoading && !hasContent}
+              disabled={isLoading && !onStop}
             >
               {isLoading ? (
                 <Square className="h-4 w-4 fill-[#1F2023] animate-pulse" />

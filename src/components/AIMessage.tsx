@@ -104,24 +104,36 @@ const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
         {explanatoryText}
       </ReactMarkdown>
       
-      {/* Tool activity summary - Only show file operations */}
-      {filesCreated.length > 0 && (
+      {/* Tool activity summary */}
+      {hasToolActivity && (
         <div className="mt-4 bg-gray-800/50 rounded-lg p-3 not-prose">
           {/* Files created/modified */}
-          <div>
-            <h4 className="font-semibold text-xs text-gray-400 mb-2 flex items-center gap-1.5">
-              <FileCode className="w-3.5 h-3.5" />
-              Files created
-            </h4>
-            <ul className="space-y-1 list-none p-0 m-0">
-              {filesCreated.map(file => (
-                <li key={file} className="flex items-center gap-2 text-xs text-gray-300">
-                  <span className="text-green-400">+</span>
-                  <span className="font-mono">{file}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {filesCreated.length > 0 && (
+            <div className="mb-3">
+              <h4 className="font-semibold text-xs text-gray-400 mb-2 flex items-center gap-1.5">
+                <FileCode className="w-3.5 h-3.5" />
+                Files created
+              </h4>
+              <ul className="space-y-1 list-none p-0 m-0">
+                {filesCreated.map(file => (
+              <li key={file} className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="text-green-400">+</span>
+                    <span className="font-mono">{file}</span>
+              </li>
+            ))}
+          </ul>
+            </div>
+          )}
+          
+          {/* Tool calls breakdown - Only showing Preview status */}
+          {groupedToolCalls && groupedToolCalls.build && (
+            <div>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                <Play className="w-3 h-3 text-[#5A9665]" />
+                <span>Preview started</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

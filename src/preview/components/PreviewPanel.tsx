@@ -173,7 +173,6 @@ export function PreviewPanel({
 
   return (
     <div className={cn('flex flex-col h-full bg-[#1a1a1a]', className)}>
-      {/* Top Bar - Tabs + Actions */}
       <div className="h-12 shrink-0 flex items-center justify-between px-4 bg-[#232323] border-b border-gray-800">
         {/* Left side - Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'code' | 'preview')} className="flex items-center">

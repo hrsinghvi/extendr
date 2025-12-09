@@ -33,7 +33,7 @@ export class AIService {
   private onToolCall?: (toolCall: ToolCall) => void;
   private onToolResult?: (result: ToolResult) => void;
   private onStreamChunk?: (chunk: string) => void;
-  private cancelled: boolean = false;
+  private abortController: AbortController | null = null;
   
   constructor(options: AIServiceOptions) {
     this.provider = createProvider(options.provider);
@@ -44,17 +44,13 @@ export class AIService {
   }
 
   /**
-   * Cancel the current AI operation
+   * Cancel the current operation
    */
-  cancel(): void {
-    this.cancelled = true;
-  }
-
-  /**
-   * Reset cancellation state (for new requests)
-   */
-  reset(): void {
-    this.cancelled = false;
+  cancel() {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
   }
   
   /**
@@ -79,6 +75,9 @@ export class AIService {
       errors: []
     };
     
+    // Reset abort controller
+    this.abortController = new AbortController();
+    
     // Build conversation with history + new user message
     const messages: Message[] = [
       ...history,
@@ -88,22 +87,14 @@ export class AIService {
     // Get system prompt
     const systemPrompt = getSystemPrompt();
     
-    // Reset cancellation state for new request
-    this.cancelled = false;
-    
     // Iteration loop - AI may make multiple tool calls
     let iterations = 0;
-    let consecutiveErrors = 0;
-    const maxConsecutiveErrors = 3;
     
     while (iterations < this.maxIterations) {
-      // Check for cancellation
-      if (this.cancelled) {
-        console.log('[AIService] Operation cancelled by user');
-        result.response = 'Operation cancelled.';
-        break;
+      if (this.abortController?.signal.aborted) {
+        throw new Error('Operation cancelled');
       }
-      
+
       iterations++;
       console.log(`[AIService] Iteration ${iterations}`);
       
@@ -111,22 +102,16 @@ export class AIService {
         // Call AI provider
         const response = await this.provider.chat(messages, ALL_TOOLS, systemPrompt);
         
+        if (this.abortController?.signal.aborted) {
+          throw new Error('Operation cancelled');
+        }
+
         // Handle different response types
         if (response.type === 'error') {
-          consecutiveErrors++;
           result.errors.push(response.error || 'Unknown error');
-          
-          if (consecutiveErrors >= maxConsecutiveErrors) {
-            result.response = `I encountered ${consecutiveErrors} consecutive errors. Stopping to prevent infinite loops. Last error: ${response.error}`;
-            break;
-          }
-          
-          // Continue to retry, but track the error
-          continue;
+          result.response = `I encountered an error: ${response.error}`;
+          break;
         }
-        
-        // Reset error counter on success
-        consecutiveErrors = 0;
         
         if (response.type === 'text') {
           // Final text response - we're done
@@ -153,6 +138,10 @@ export class AIService {
           
           // Execute tools
           const toolResults = await executeToolCalls(toolCalls, context);
+
+          if (this.abortController?.signal.aborted) {
+            throw new Error('Operation cancelled');
+          }
           
           // Process results
           for (const tr of toolResults) {
@@ -187,17 +176,10 @@ export class AIService {
         break;
         
       } catch (error: any) {
-        consecutiveErrors++;
         console.error('[AIService] Error:', error);
         result.errors.push(error.message);
-        
-        if (consecutiveErrors >= maxConsecutiveErrors) {
-          result.response = `I encountered ${consecutiveErrors} consecutive errors. Stopping to prevent infinite loops. Last error: ${error.message}`;
-          break;
-        }
-        
-        // Continue to retry
-        continue;
+        result.response = `I encountered an error: ${error.message}`;
+        break;
       }
     }
     
@@ -206,48 +188,9 @@ export class AIService {
       result.response += '\n\n(Note: Reached maximum iterations. Some operations may be incomplete.)';
     }
     
-    // Generate user-friendly summary if we have actions to report
-    if (result.modifiedFiles.length > 0 || result.buildTriggered) {
-      const summary = this.generateUserFriendlySummary(result);
-      if (summary && (!result.response || result.response.trim() === '')) {
-        result.response = summary;
-      } else if (summary) {
-        result.response = result.response + '\n\n' + summary;
-      }
-    }
-    
     return result;
   }
   
-  /**
-   * Generate a user-friendly summary of what was done
-   */
-  private generateUserFriendlySummary(result: AIServiceResult): string {
-    const parts: string[] = [];
-    
-    // File operations
-    if (result.modifiedFiles.length > 0) {
-      const fileCount = result.modifiedFiles.length;
-      if (fileCount === 1) {
-        parts.push(`Created 1 file for your extension`);
-      } else {
-        parts.push(`Created ${fileCount} files for your extension`);
-      }
-    }
-    
-    // Build status
-    if (result.buildTriggered) {
-      parts.push(`Built and started your extension preview`);
-    }
-    
-    // Errors
-    if (result.errors.length > 0 && result.errors.length <= 2) {
-      parts.push(`Encountered ${result.errors.length} issue(s) that may need attention`);
-    }
-    
-    return parts.length > 0 ? parts.join('. ') + '.' : '';
-  }
-
   /**
    * Check if the service is configured
    */
