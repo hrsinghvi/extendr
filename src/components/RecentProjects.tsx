@@ -145,21 +145,23 @@ export function RecentProjects() {
     updateCategories();
   }, [projects, loading]);
 
-  // Auto-generate descriptions
+    // Auto-generate descriptions
   useEffect(() => {
     if (loading || !projects.length) return;
 
-    // Filter projects that need a description (empty or using the UI default fallback text)
-    // Note: The UI default text "A custom Chrome extension..." is rendered when description is falsy.
-    // So we just check for falsy description here.
+    const isErrorDescription = (desc: string | null) => {
+      return desc && (desc.startsWith("I encountered an error") || desc.includes("quota"));
+    };
+
+    // Filter projects that need a description (empty or using the UI default fallback text OR has an error message)
     const projectsToUpdate = projects.filter(p => {
-      return (!p.description || p.description.trim() === "") && !generatingDescriptions.has(p.id);
+      return (!p.description || p.description.trim() === "" || isErrorDescription(p.description)) && !generatingDescriptions.has(p.id);
     });
 
     if (projectsToUpdate.length === 0) return;
 
     const updateDescriptions = async () => {
-      // Mark as updating
+      // Mark as updating to prevent duplicate runs
       setGeneratingDescriptions(prev => {
         const next = new Set(prev);
         projectsToUpdate.forEach(p => next.add(p.id));
@@ -169,7 +171,7 @@ export function RecentProjects() {
       const aiService = createAIServiceFromEnv();
       if (!aiService) return;
 
-      // Dummy context for AI service (we're not using tools here)
+      // Dummy context for AI service
       const dummyToolContext: ToolContext = {
           writeFile: async () => {},
           readFile: async () => "",
@@ -190,12 +192,38 @@ export function RecentProjects() {
       // Process one by one to avoid rate limits
       for (const p of projectsToUpdate) {
           try {
-              const prompt = `Generate a short description (max 9 words) for a Chrome extension called "${p.title}". It should be personally tailored to the project name. Do not use quotes.`;
+              // 1. Fetch the chat and first message to get user context
+              let userContext = "";
+              const { data: chatData } = await supabase
+                .from("chats")
+                .select("id")
+                .eq("project_id", p.id)
+                .single();
+
+              if (chatData) {
+                const { data: messages } = await supabase
+                  .from("messages")
+                  .select("content")
+                  .eq("chat_id", chatData.id)
+                  .eq("role", "user")
+                  .order("created_at", { ascending: true })
+                  .limit(1);
+                
+                if (messages && messages.length > 0) {
+                  userContext = messages[0].content;
+                }
+              }
+
+              const prompt = `Generate a short description (max 9 words) for a Chrome extension called "${p.title}". 
+              ${userContext ? `The user's original request was: "${userContext}".` : ''}
+              It should be personally tailored to the project name and user request. Do not use quotes.`;
+              
               // Use chat with empty history
               const result = await aiService.chat(prompt, [], dummyToolContext);
               const description = result.response.trim();
 
-              if (description) {
+              // Only save if it's a valid description and NOT an error message
+              if (description && !description.startsWith("I encountered an error") && !description.includes("quota")) {
                   // Update DB
                   await supabase
                     .from('projects')
@@ -206,7 +234,13 @@ export function RecentProjects() {
                   setProjects(current => current.map(curr => 
                       curr.id === p.id ? { ...curr, description } : curr
                   ));
+              } else {
+                console.warn("Skipping saving error description:", description);
               }
+              
+              // Add a small delay between requests to be nice to the API
+              await new Promise(resolve => setTimeout(resolve, 1000));
+
           } catch (e) {
               console.error("Error generating description for", p.title, e);
           }
@@ -317,13 +351,13 @@ export function RecentProjects() {
                 </div>
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider truncate w-full text-center mt-1 px-1">{categoryName}</p>
               </div>
-              <div className="flex-grow">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors text-lg">
+              <div className="flex-grow min-w-0">
+                <div className="flex items-center justify-between mb-1 gap-2">
+                  <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors text-lg truncate">
                     {project.title}
                   </h3>
                   <button
-                    className="text-gray-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-red-500/10"
+                    className="text-gray-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-red-500/10 shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (confirm("Are you sure you want to delete this project?")) {

@@ -228,6 +228,7 @@ export function createAIServiceFromEnv(callbacks?: {
   // Try Gemini first (current default)
   const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (geminiKey) {
+    console.log('[AIService] Using Gemini API Key:', geminiKey.substring(0, 4) + '...');
     return new AIService({
       provider: {
         type: 'gemini',

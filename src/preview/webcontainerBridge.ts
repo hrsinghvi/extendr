@@ -444,16 +444,16 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
     // Only create default package.json if not provided
     if (!hasPackageJson) {
       const defaultPackageJson = {
-        name: 'extension-preview',
-        version: '1.0.0',
-        type: 'module',
-        scripts: {
-          dev: 'vite --host'
-        },
-        devDependencies: {
-          vite: '^5.0.0'
-        }
-      };
+      name: 'extension-preview',
+      version: '1.0.0',
+      type: 'module',
+      scripts: {
+        dev: 'vite --host'
+      },
+      devDependencies: {
+        vite: '^5.0.0'
+      }
+    };
       allFiles['package.json'] = JSON.stringify(defaultPackageJson, null, 2);
       console.log('[WebContainer] Using default package.json');
     } else {
@@ -485,10 +485,10 @@ export default defineConfig({
     if (!hasIndexHtml) {
       // Try to use popup files as fallback
       let indexHtml = files['popup/popup.html'] || files['popup/index.html'] || files['src/index.html'];
-      
-      if (!indexHtml) {
-        // Create a basic index.html if none exists
-        indexHtml = `<!DOCTYPE html>
+    
+    if (!indexHtml) {
+      // Create a basic index.html if none exists
+      indexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -513,12 +513,12 @@ export default defineConfig({
 </head>
 <body>
   <div class="loading">
-    <h1>Extension Preview</h1>
+  <h1>Extension Preview</h1>
     <p>Waiting for files... The AI is setting up your project.</p>
   </div>
 </body>
 </html>`;
-      }
+    }
       allFiles['index.html'] = indexHtml;
       console.log('[WebContainer] Using default/fallback index.html');
     } else {
