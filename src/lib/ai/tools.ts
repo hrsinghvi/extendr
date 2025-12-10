@@ -41,17 +41,31 @@ Guidelines:
 };
 
 /**
- * Read contents of a file
+ * Read contents of a file (with optional line range)
  */
 export const EXT_READ_FILE: ToolDefinition = {
   name: 'ext_read_file',
-  description: 'Read the contents of a file from the sandbox. Use this to check existing code before making modifications.',
+  description: `Read the contents of a file from the sandbox.
+
+Use this to:
+- Check existing code before making modifications
+- Read specific line ranges in large files (optional start_line/end_line)
+
+For large files, consider using start_line and end_line to read only the relevant section.`,
   parameters: {
     type: 'object',
     properties: {
       file_path: {
         type: 'string',
-        description: 'Path to the file to read (e.g., "manifest.json")'
+        description: 'Path to the file to read (e.g., "src/App.tsx")'
+      },
+      start_line: {
+        type: 'number',
+        description: 'Optional: Start reading from this line number (1-indexed)'
+      },
+      end_line: {
+        type: 'number',
+        description: 'Optional: Stop reading at this line number (inclusive)'
       }
     },
     required: ['file_path']
@@ -121,7 +135,12 @@ export const EXT_LIST_FILES: ToolDefinition = {
  */
 export const EXT_SEARCH_FILES: ToolDefinition = {
   name: 'ext_search_files',
-  description: 'Search for text or regex patterns across files in the sandbox.',
+  description: `Search for text or regex patterns across files in the sandbox.
+
+Returns file paths and match counts. Useful for:
+- Finding where a function/variable is used
+- Locating specific code patterns
+- Checking for duplicate code`,
   parameters: {
     type: 'object',
     properties: {
@@ -131,7 +150,11 @@ export const EXT_SEARCH_FILES: ToolDefinition = {
       },
       include_pattern: {
         type: 'string',
-        description: 'Glob pattern to filter files (e.g., "*.js", "popup/**")'
+        description: 'Glob pattern to include files (e.g., "*.tsx", "src/**")'
+      },
+      exclude_pattern: {
+        type: 'string',
+        description: 'Glob pattern to exclude files (e.g., "node_modules/**", "*.test.ts")'
       },
       case_sensitive: {
         type: 'boolean',
@@ -139,6 +162,71 @@ export const EXT_SEARCH_FILES: ToolDefinition = {
       }
     },
     required: ['query']
+  }
+};
+
+/**
+ * Replace specific lines in a file (surgical edit)
+ */
+export const EXT_REPLACE_LINES: ToolDefinition = {
+  name: 'ext_replace_lines',
+  description: `Surgical code edit: Replace specific lines in a file.
+
+PREFER THIS over ext_write_file when making small changes to existing files.
+This avoids rewriting the entire file and is safer for targeted edits.
+
+How it works:
+1. Specify the file path
+2. Provide a unique search string (existing code to find)
+3. Provide the replacement string
+
+The search string must be unique in the file to avoid ambiguity.`,
+  parameters: {
+    type: 'object',
+    properties: {
+      file_path: {
+        type: 'string',
+        description: 'Path to the file to modify'
+      },
+      search: {
+        type: 'string',
+        description: 'The exact text/code to find (must be unique in the file)'
+      },
+      replace: {
+        type: 'string',
+        description: 'The new text/code to replace it with'
+      }
+    },
+    required: ['file_path', 'search', 'replace']
+  }
+};
+
+/**
+ * Download a file from a URL to the project
+ */
+export const EXT_DOWNLOAD_FILE: ToolDefinition = {
+  name: 'ext_download_file',
+  description: `Download a file from a URL and save it to the project.
+
+Use this to:
+- Download images, icons, or assets from the web
+- Fetch external resources (fonts, data files)
+- Import files from CDNs or GitHub raw URLs
+
+Supported formats: images (png, jpg, svg), fonts, JSON, text files.`,
+  parameters: {
+    type: 'object',
+    properties: {
+      url: {
+        type: 'string',
+        description: 'The URL to download from (must be publicly accessible)'
+      },
+      file_path: {
+        type: 'string',
+        description: 'Where to save the file in the project (e.g., "src/images/logo.png")'
+      }
+    },
+    required: ['url', 'file_path']
   }
 };
 
@@ -292,25 +380,27 @@ export const EXT_GET_PROJECT_INFO: ToolDefinition = {
 // ============================================================================
 
 /**
- * All available tools
+ * All available tools (15 total)
  */
 export const ALL_TOOLS: ToolDefinition[] = [
-  // File operations
+  // File operations (8 tools)
   EXT_WRITE_FILE,
   EXT_READ_FILE,
   EXT_DELETE_FILE,
   EXT_RENAME_FILE,
   EXT_LIST_FILES,
   EXT_SEARCH_FILES,
-  // Package management
+  EXT_REPLACE_LINES,
+  EXT_DOWNLOAD_FILE,
+  // Package management (2 tools)
   EXT_ADD_DEPENDENCY,
   EXT_REMOVE_DEPENDENCY,
-  // Build & preview
+  // Build & preview (2 tools)
   EXT_BUILD_PREVIEW,
   EXT_STOP_PREVIEW,
-  // Terminal
+  // Terminal (1 tool)
   EXT_RUN_COMMAND,
-  // Debug
+  // Debug (2 tools)
   EXT_READ_CONSOLE_LOGS,
   EXT_GET_PROJECT_INFO
 ];
@@ -332,6 +422,8 @@ export const TOOL_NAMES = {
   RENAME_FILE: 'ext_rename_file',
   LIST_FILES: 'ext_list_files',
   SEARCH_FILES: 'ext_search_files',
+  REPLACE_LINES: 'ext_replace_lines',
+  DOWNLOAD_FILE: 'ext_download_file',
   ADD_DEPENDENCY: 'ext_add_dependency',
   REMOVE_DEPENDENCY: 'ext_remove_dependency',
   BUILD_PREVIEW: 'ext_build_preview',

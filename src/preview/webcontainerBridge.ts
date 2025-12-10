@@ -444,28 +444,47 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
     // Only create default package.json if not provided
     if (!hasPackageJson) {
       const defaultPackageJson = {
-      name: 'extension-preview',
-      version: '1.0.0',
-      type: 'module',
-      scripts: {
-        dev: 'vite --host'
-      },
-      devDependencies: {
-        vite: '^5.0.0'
-      }
-    };
+        name: 'extension-preview',
+        private: true,
+        version: '1.0.0',
+        type: 'module',
+        scripts: {
+          dev: 'vite --host',
+          build: 'tsc && vite build',
+          preview: 'vite preview'
+        },
+        dependencies: {
+          'react': '^18.3.1',
+          'react-dom': '^18.3.1',
+          'lucide-react': '^0.468.0',
+          'class-variance-authority': '^0.7.0',
+          'clsx': '^2.1.1',
+          'tailwind-merge': '^2.5.5'
+        },
+        devDependencies: {
+          '@types/react': '^18.3.16',
+          '@types/react-dom': '^18.3.5',
+          '@vitejs/plugin-react': '^4.3.4',
+          'autoprefixer': '^10.4.20',
+          'postcss': '^8.4.49',
+          'tailwindcss': '^3.4.17',
+          'typescript': '^5.7.2',
+          'vite': '^6.0.3'
+        }
+      };
       allFiles['package.json'] = JSON.stringify(defaultPackageJson, null, 2);
-      console.log('[WebContainer] Using default package.json');
+      console.log('[WebContainer] Using default package.json with React/Tailwind/shadcn deps');
     } else {
       console.log('[WebContainer] Using AI-provided package.json');
     }
 
-    // Only create default vite.config.js if not provided
+    // Only create default vite.config.ts if not provided
     if (!hasViteConfig) {
       const defaultViteConfig = `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  root: '.',
+  plugins: [react()],
   server: {
     host: true,
     port: 3000
@@ -475,54 +494,443 @@ export default defineConfig({
   }
 });
 `;
-      allFiles['vite.config.js'] = defaultViteConfig;
-      console.log('[WebContainer] Using default vite.config.js');
+      allFiles['vite.config.ts'] = defaultViteConfig;
+      console.log('[WebContainer] Using default vite.config.ts with React plugin');
     } else {
       console.log('[WebContainer] Using AI-provided vite config');
     }
 
+    // Create default tailwind.config.js if not provided
+    if (!files['tailwind.config.js'] && !files['tailwind.config.ts']) {
+      const defaultTailwindConfig = `/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+    },
+  },
+  plugins: [],
+}
+`;
+      allFiles['tailwind.config.js'] = defaultTailwindConfig;
+      console.log('[WebContainer] Using default tailwind.config.js with shadcn theme');
+    }
+
+    // Create default postcss.config.js if not provided
+    if (!files['postcss.config.js'] && !files['postcss.config.cjs']) {
+      const defaultPostcssConfig = `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+`;
+      allFiles['postcss.config.js'] = defaultPostcssConfig;
+      console.log('[WebContainer] Using default postcss.config.js');
+    }
+
+    // Create default tsconfig.json if not provided
+    if (!files['tsconfig.json']) {
+      const defaultTsConfig = {
+        compilerOptions: {
+          target: 'ES2020',
+          useDefineForClassFields: true,
+          lib: ['ES2020', 'DOM', 'DOM.Iterable'],
+          module: 'ESNext',
+          skipLibCheck: true,
+          moduleResolution: 'bundler',
+          allowImportingTsExtensions: true,
+          resolveJsonModule: true,
+          isolatedModules: true,
+          noEmit: true,
+          jsx: 'react-jsx',
+          strict: true,
+          noUnusedLocals: true,
+          noUnusedParameters: true,
+          noFallthroughCasesInSwitch: true,
+          baseUrl: '.',
+          paths: {
+            '@/*': ['./src/*']
+          }
+        },
+        include: ['src']
+      };
+      allFiles['tsconfig.json'] = JSON.stringify(defaultTsConfig, null, 2);
+      console.log('[WebContainer] Using default tsconfig.json');
+    }
+
+    // Create default src/lib/utils.ts (cn utility for shadcn) if not provided
+    if (!files['src/lib/utils.ts']) {
+      const cnUtility = `import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`;
+      allFiles['src/lib/utils.ts'] = cnUtility;
+      console.log('[WebContainer] Created src/lib/utils.ts (cn utility)');
+    }
+
+    // Create default src/styles/index.css with Tailwind and shadcn CSS variables
+    if (!files['src/styles/index.css'] && !files['src/index.css']) {
+      const defaultCss = `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 355 100% 97%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 142 76% 36%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --primary: 142 76% 46%;
+    --primary-foreground: 144 80% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 142 76% 46%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+`;
+      allFiles['src/styles/index.css'] = defaultCss;
+      console.log('[WebContainer] Created src/styles/index.css with shadcn CSS variables');
+    }
+
     // Only create index.html if not provided
     if (!hasIndexHtml) {
-      // Try to use popup files as fallback
-      let indexHtml = files['popup/popup.html'] || files['popup/index.html'] || files['src/index.html'];
-    
-    if (!indexHtml) {
-      // Create a basic index.html if none exists
-      indexHtml = `<!DOCTYPE html>
+      // Create a proper React entry index.html
+      const indexHtml = `<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Extension Preview</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      padding: 20px;
-      background: #1a1a1a;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    .loading {
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <div class="loading">
-  <h1>Extension Preview</h1>
-    <p>Waiting for files... The AI is setting up your project.</p>
-  </div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extension Preview</title>
+  </head>
+  <body class="dark">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>`;
-    }
       allFiles['index.html'] = indexHtml;
-      console.log('[WebContainer] Using default/fallback index.html');
+      console.log('[WebContainer] Using default React index.html');
     } else {
       console.log('[WebContainer] Using AI-provided index.html');
+    }
+
+    // Create default src/main.tsx if not provided
+    if (!files['src/main.tsx']) {
+      const defaultMain = `import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './styles/index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+`;
+      allFiles['src/main.tsx'] = defaultMain;
+      console.log('[WebContainer] Created default src/main.tsx');
+    }
+
+    // Create default src/App.tsx if not provided
+    if (!files['src/App.tsx'] && !files['src/pages/popup/App.tsx']) {
+      const defaultApp = `import { useState } from 'react';
+import { cn } from './lib/utils';
+
+export default function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-80 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-center mb-4">
+          Extension Preview
+        </h1>
+        <p className="text-sm text-muted-foreground text-center mb-6">
+          Your extension will appear here. The AI is setting up your project.
+        </p>
+        <button
+          onClick={() => setCount(c => c + 1)}
+          className={cn(
+            "w-full inline-flex items-center justify-center rounded-md text-sm font-medium",
+            "h-10 px-4 py-2",
+            "bg-primary text-primary-foreground hover:bg-primary/90",
+            "transition-colors"
+          )}
+        >
+          Count: {count}
+        </button>
+      </div>
+    </div>
+  );
+}
+`;
+      allFiles['src/App.tsx'] = defaultApp;
+      console.log('[WebContainer] Created default src/App.tsx');
+    }
+
+    // ============ PRE-INSTALLED SHADCN/UI COMPONENTS ============
+
+    // shadcn/ui Button component
+    if (!files['src/components/ui/button.tsx']) {
+      const buttonComponent = `import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Button.displayName = "Button";
+
+export { Button, buttonVariants };
+`;
+      allFiles['src/components/ui/button.tsx'] = buttonComponent;
+      console.log('[WebContainer] Created shadcn Button component');
+    }
+
+    // shadcn/ui Card component
+    if (!files['src/components/ui/card.tsx']) {
+      const cardComponent = `import * as React from "react";
+import { cn } from "@/lib/utils";
+
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}
+      {...props}
+    />
+  )
+);
+Card.displayName = "Card";
+
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+  )
+);
+CardHeader.displayName = "CardHeader";
+
+const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3
+      ref={ref}
+      className={cn("text-2xl font-semibold leading-none tracking-tight", className)}
+      {...props}
+    />
+  )
+);
+CardTitle.displayName = "CardTitle";
+
+const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
+  ({ className, ...props }, ref) => (
+    <p ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+  )
+);
+CardDescription.displayName = "CardDescription";
+
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  )
+);
+CardContent.displayName = "CardContent";
+
+const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
+  )
+);
+CardFooter.displayName = "CardFooter";
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+`;
+      allFiles['src/components/ui/card.tsx'] = cardComponent;
+      console.log('[WebContainer] Created shadcn Card component');
+    }
+
+    // shadcn/ui Input component
+    if (!files['src/components/ui/input.tsx']) {
+      const inputComponent = `import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Input.displayName = "Input";
+
+export { Input };
+`;
+      allFiles['src/components/ui/input.tsx'] = inputComponent;
+      console.log('[WebContainer] Created shadcn Input component');
+    }
+
+    // shadcn/ui Badge component
+    if (!files['src/components/ui/badge.tsx']) {
+      const badgeComponent = `import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+}
+
+export { Badge, badgeVariants };
+`;
+      allFiles['src/components/ui/badge.tsx'] = badgeComponent;
+      console.log('[WebContainer] Created shadcn Badge component');
     }
 
     await mountFiles(allFiles);

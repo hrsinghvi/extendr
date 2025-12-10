@@ -71,21 +71,39 @@ const handleWriteFile: ToolHandler = async (args, context) => {
 };
 
 /**
- * ext_read_file - Read file contents
+ * ext_read_file - Read file contents (with optional line range)
  */
 const handleReadFile: ToolHandler = async (args, context) => {
-  const { file_path } = args as { file_path: string };
+  const { file_path, start_line, end_line } = args as { 
+    file_path: string; 
+    start_line?: number;
+    end_line?: number;
+  };
   const id = generateToolCallId();
   
   try {
     // First try to read from state (faster)
     const files = context.getFiles();
-    if (files[file_path]) {
-      return successResult(id, TOOL_NAMES.READ_FILE, files[file_path]);
+    let content = files[file_path];
+    
+    if (!content) {
+      // Fall back to WebContainer
+      content = await context.readFile(file_path);
     }
     
-    // Fall back to WebContainer
-    const content = await context.readFile(file_path);
+    // Apply line range if specified
+    if (start_line !== undefined || end_line !== undefined) {
+      const lines = content.split('\n');
+      const start = Math.max(0, (start_line || 1) - 1); // Convert to 0-indexed
+      const end = end_line !== undefined ? Math.min(lines.length, end_line) : lines.length;
+      
+      const slicedLines = lines.slice(start, end);
+      // Add line numbers for context
+      content = slicedLines
+        .map((line, i) => `${start + i + 1}: ${line}`)
+        .join('\n');
+    }
+    
     return successResult(id, TOOL_NAMES.READ_FILE, content);
   } catch (error: any) {
     return errorResult(id, TOOL_NAMES.READ_FILE, `File not found: ${file_path}`);
@@ -184,9 +202,10 @@ const handleListFiles: ToolHandler = async (args, context) => {
  * ext_search_files - Search for text in files
  */
 const handleSearchFiles: ToolHandler = async (args, context) => {
-  const { query, include_pattern, case_sensitive } = args as {
+  const { query, include_pattern, exclude_pattern, case_sensitive } = args as {
     query: string;
     include_pattern?: string;
+    exclude_pattern?: string;
     case_sensitive?: boolean;
   };
   const id = generateToolCallId();
@@ -197,13 +216,26 @@ const handleSearchFiles: ToolHandler = async (args, context) => {
     const flags = case_sensitive ? 'g' : 'gi';
     const regex = new RegExp(query, flags);
     
+    // Helper to convert glob to regex
+    const globToRegex = (glob: string) => {
+      return new RegExp(
+        glob
+          .replace(/\*\*/g, '<<GLOBSTAR>>')
+          .replace(/\*/g, '[^/]*')
+          .replace(/<<GLOBSTAR>>/g, '.*')
+          .replace(/\?/g, '.')
+      );
+    };
+    
     for (const [path, content] of Object.entries(files)) {
       // Apply include pattern filter
       if (include_pattern) {
-        const pattern = include_pattern
-          .replace(/\*/g, '.*')
-          .replace(/\?/g, '.');
-        if (!new RegExp(pattern).test(path)) continue;
+        if (!globToRegex(include_pattern).test(path)) continue;
+      }
+      
+      // Apply exclude pattern filter
+      if (exclude_pattern) {
+        if (globToRegex(exclude_pattern).test(path)) continue;
       }
       
       // Search in content
@@ -220,6 +252,122 @@ const handleSearchFiles: ToolHandler = async (args, context) => {
     return successResult(id, TOOL_NAMES.SEARCH_FILES, result);
   } catch (error: any) {
     return errorResult(id, TOOL_NAMES.SEARCH_FILES, error.message);
+  }
+};
+
+/**
+ * ext_replace_lines - Surgical line replacement
+ */
+const handleReplaceLines: ToolHandler = async (args, context) => {
+  const { file_path, search, replace } = args as { 
+    file_path: string; 
+    search: string;
+    replace: string;
+  };
+  const id = generateToolCallId();
+  
+  try {
+    // Read current file content
+    const files = context.getFiles();
+    let content = files[file_path];
+    
+    if (!content) {
+      return errorResult(id, TOOL_NAMES.REPLACE_LINES, `File not found: ${file_path}`);
+    }
+    
+    // Check if search string exists
+    if (!content.includes(search)) {
+      return errorResult(
+        id, 
+        TOOL_NAMES.REPLACE_LINES, 
+        `Search string not found in ${file_path}. Make sure it matches exactly.`
+      );
+    }
+    
+    // Check if search string is unique
+    const occurrences = content.split(search).length - 1;
+    if (occurrences > 1) {
+      return errorResult(
+        id, 
+        TOOL_NAMES.REPLACE_LINES, 
+        `Search string found ${occurrences} times. It must be unique. Add more context.`
+      );
+    }
+    
+    // Perform replacement
+    const newContent = content.replace(search, replace);
+    
+    // Write to WebContainer
+    await context.writeFile(file_path, newContent);
+    
+    // Update React state
+    context.updateFile(file_path, newContent);
+    
+    context.writeToTerminal(`\x1b[32m✓\x1b[0m Modified: ${file_path}\r\n`);
+    
+    return successResult(
+      id, 
+      TOOL_NAMES.REPLACE_LINES, 
+      `Successfully replaced code in ${file_path}`
+    );
+  } catch (error: any) {
+    return errorResult(id, TOOL_NAMES.REPLACE_LINES, error.message);
+  }
+};
+
+/**
+ * ext_download_file - Download file from URL
+ */
+const handleDownloadFile: ToolHandler = async (args, context) => {
+  const { url, file_path } = args as { url: string; file_path: string };
+  const id = generateToolCallId();
+  
+  try {
+    context.writeToTerminal(`\x1b[36m⬇\x1b[0m Downloading: ${url}\r\n`);
+    
+    // Fetch the file
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      return errorResult(
+        id, 
+        TOOL_NAMES.DOWNLOAD_FILE, 
+        `Failed to download: ${response.status} ${response.statusText}`
+      );
+    }
+    
+    // Get content as text (for text files) or base64 (for binary)
+    const contentType = response.headers.get('content-type') || '';
+    let content: string;
+    
+    if (contentType.includes('text') || contentType.includes('json') || contentType.includes('xml') || contentType.includes('svg')) {
+      // Text-based file
+      content = await response.text();
+    } else {
+      // Binary file - convert to base64 data URL for storage
+      const blob = await response.blob();
+      content = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    }
+    
+    // Write to WebContainer
+    await context.writeFile(file_path, content);
+    
+    // Update React state
+    context.updateFile(file_path, content);
+    
+    context.writeToTerminal(`\x1b[32m✓\x1b[0m Downloaded to: ${file_path}\r\n`);
+    
+    return successResult(
+      id, 
+      TOOL_NAMES.DOWNLOAD_FILE, 
+      `Successfully downloaded ${url} to ${file_path}`
+    );
+  } catch (error: any) {
+    return errorResult(id, TOOL_NAMES.DOWNLOAD_FILE, error.message);
   }
 };
 
@@ -394,20 +542,27 @@ const handleGetProjectInfo: ToolHandler = async (_args, context) => {
 // ============================================================================
 
 /**
- * All tool handlers mapped by name
+ * All tool handlers mapped by name (15 handlers)
  */
 export const TOOL_HANDLERS: ToolHandlers = {
+  // File operations (8 handlers)
   [TOOL_NAMES.WRITE_FILE]: handleWriteFile,
   [TOOL_NAMES.READ_FILE]: handleReadFile,
   [TOOL_NAMES.DELETE_FILE]: handleDeleteFile,
   [TOOL_NAMES.RENAME_FILE]: handleRenameFile,
   [TOOL_NAMES.LIST_FILES]: handleListFiles,
   [TOOL_NAMES.SEARCH_FILES]: handleSearchFiles,
+  [TOOL_NAMES.REPLACE_LINES]: handleReplaceLines,
+  [TOOL_NAMES.DOWNLOAD_FILE]: handleDownloadFile,
+  // Package management (2 handlers)
   [TOOL_NAMES.ADD_DEPENDENCY]: handleAddDependency,
   [TOOL_NAMES.REMOVE_DEPENDENCY]: handleRemoveDependency,
+  // Build & preview (2 handlers)
   [TOOL_NAMES.BUILD_PREVIEW]: handleBuildPreview,
   [TOOL_NAMES.STOP_PREVIEW]: handleStopPreview,
+  // Terminal (1 handler)
   [TOOL_NAMES.RUN_COMMAND]: handleRunCommand,
+  // Debug (2 handlers)
   [TOOL_NAMES.READ_CONSOLE_LOGS]: handleReadConsoleLogs,
   [TOOL_NAMES.GET_PROJECT_INFO]: handleGetProjectInfo
 };
