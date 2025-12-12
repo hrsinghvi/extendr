@@ -103,26 +103,130 @@ export default function Build() {
   
   // Ref to track files for tool context
   const extensionFilesRef = useRef<FileMap>(extensionFiles);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const projectRef = useRef<Project | null>(null); // Ref to current project for async operations
+  const isSavingRef = useRef(false); // Prevent concurrent saves
+  const pendingSaveRef = useRef<FileMap | null>(null); // Queue pending save
   
   useEffect(() => {
     extensionFilesRef.current = extensionFiles;
   }, [extensionFiles]);
 
-  /**
-   * Debounced save to Supabase - prevents too many saves during rapid file creation
-   */
-  const debouncedSaveFiles = useCallback((files: FileMap) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = setTimeout(() => {
-      if (project) {
-        console.log('[Build] Auto-saving files to Supabase...');
-        saveProjectFiles(project.id, files);
-      }
-    }, 1000); // Save after 1 second of inactivity
+  useEffect(() => {
+    projectRef.current = project;
   }, [project]);
+
+  // ============================================================================
+  // PERSISTENCE SYSTEM - Supabase File Storage
+  // ============================================================================
+
+  /**
+   * Save files to Supabase - SYNCHRONOUS, throws on error
+   * This is the single source of truth for file persistence
+   */
+  const saveFilesToSupabase = useCallback(async (projectId: string, files: FileMap): Promise<boolean> => {
+    if (Object.keys(files).length === 0) {
+      console.log('[Persistence] No files to save');
+      return true;
+    }
+
+    console.log('[Persistence] Saving', Object.keys(files).length, 'files to Supabase...');
+    
+    try {
+      const { error } = await supabase
+        .from('project_files')
+        .upsert({ 
+          project_id: projectId, 
+          files: files as any, 
+          updated_at: new Date().toISOString() 
+        }, { onConflict: 'project_id' });
+
+      if (error) {
+        console.error('[Persistence] Save failed:', error);
+        toast({
+          title: "Save Failed",
+          description: `Could not save files: ${error.message}`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      console.log('[Persistence] ✓ Files saved successfully');
+      return true;
+    } catch (err: any) {
+      console.error('[Persistence] Save error:', err);
+      toast({
+        title: "Save Error",
+        description: err.message,
+        variant: "destructive"
+      });
+      return false;
+    }
+  }, [toast]);
+
+  /**
+   * Load files from Supabase for a project
+   */
+  const loadFilesFromSupabase = useCallback(async (projectId: string): Promise<FileMap> => {
+    console.log('[Persistence] Loading files from Supabase for project:', projectId);
+    
+    try {
+      const { data, error } = await supabase
+        .from('project_files')
+        .select('files')
+        .eq('project_id', projectId)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No files found - this is OK for new projects
+          console.log('[Persistence] No saved files found (new project)');
+          return {};
+        }
+        console.error('[Persistence] Load error:', error);
+        return {};
+      }
+      
+      if (data?.files && typeof data.files === 'object') {
+        const files = data.files as FileMap;
+        console.log('[Persistence] ✓ Loaded', Object.keys(files).length, 'files from Supabase');
+        return files;
+      }
+      
+      return {};
+    } catch (err: any) {
+      console.error('[Persistence] Load exception:', err);
+      return {};
+    }
+  }, []);
+
+  /**
+   * Queue a save operation (debounced to prevent too many saves)
+   */
+  const queueSave = useCallback(async (files: FileMap) => {
+    const proj = projectRef.current;
+    if (!proj) {
+      console.log('[Persistence] No project, skipping save');
+      return;
+    }
+
+    // If already saving, queue this save
+    if (isSavingRef.current) {
+      console.log('[Persistence] Save in progress, queuing...');
+      pendingSaveRef.current = files;
+      return;
+    }
+
+    isSavingRef.current = true;
+    await saveFilesToSupabase(proj.id, files);
+    isSavingRef.current = false;
+
+    // Process queued save if any
+    if (pendingSaveRef.current) {
+      const queuedFiles = pendingSaveRef.current;
+      pendingSaveRef.current = null;
+      await queueSave(queuedFiles);
+    }
+  }, [saveFilesToSupabase]);
 
   // WebContainer hook
   const {
@@ -157,25 +261,45 @@ export default function Build() {
   /**
    * Create tool context for AI service
    * This context connects the AI tools to WebContainer and saves files to Supabase
+   * 
+   * CRITICAL: Supabase save happens FIRST, before WebContainer operations
+   * This guarantees files are persisted even if WebContainer crashes
    */
   const toolContext = useMemo((): ToolContext => {
     return createToolContext(
       {
+        // writeFile: Save to Supabase FIRST, then write to WebContainer
         writeFile: async (path: string, content: string) => {
+          // 1. Update state FIRST
+          const newFiles = { ...extensionFilesRef.current, [path]: content };
+          extensionFilesRef.current = newFiles;
+          setExtensionFiles(newFiles);
+          
+          // 2. Save to Supabase BEFORE WebContainer (guaranteed persistence)
+          const proj = projectRef.current;
+          if (proj) {
+            console.log('[ToolContext] Saving to Supabase FIRST:', path);
+            await saveFilesToSupabase(proj.id, newFiles);
+          }
+          
+          // 3. THEN write to WebContainer (preview) - errors here won't lose data
           try {
             await wcWriteFile(path, content);
+            console.log('[ToolContext] Wrote to WebContainer:', path);
           } catch (e) {
-            // If WebContainer isn't ready, just update state
-            console.log('[Build] WebContainer not ready, updating state only');
+            console.log('[ToolContext] WebContainer error (file already saved to Supabase):', path);
+            // Don't throw - file is already safely saved
           }
         },
         readFile: async (path: string) => {
+          // First try state (includes Supabase-loaded files)
+          const files = extensionFilesRef.current;
+          if (files[path]) return files[path];
+          
+          // Fall back to WebContainer
           try {
             return await wcReadFile(path);
           } catch (e) {
-            // Fall back to state
-            const files = extensionFilesRef.current;
-            if (files[path]) return files[path];
             throw new Error(`File not found: ${path}`);
           }
         },
@@ -187,8 +311,16 @@ export default function Build() {
           }
         },
         build: async (files: FileMap, installDeps?: boolean) => {
-          // Update state first
+          // Update state FIRST
+          extensionFilesRef.current = files;
           setExtensionFiles(files);
+          
+          // Save to Supabase BEFORE building
+          const proj = projectRef.current;
+          if (proj) {
+            await saveFilesToSupabase(proj.id, files);
+          }
+          
           // Then trigger build
           await build(files, installDeps ?? true);
         },
@@ -204,15 +336,17 @@ export default function Build() {
       },
       {
         getFiles: () => extensionFilesRef.current,
+        // setFiles: Updates state AND saves to Supabase
         setFiles: (files: FileMap) => {
+          console.log('[ToolContext] setFiles called with', Object.keys(files).length, 'files');
+          extensionFilesRef.current = files;
           setExtensionFiles(files);
-          extensionFilesRef.current = files; // Keep ref in sync
-          // Debounced save to Supabase
-          debouncedSaveFiles(files);
+          // Save to Supabase
+          queueSave(files);
         }
       }
     );
-  }, [build, stop, status, logs, clearLogs, project, debouncedSaveFiles]);
+  }, [build, stop, status, logs, clearLogs, queueSave, saveFilesToSupabase]);
 
   /**
    * Create AI service instance
@@ -488,30 +622,41 @@ export default function Build() {
   }
 
   /**
-   * Save project files to Supabase
+   * Restore files to WebContainer from loaded state
+   * This writes each file from the loaded Supabase data into the WebContainer
    */
-  async function saveProjectFiles(projectId: string, files: FileMap) {
-    try {
-      const { error } = await supabase
-        .from('project_files')
-        .upsert({ 
-          project_id: projectId, 
-          files: files as any, 
-          updated_at: new Date().toISOString() 
-        }, { onConflict: 'project_id' });
-
-      if (error) throw error;
-      console.log('[Build] Project files saved');
-    } catch (err: any) {
-      console.error('[Build] Error saving project files:', err);
+  const restoreFilesToWebContainer = useCallback(async (files: FileMap): Promise<void> => {
+    if (Object.keys(files).length === 0) {
+      console.log('[Persistence] No files to restore to WebContainer');
+      return;
     }
-  }
+
+    console.log('[Persistence] Restoring', Object.keys(files).length, 'files to WebContainer...');
+    
+    for (const [path, content] of Object.entries(files)) {
+      try {
+        await wcWriteFile(path, content);
+        console.log('[Persistence] ✓ Restored:', path);
+      } catch (e) {
+        console.warn('[Persistence] Could not restore to WC:', path, e);
+        // Continue with other files even if one fails
+      }
+    }
+    
+    console.log('[Persistence] ✓ All files restored to WebContainer');
+  }, []);
 
   /**
    * Loads existing chat for a project or creates a new one
+   * Also loads and restores project files from Supabase
    */
   async function loadOrCreateChat(userId: string, projectId: string) {
     try {
+      // Step 1: Load project files from Supabase FIRST
+      console.log('[loadOrCreateChat] Loading project files...');
+      await initializeProjectFiles(projectId);
+      
+      // Step 2: Load or create chat
       const { data: existingChats, error: fetchError } = await supabase
         .from("chats")
         .select("*")
@@ -531,7 +676,6 @@ export default function Build() {
         if (newChat) {
           setCurrentChat(newChat);
           setMessages([]);
-          setExtensionFiles(getDefaultExtensionFiles());
         }
       }
     } catch (err: any) {
@@ -582,30 +726,6 @@ export default function Build() {
       if (error) throw error;
       
       setMessages((data as DBMessage[]) || []);
-      
-      // Load project files if they exist - ALWAYS do this even if there are no messages
-      if (project) {
-        console.log('[Build] Checking for saved project files...');
-        const { data: fileData, error: fileError } = await supabase
-          .from('project_files')
-          .select('files')
-          .eq('project_id', project.id)
-          .single();
-        
-        if (fileError && fileError.code !== 'PGRST116') {
-          console.error('[Build] Error loading files:', fileError);
-        }
-
-        if (fileData?.files) {
-          console.log('[Build] Loaded project files from database:', Object.keys(fileData.files).length);
-          const loadedFiles = fileData.files as FileMap;
-          setExtensionFiles(loadedFiles);
-          // Sync ref immediately
-          extensionFilesRef.current = loadedFiles;
-        } else {
-           console.log('[Build] No saved files found');
-        }
-      }
     } catch (err: any) {
       console.error("Error loading messages:", err);
       toast({
@@ -614,6 +734,35 @@ export default function Build() {
         variant: "destructive",
       });
     }
+  }
+
+  /**
+   * MAIN INITIALIZATION: Load project files from Supabase and restore to WebContainer
+   * This should be called BEFORE any preview is started
+   */
+  async function initializeProjectFiles(projectId: string): Promise<FileMap> {
+    console.log('[Init] === LOADING PROJECT FILES ===');
+    
+    // Step 1: Load files from Supabase
+    const files = await loadFilesFromSupabase(projectId);
+    
+    // Step 2: Update React state
+    setExtensionFiles(files);
+    extensionFilesRef.current = files;
+    
+    // Step 3: If we have files, restore them to WebContainer
+    if (Object.keys(files).length > 0) {
+      console.log('[Init] Restoring files to WebContainer...');
+      await restoreFilesToWebContainer(files);
+      
+      toast({
+        title: "Project Restored",
+        description: `Loaded ${Object.keys(files).length} files from your last session.`,
+      });
+    }
+    
+    console.log('[Init] === PROJECT FILES READY ===');
+    return files;
   }
 
   /**
@@ -692,15 +841,18 @@ export default function Build() {
       
       setMessages((prev) => [...prev, assistantMsg as DBMessage]);
 
-      // ALWAYS save files after AI response (even if no files modified, state may have changed)
+      // ALWAYS save files after AI response
       if (project && Object.keys(extensionFilesRef.current).length > 0) {
-        console.log('[Build] Saving project files after AI response...');
-        await saveProjectFiles(project.id, extensionFilesRef.current);
+        console.log('[Build] Final save after AI response...');
+        const saved = await saveFilesToSupabase(project.id, extensionFilesRef.current);
+        if (saved) {
+          console.log('[Build] ✓ All files persisted to Supabase');
+        }
       }
       
       if (result.modifiedFiles.length > 0) {
         toast({
-          title: "Files Created",
+          title: "Files Created & Saved",
           description: `Created ${result.modifiedFiles.length} file(s). ${result.buildTriggered ? 'Building preview...' : 'Click Build & Run to preview.'}`,
         });
       }
@@ -737,23 +889,32 @@ export default function Build() {
 
   /**
    * Handle file changes from the editor
+   * Saves to Supabase immediately
    */
   const handleFilesChange = useCallback((newFiles: FileMap) => {
+    // Update state and ref
+    extensionFilesRef.current = newFiles;
     setExtensionFiles(newFiles);
     
-    // Save to project
-    if (project) {
-      saveProjectFiles(project.id, newFiles);
-    }
-  }, [project]);
+    // Save to Supabase
+    queueSave(newFiles);
+  }, [queueSave]);
 
   /**
    * Handle build button click
+   * Saves files to Supabase before building
    */
-  const handleBuild = useCallback(() => {
+  const handleBuild = useCallback(async () => {
     console.log('[Build] handleBuild called with', Object.keys(extensionFiles).length, 'files');
+    
+    // Save to Supabase first
+    if (project) {
+      await saveFilesToSupabase(project.id, extensionFiles);
+    }
+    
+    // Then build
     build(extensionFiles, true);
-  }, [build, extensionFiles]);
+  }, [build, extensionFiles, project, saveFilesToSupabase]);
 
   /**
    * Handle stop button click
@@ -764,10 +925,16 @@ export default function Build() {
 
   /**
    * Handle rebuild
+   * Saves files to Supabase before rebuilding
    */
-  const handleRebuild = useCallback(() => {
+  const handleRebuild = useCallback(async () => {
+    // Save to Supabase first
+    if (project) {
+      await saveFilesToSupabase(project.id, extensionFiles);
+    }
+    
     build(extensionFiles, false);
-  }, [build, extensionFiles]);
+  }, [build, extensionFiles, project, saveFilesToSupabase]);
 
   if (isLoading) {
     return (

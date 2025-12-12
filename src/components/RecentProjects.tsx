@@ -14,7 +14,6 @@ import { Badge } from "./ui/badge";
 import { supabase } from "../integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { createAIServiceFromEnv, type ToolContext } from "@/lib/ai";
 
 // Dummy data removed; data now loaded from MCP (public.projects) per-auth user
 // We intentionally fetch the current session via Supabase client (no AuthContext dependency)
@@ -34,7 +33,6 @@ export function RecentProjects() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("last-edited");
-  const [generatingDescriptions, setGeneratingDescriptions] = useState<Set<string>>(new Set());
 
   // Redirect to landing page on login
   useEffect(() => {
@@ -145,110 +143,6 @@ export function RecentProjects() {
     updateCategories();
   }, [projects, loading]);
 
-    // Auto-generate descriptions
-  useEffect(() => {
-    if (loading || !projects.length) return;
-
-    const isErrorDescription = (desc: string | null) => {
-      return desc && (desc.startsWith("I encountered an error") || desc.includes("quota"));
-    };
-
-    // Filter projects that need a description (empty or using the UI default fallback text OR has an error message)
-    const projectsToUpdate = projects.filter(p => {
-      return (!p.description || p.description.trim() === "" || isErrorDescription(p.description)) && !generatingDescriptions.has(p.id);
-    });
-
-    if (projectsToUpdate.length === 0) return;
-
-    const updateDescriptions = async () => {
-      // Mark as updating to prevent duplicate runs
-      setGeneratingDescriptions(prev => {
-        const next = new Set(prev);
-        projectsToUpdate.forEach(p => next.add(p.id));
-        return next;
-      });
-
-      const aiService = createAIServiceFromEnv();
-      if (!aiService) return;
-
-      // Dummy context for AI service
-      const dummyToolContext: ToolContext = {
-          writeFile: async () => {},
-          readFile: async () => "",
-          deleteFile: async () => {},
-          listFiles: async () => [],
-          getFiles: () => ({}),
-          setFiles: () => {},
-          updateFile: () => {},
-          build: async () => {},
-          stop: () => {},
-          isRunning: () => false,
-          runCommand: async () => ({ exitCode: 0, output: "" }),
-          getLogs: () => [],
-          clearLogs: () => {},
-          writeToTerminal: () => {}
-      };
-
-      // Process one by one to avoid rate limits
-      for (const p of projectsToUpdate) {
-          try {
-              // 1. Fetch the chat and first message to get user context
-              let userContext = "";
-              const { data: chatData } = await supabase
-                .from("chats")
-                .select("id")
-                .eq("project_id", p.id)
-                .single();
-
-              if (chatData) {
-                const { data: messages } = await supabase
-                  .from("messages")
-                  .select("content")
-                  .eq("chat_id", chatData.id)
-                  .eq("role", "user")
-                  .order("created_at", { ascending: true })
-                  .limit(1);
-                
-                if (messages && messages.length > 0) {
-                  userContext = messages[0].content;
-                }
-              }
-
-              const prompt = `Generate a short description (max 9 words) for a Chrome extension called "${p.title}". 
-              ${userContext ? `The user's original request was: "${userContext}".` : ''}
-              It should be personally tailored to the project name and user request. Do not use quotes.`;
-              
-              // Use chat with empty history
-              const result = await aiService.chat(prompt, [], dummyToolContext);
-              const description = result.response.trim();
-
-              // Only save if it's a valid description and NOT an error message
-              if (description && !description.startsWith("I encountered an error") && !description.includes("quota")) {
-                  // Update DB
-                  await supabase
-                    .from('projects')
-                    .update({ description })
-                    .eq('id', p.id);
-                  
-                  // Update local state
-                  setProjects(current => current.map(curr => 
-                      curr.id === p.id ? { ...curr, description } : curr
-                  ));
-              } else {
-                console.warn("Skipping saving error description:", description);
-              }
-              
-              // Add a small delay between requests to be nice to the API
-              await new Promise(resolve => setTimeout(resolve, 1000));
-
-          } catch (e) {
-              console.error("Error generating description for", p.title, e);
-          }
-      }
-    };
-
-    updateDescriptions();
-  }, [projects, loading]);
 
   // Filtering
   const filteredProjects = projects.filter(p =>
@@ -333,7 +227,7 @@ export function RecentProjects() {
           <p className="text-gray-400">No projects yet. Start building something amazing!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredProjects.map((project) => {
             const categoryName = project.category || determineCategoryFromText((project.title || "") + " " + (project.description || ""));
             const CategoryIcon = CATEGORIES[categoryName as ProjectCategory] || CATEGORIES["Other"];
@@ -341,38 +235,39 @@ export function RecentProjects() {
             return (
             <div
               key={project.id}
-              className="group cursor-pointer bg-[#1a1a1a] rounded-lg border border-[#333] p-4 flex items-start space-x-4 hover:border-[#555] transition-colors"
+              className="group cursor-pointer bg-[#1a1a1a] rounded-xl border border-[#333] p-3 hover:border-[#555] transition-colors relative aspect-[5/4] flex flex-col"
               onClick={() => navigate("/build", { state: { project } })}
             >
-              <div className="flex-shrink-0 text-center w-16">
-                {/* Icon container */}
-                <div className="w-12 h-12 bg-gradient-to-r from-[#5A9665] to-[#5f87a3] rounded-lg flex items-center justify-center mx-auto mb-1 shadow-lg">
-                  <CategoryIcon className="text-white w-6 h-6" />
+              {/* Delete button */}
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-400 transition-colors p-1 rounded-md hover:bg-red-500/10 opacity-0 group-hover:opacity-100 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm("Are you sure you want to delete this project?")) {
+                    handleDeleteProject(project.id);
+                  }
+                }}
+                title="Delete project"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Icon */}
+              <div className="flex-1 flex items-center justify-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#5A9665] to-[#5f87a3] rounded-xl flex items-center justify-center shadow-lg">
+                  <CategoryIcon className="text-white w-7 h-7" />
                 </div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider truncate w-full text-center mt-1 px-1">{categoryName}</p>
               </div>
-              <div className="flex-grow min-w-0">
-                <div className="flex items-center justify-between mb-1 gap-2">
-                  <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors text-lg truncate">
-                    {project.title}
-                  </h3>
-                  <button
-                    className="text-gray-500 hover:text-red-400 transition-colors p-1.5 rounded-md hover:bg-red-500/10 shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm("Are you sure you want to delete this project?")) {
-                        handleDeleteProject(project.id);
-                      }
-                    }}
-                    title="Delete project"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-sm text-gray-400 mb-2 line-clamp-2">
-                  {project.description || "A custom Chrome extension built with AI assistance."}
+
+              {/* Content */}
+              <div className="text-center mt-2">
+                <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-1">{categoryName}</p>
+                <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors text-sm truncate px-1">
+                  {project.title}
+                </h3>
+                <p className="text-[10px] text-gray-500 mt-1">
+                  {new Date(project.updated_at ?? project.created_at ?? Date.now()).toLocaleDateString()}
                 </p>
-                <p className="text-xs text-gray-500">Updated {new Date(project.updated_at ?? project.created_at ?? Date.now()).toLocaleDateString()}</p>
               </div>
             </div>
             );
