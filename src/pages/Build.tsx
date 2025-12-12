@@ -103,9 +103,26 @@ export default function Build() {
   
   // Ref to track files for tool context
   const extensionFilesRef = useRef<FileMap>(extensionFiles);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   useEffect(() => {
     extensionFilesRef.current = extensionFiles;
   }, [extensionFiles]);
+
+  /**
+   * Debounced save to Supabase - prevents too many saves during rapid file creation
+   */
+  const debouncedSaveFiles = useCallback((files: FileMap) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      if (project) {
+        console.log('[Build] Auto-saving files to Supabase...');
+        saveProjectFiles(project.id, files);
+      }
+    }, 1000); // Save after 1 second of inactivity
+  }, [project]);
 
   // WebContainer hook
   const {
@@ -139,6 +156,7 @@ export default function Build() {
 
   /**
    * Create tool context for AI service
+   * This context connects the AI tools to WebContainer and saves files to Supabase
    */
   const toolContext = useMemo((): ToolContext => {
     return createToolContext(
@@ -186,10 +204,15 @@ export default function Build() {
       },
       {
         getFiles: () => extensionFilesRef.current,
-        setFiles: (files: FileMap) => setExtensionFiles(files)
+        setFiles: (files: FileMap) => {
+          setExtensionFiles(files);
+          extensionFilesRef.current = files; // Keep ref in sync
+          // Debounced save to Supabase
+          debouncedSaveFiles(files);
+        }
       }
     );
-  }, [build, stop, status, logs, clearLogs]);
+  }, [build, stop, status, logs, clearLogs, project, debouncedSaveFiles]);
 
   /**
    * Create AI service instance
@@ -669,10 +692,13 @@ export default function Build() {
       
       setMessages((prev) => [...prev, assistantMsg as DBMessage]);
 
-      // Save files to project if any were modified
-      if (result.modifiedFiles.length > 0 && project) {
+      // ALWAYS save files after AI response (even if no files modified, state may have changed)
+      if (project && Object.keys(extensionFilesRef.current).length > 0) {
+        console.log('[Build] Saving project files after AI response...');
         await saveProjectFiles(project.id, extensionFilesRef.current);
-        
+      }
+      
+      if (result.modifiedFiles.length > 0) {
         toast({
           title: "Files Created",
           description: `Created ${result.modifiedFiles.length} file(s). ${result.buildTriggered ? 'Building preview...' : 'Click Build & Run to preview.'}`,
@@ -862,7 +888,7 @@ export default function Build() {
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[90%] rounded-lg px-4 py-3 ${
+                      className={`max-w-[90%] rounded-lg px-4 py-3 overflow-hidden ${
                         message.role === "user"
                         ? "bg-[#5A9665] text-white"
                         : "bg-[#2a2a2a] text-white"

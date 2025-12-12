@@ -98,11 +98,20 @@ const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
   const hasToolActivity = filesCreated.length > 0 || (toolCalls && toolCalls.length > 0);
 
   return (
-    <div className="prose prose-invert prose-sm max-w-none">
+    <div className="prose prose-invert prose-sm max-w-none break-words overflow-hidden [word-break:break-word]">
       {/* Main text content */}
-      <ReactMarkdown>
-        {explanatoryText}
-      </ReactMarkdown>
+      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+        <ReactMarkdown
+          components={{
+            // Ensure all elements break words properly
+            p: ({ children }) => <p className="break-words [overflow-wrap:anywhere]">{children}</p>,
+            a: ({ children, href }) => <a href={href} className="break-all text-[#5A9665] hover:underline">{children}</a>,
+            code: ({ children }) => <code className="break-all bg-gray-700/50 px-1 py-0.5 rounded text-xs">{children}</code>,
+          }}
+        >
+          {explanatoryText}
+        </ReactMarkdown>
+      </div>
       
       {/* Tool activity summary */}
       {hasToolActivity && (
