@@ -52,7 +52,7 @@ const plans = [
   {
     name: "Premium",
     description:
-      "For power users who need advanced features and faster generation",
+      "For power users who need all features and faster generation",
     price: 40,
     yearlyPrice: 380,
     popular: true,
