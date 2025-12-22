@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Settings, Download } from "lucide-react";
+import { ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Settings, Download, Eye, Trash2, Play, Terminal, Package, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PromptInputBox } from "@/components/ui/prompt-input-box";
 import { AIMessage } from "@/components/AIMessage";
@@ -18,6 +18,7 @@ import {
 import { 
   PreviewPanel, 
   useWebContainer,
+  BuildStatus,
   writeFile as wcWriteFile,
   readFile as wcReadFile,
   runCommand as wcRunCommand,
@@ -33,6 +34,7 @@ import {
   type ToolContext
 } from "@/lib/ai";
 import { determineCategoryFromText } from "@/lib/categories";
+import { downloadExtension } from "@/lib/export";
 
 // Types for chat and messages (from Supabase)
 interface DBMessage {
@@ -106,6 +108,8 @@ export default function Build() {
   const projectRef = useRef<Project | null>(null); // Ref to current project for async operations
   const isSavingRef = useRef(false); // Prevent concurrent saves
   const pendingSaveRef = useRef<FileMap | null>(null); // Queue pending save
+  const hasAutoBuiltRef = useRef(false); // Track if we've auto-built for current project
+  const lastProjectIdRef = useRef<string | null>(null); // Track project ID for auto-build reset
   
   useEffect(() => {
     extensionFilesRef.current = extensionFiles;
@@ -238,6 +242,7 @@ export default function Build() {
     build,
     stop,
     clearLogs,
+    clearPreview,
     updateFiles,
     connectTerminal,
     isBooted
@@ -247,6 +252,20 @@ export default function Build() {
     },
     onError: (error) => {
       console.error('[Build] WebContainer error:', error);
+      
+      // Handle WebContainer singleton error gracefully
+      if (error.includes('single WebContainer') || error.includes('already running')) {
+        console.warn('[Build] WebContainer already running - this can happen during dev hot reload');
+        // Don't show toast for this - it's expected during development
+        // Just try to refresh the page after a short delay
+        toast({
+          title: 'Refreshing...',
+          description: 'WebContainer needs to restart. Refreshing page...',
+        });
+        setTimeout(() => window.location.reload(), 1500);
+        return;
+      }
+      
       toast({
         title: 'Build Error',
         description: error,
@@ -388,6 +407,48 @@ export default function Build() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  /**
+   * Auto-build when loading a project with existing files
+   * This ensures the preview starts automatically when returning to a project
+   */
+  useEffect(() => {
+    // Reset auto-build tracking when project changes
+    if (project?.id && project.id !== lastProjectIdRef.current) {
+      hasAutoBuiltRef.current = false;
+      lastProjectIdRef.current = project.id;
+    }
+
+    // Check conditions for auto-build:
+    // 1. We have files loaded
+    // 2. We haven't auto-built yet for this project
+    // 3. We're not currently loading
+    // 4. No preview URL yet
+    // 5. Build status is idle (not already building)
+    const hasFiles = Object.keys(extensionFiles).length > 0;
+    const shouldAutoBuild = hasFiles && 
+                           !hasAutoBuiltRef.current && 
+                           !isLoading && 
+                           !previewUrl && 
+                           status === BuildStatus.IDLE &&
+                           !isThinking;
+
+    if (shouldAutoBuild) {
+      console.log('[Auto-Build] Triggering auto-build for', Object.keys(extensionFiles).length, 'files');
+      hasAutoBuiltRef.current = true;
+      
+      // Small delay to ensure everything is initialized
+      const timer = setTimeout(() => {
+        build(extensionFiles, true).catch(err => {
+          console.warn('[Auto-Build] Failed:', err);
+          // Reset flag so it can retry on next opportunity
+          hasAutoBuiltRef.current = false;
+        });
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [extensionFiles, project?.id, isLoading, previewUrl, status, isThinking, build]);
 
   /**
    * Handle terminal ready - connect it to WebContainer
@@ -743,6 +804,9 @@ export default function Build() {
   async function initializeProjectFiles(projectId: string): Promise<FileMap> {
     console.log('[Init] === LOADING PROJECT FILES ===');
     
+    // IMPORTANT: Clear any existing preview from previous project
+    clearPreview();
+    
     // Step 1: Load files from Supabase
     const files = await loadFilesFromSupabase(projectId);
     
@@ -754,11 +818,7 @@ export default function Build() {
     if (Object.keys(files).length > 0) {
       console.log('[Init] Restoring files to WebContainer...');
       await restoreFilesToWebContainer(files);
-      
-      toast({
-        title: "Project Restored",
-        description: `Loaded ${Object.keys(files).length} files from your last session.`,
-      });
+      // Auto-build will be triggered by the useEffect below
     }
     
     console.log('[Init] === PROJECT FILES READY ===');
@@ -850,19 +910,19 @@ export default function Build() {
         }
       }
       
-      if (result.modifiedFiles.length > 0) {
-        toast({
-          title: "Files Created & Saved",
-          description: `Created ${result.modifiedFiles.length} file(s). ${result.buildTriggered ? 'Building preview...' : 'Click Build & Run to preview.'}`,
-        });
-      }
-      
-      // If build wasn't triggered by AI but files were modified, suggest building
+      // If build wasn't triggered by AI but files were modified, auto-build
       if (result.modifiedFiles.length > 0 && !result.buildTriggered) {
-        // Auto-build after file creation
-        setTimeout(() => {
-          build(extensionFilesRef.current, true);
-        }, 500);
+        // Wait for all async operations to complete, then build
+        // Using a longer delay and ensuring files are ready
+        console.log('[Build] Auto-building after AI created files...');
+        setTimeout(async () => {
+          // Double-check we have files
+          const currentFiles = extensionFilesRef.current;
+          if (Object.keys(currentFiles).length > 0) {
+            console.log('[Build] Starting auto-build with', Object.keys(currentFiles).length, 'files');
+            await build(currentFiles, true);
+          }
+        }, 1500); // Increased from 500ms to give time for all async ops
       }
       
     } catch (err: any) {
@@ -949,7 +1009,7 @@ export default function Build() {
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden bg-[#232323]">
         {/* Left sidebar - Chat */}
-        <div className="bg-[#232323] flex flex-col w-[400px] min-w-[350px] max-w-[500px] border-r border-gray-800">
+        <div className="bg-[#232323] flex flex-col w-[480px] min-w-[420px] max-w-[600px] border-r border-gray-800">
           {/* Chat Top Bar */}
           <div className="h-12 flex items-center px-4 border-b border-gray-800">
             <DropdownMenu>
@@ -1078,23 +1138,82 @@ export default function Build() {
             )}
             {isThinking && (
               <div className="flex items-start gap-3 text-gray-400">
-                <div className="bg-[#2a2a2a] rounded-lg px-4 py-3">
+                <div className="bg-[#2a2a2a] rounded-lg px-4 py-3 max-w-[90%]">
                   <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                </div>
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                      <div className="w-2 h-2 bg-[#5A9665] rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                    </div>
                     <span className="text-sm">{thinkingMessage}</span>
                   </div>
                   {currentToolCalls.length > 0 && (
-                    <div className="mt-2 text-xs text-gray-500">
-                      {currentToolCalls.map((tc, i) => (
-                        <div key={i} className="flex items-center gap-1">
-                          <span className="text-green-400">✓</span>
-                          <span>{tc.name.replace('ext_', '')}</span>
-                        </div>
-                      ))}
+                    <div className="mt-3 bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800">
+                      <div className="px-3 py-2 text-xs text-gray-400 border-b border-gray-800 font-medium">
+                        {currentToolCalls.length} action{currentToolCalls.length !== 1 ? 's' : ''} in progress...
+                      </div>
+                      <div className="px-3 py-2 space-y-1.5">
+                        {currentToolCalls.map((tc, i) => {
+                          const toolName = tc.name;
+                          const args = tc.arguments as Record<string, unknown>;
+                          const filePath = args.file_path as string;
+                          const packageName = args.package as string;
+                          const command = args.command as string;
+                          
+                          // Determine icon component, label, detail based on tool
+                          let IconComponent = Terminal;
+                          let label = toolName.replace('ext_', '').replace(/_/g, ' ');
+                          let color = 'text-gray-400';
+                          let detail = filePath || packageName || command;
+                          
+                          if (toolName === 'ext_write_file') {
+                            IconComponent = Pencil;
+                            label = 'Wrote';
+                            color = 'text-green-400';
+                          } else if (toolName === 'ext_read_file') {
+                            IconComponent = Eye;
+                            label = 'Read';
+                            color = 'text-blue-400';
+                          } else if (toolName === 'ext_replace_lines') {
+                            IconComponent = Pencil;
+                            label = 'Edited';
+                            color = 'text-orange-400';
+                          } else if (toolName === 'ext_build_preview') {
+                            IconComponent = Play;
+                            label = 'Building project';
+                            color = 'text-[#5A9665]';
+                            detail = '';
+                          } else if (toolName === 'ext_delete_file') {
+                            IconComponent = Trash2;
+                            label = 'Deleted';
+                            color = 'text-red-400';
+                          } else if (toolName === 'ext_add_dependency') {
+                            IconComponent = Package;
+                            label = 'Installing';
+                            color = 'text-cyan-400';
+                          } else if (toolName === 'ext_download_file') {
+                            IconComponent = Download;
+                            label = 'Downloaded';
+                            color = 'text-cyan-400';
+                          } else if (toolName === 'ext_run_command') {
+                            IconComponent = Terminal;
+                            label = 'Ran command';
+                            color = 'text-yellow-400';
+                          }
+                          
+                          return (
+                            <div key={i} className="flex items-center gap-2 text-xs">
+                              <IconComponent className={`w-3.5 h-3.5 flex-shrink-0 ${color}`} />
+                              <span className={`${color} flex-shrink-0`}>{label}</span>
+                              {detail && (
+                                <code className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-400 font-mono text-[10px] truncate">
+                                  {detail}
+                                </code>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1131,11 +1250,22 @@ export default function Build() {
             onTerminalReady={handleTerminalReady}
             className="flex-1"
             userEmail={user?.email}
-            onExport={() => {
-              toast({
-                title: "Export Coming Soon",
-                description: "Extension export will be available soon.",
-              });
+            isAIWorking={isThinking}
+            onExport={async () => {
+              try {
+                await downloadExtension(extensionFiles, projectTitle);
+                toast({
+                  title: "Exported!",
+                  description: "Extension downloaded as ZIP file.",
+                });
+              } catch (error: any) {
+                console.error("Export error:", error);
+                toast({
+                  title: "Export Failed",
+                  description: error.message || "Failed to export extension. Please try again.",
+                  variant: "destructive",
+                });
+              }
             }}
             onPublish={() => {
               toast({

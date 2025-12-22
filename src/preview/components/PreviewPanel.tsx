@@ -71,6 +71,8 @@ interface ExtendedPreviewPanelProps extends PreviewPanelProps {
   userEmail?: string;
   onExport?: () => void;
   onPublish?: () => void;
+  /** Whether AI is currently working on the extension */
+  isAIWorking?: boolean;
 }
 
 /**
@@ -92,7 +94,8 @@ export function PreviewPanel({
   onTerminalReady,
   userEmail,
   onExport,
-  onPublish
+  onPublish,
+  isAIWorking = false
 }: ExtendedPreviewPanelProps) {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code');
@@ -280,30 +283,36 @@ export function PreviewPanel({
         )}
 
         {/* Editor/Preview area */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Tab Content */}
-          {activeTab === 'code' ? (
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              {selectedFile ? (
-                <CodeEditor
-                  value={selectedFileContent}
-                  onChange={handleCodeChange}
-                  fileName={selectedFile}
-                  className="flex-1 overflow-hidden"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                  <FileCode className="w-5 h-5 mr-2" />
-                  Select a file to edit
-                </div>
-              )}
-            </div>
-          ) : (
-            <PreviewFrame 
-              url={previewUrl || null} 
-              className="flex-1" 
-            />
-          )}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+          {/* Code Tab Content - hidden when preview tab is active */}
+          <div className={cn(
+            "flex-1 flex flex-col min-h-0 overflow-hidden",
+            activeTab !== 'code' && "hidden"
+          )}>
+            {selectedFile ? (
+              <CodeEditor
+                value={selectedFileContent}
+                onChange={handleCodeChange}
+                fileName={selectedFile}
+                className="flex-1 overflow-hidden"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                <FileCode className="w-5 h-5 mr-2" />
+                Select a file to edit
+              </div>
+            )}
+          </div>
+          
+          {/* Preview Tab Content - ALWAYS mounted, hidden when code tab is active */}
+          {/* This prevents iframe reload flicker when switching tabs */}
+          <PreviewFrame 
+            url={previewUrl || null} 
+            className={cn("flex-1 absolute inset-0", activeTab !== 'preview' && "hidden")}
+            hasFiles={Object.keys(files).length > 0}
+            buildStatus={status}
+            isAIWorking={isAIWorking}
+          />
 
           {/* Bottom panel (Terminal/Logs) - Only show in code view */}
           {activeTab === 'code' && (

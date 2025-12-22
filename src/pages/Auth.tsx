@@ -234,7 +234,7 @@ export default function Auth() {
         <div className="relative z-10 w-full max-w-2xl px-8">
           <PromptInputBox
             onSend={handleSend}
-            placeholder="Ask Lovable to build your landing page."
+            placeholder="Ask extendr to build your landing page."
           />
         </div>
       </div>

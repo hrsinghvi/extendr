@@ -97,7 +97,7 @@ export class GeminiProvider extends BaseAIProvider {
   }
   
   protected getDefaultModel(): string {
-    return 'gemini-2.0-flash';
+    return 'gemini-2.5-flash';
   }
   
   /**
@@ -293,10 +293,13 @@ export class GeminiProvider extends BaseAIProvider {
       }
     }
     
-    // If we have tool calls, return them
+    // If we have tool calls, return them (include any text content too)
     if (toolCalls.length > 0) {
       this.log('Received tool calls', toolCalls.map(tc => tc.name));
-      return this.toolCallsResponse(toolCalls, data);
+      if (textContent) {
+        this.log('Also received text with tool calls:', textContent.substring(0, 100));
+      }
+      return this.toolCallsResponse(toolCalls, data, textContent || undefined);
     }
     
     // Otherwise return text

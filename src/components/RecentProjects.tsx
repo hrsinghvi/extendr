@@ -1,8 +1,9 @@
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, ArrowRight, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { CATEGORIES, determineCategoryFromText, type ProjectCategory } from "@/lib/categories";
+import { GradientIcon } from "./GradientIcon";
 import {
   Select,
   SelectContent,
@@ -10,10 +11,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Badge } from "./ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { supabase } from "../integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+
+/**
+ * Format a date as "X time ago"
+ */
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (seconds < 60) return `Updated ${seconds} seconds ago`;
+  
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `Updated ${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Updated ${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `Updated ${days} day${days !== 1 ? 's' : ''} ago`;
+  
+  const months = Math.floor(days / 30);
+  if (months < 12) return `Updated ${months} month${months !== 1 ? 's' : ''} ago`;
+  
+  const years = Math.floor(months / 12);
+  return `Updated ${years} year${years !== 1 ? 's' : ''} ago`;
+}
 
 // Dummy data removed; data now loaded from MCP (public.projects) per-auth user
 // We intentionally fetch the current session via Supabase client (no AuthContext dependency)
@@ -33,6 +68,8 @@ export function RecentProjects() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("last-edited");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // Redirect to landing page on login
   useEffect(() => {
@@ -111,24 +148,31 @@ export function RecentProjects() {
     };
   }, [authLoading, isAuthenticated, user?.id, toast, projects.length]);
 
-  // Auto-categorize projects
+  // Auto-categorize projects and generate descriptions
   useEffect(() => {
     if (loading || !projects.length) return;
     
-    const uncategorized = projects.filter(p => !p.category);
-    if (uncategorized.length === 0) return;
+    const needsUpdate = projects.filter(p => !p.category || !p.description);
+    if (needsUpdate.length === 0) return;
 
-    const updateCategories = async () => {
-      const updates = uncategorized.map(async (p) => {
-        const category = determineCategoryFromText((p.title || "") + " " + (p.description || ""));
+    const updateProjects = async () => {
+      const updates = needsUpdate.map(async (p) => {
+        const category = p.category || determineCategoryFromText((p.title || "") + " " + (p.description || ""));
+        
+        // Generate description if missing
+        let description = p.description;
+        if (!description && p.title) {
+          // Create a simple description based on title and category
+          description = generateDescription(p.title, category);
+        }
         
         // Update DB
         await supabase
           .from('projects')
-          .update({ category })
+          .update({ category, description })
           .eq('id', p.id);
           
-        return { id: p.id, category };
+        return { id: p.id, category, description };
       });
 
       const results = await Promise.all(updates);
@@ -136,12 +180,34 @@ export function RecentProjects() {
       // Update local state
       setProjects(current => current.map(p => {
         const update = results.find(r => r.id === p.id);
-        return update ? { ...p, category: update.category } : p;
+        return update ? { ...p, category: update.category, description: update.description } : p;
       }));
     };
 
-    updateCategories();
+    updateProjects();
   }, [projects, loading]);
+
+  /**
+   * Generate a description based on title and category
+   */
+  function generateDescription(title: string, category: string): string {
+    const titleLower = title.toLowerCase();
+    
+    // Category-based descriptions
+    const categoryDescriptions: Record<string, string> = {
+      "Productivity": `${title} is a productivity extension that helps you work smarter and stay organized.`,
+      "Developer Tools": `${title} is a developer tool that enhances your coding workflow and development experience.`,
+      "Social & Communication": `${title} is a social extension that improves your online communication and networking.`,
+      "Shopping & Finance": `${title} is a shopping and finance tool that helps you save money and manage purchases.`,
+      "Entertainment": `${title} is an entertainment extension that enhances your browsing and media experience.`,
+      "Privacy & Security": `${title} is a privacy and security tool that protects your data and online activity.`,
+      "News & Research": `${title} is a research tool that helps you discover and organize information.`,
+      "Accessibility": `${title} is an accessibility tool that makes the web more usable for everyone.`,
+      "Games": `${title} is a fun game extension that you can play right in your browser.`,
+    };
+    
+    return categoryDescriptions[category] || `${title} is a Chrome extension that enhances your browsing experience.`;
+  }
 
 
   // Filtering
@@ -227,53 +293,101 @@ export function RecentProjects() {
           <p className="text-gray-400">No projects yet. Start building something amazing!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
           {filteredProjects.map((project) => {
             const categoryName = project.category || determineCategoryFromText((project.title || "") + " " + (project.description || ""));
             const CategoryIcon = CATEGORIES[categoryName as ProjectCategory] || CATEGORIES["Other"];
+            const description = project.description || generateDescription(project.title || "Extension", categoryName);
             
             return (
-            <div
-              key={project.id}
-              className="group cursor-pointer bg-[#1a1a1a] rounded-xl border border-[#333] p-3 hover:border-[#555] transition-colors relative aspect-[5/4] flex flex-col"
-              onClick={() => navigate("/build", { state: { project } })}
-            >
-              {/* Delete button */}
-              <button
-                className="absolute top-2 right-2 text-gray-500 hover:text-red-400 transition-colors p-1 rounded-md hover:bg-red-500/10 opacity-0 group-hover:opacity-100 z-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm("Are you sure you want to delete this project?")) {
-                    handleDeleteProject(project.id);
-                  }
-                }}
-                title="Delete project"
+              <div
+                key={project.id}
+                className="group cursor-pointer bg-[#1a1a1a] rounded-2xl border border-[#333] hover:border-[#555] transition-all hover:bg-[#1f1f1f] flex items-stretch gap-4 p-4 relative"
+                onClick={() => navigate("/build", { state: { project } })}
               >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Icon */}
-              <div className="flex-1 flex items-center justify-center">
-                <div className="w-14 h-14 bg-gradient-to-br from-[#5A9665] to-[#5f87a3] rounded-xl flex items-center justify-center shadow-lg">
-                  <CategoryIcon className="text-white w-7 h-7" />
+                {/* Left: Icon Box */}
+                <div className="w-20 h-20 flex-shrink-0 bg-[#0d1117] rounded-xl flex flex-col items-center justify-center shadow-lg">
+                  <GradientIcon icon={CategoryIcon} className="w-8 h-8 mb-1" />
+                  <span className="text-[9px] text-gray-500 font-medium truncate max-w-[70px] text-center">{categoryName}</span>
                 </div>
-              </div>
 
-              {/* Content */}
-              <div className="text-center mt-2">
-                <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-1">{categoryName}</p>
-                <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors text-sm truncate px-1">
-                  {project.title}
-                </h3>
-                <p className="text-[10px] text-gray-500 mt-1">
-                  {new Date(project.updated_at ?? project.created_at ?? Date.now()).toLocaleDateString()}
-                </p>
+                {/* Right: Content */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
+                  {/* Title with arrow */}
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <h3 className="font-semibold text-white group-hover:text-[#5A9665] transition-colors text-base truncate">
+                      {project.title}
+                    </h3>
+                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#5A9665] transition-colors flex-shrink-0" />
+                  </div>
+                  
+                  {/* Description */}
+                  <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                    {description}
+                  </p>
+                  
+                  {/* Updated time */}
+                  <p className="text-xs text-[#5A9665]">
+                    {formatTimeAgo(new Date(project.updated_at ?? project.created_at ?? Date.now()))}
+                  </p>
+                </div>
+
+                {/* Delete button - only visible on hover */}
+                <button
+                  className="absolute top-3 right-3 flex-shrink-0 text-gray-500 hover:text-red-400 transition-all p-2 rounded-lg hover:bg-red-500/10 opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProjectToDelete({ id: project.id, title: project.title });
+                    setDeleteDialogOpen(true);
+                  }}
+                  title="Delete project"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-            </div>
             );
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-[#1a1a1a] border-[#333] max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-red-500/10">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+              </div>
+              <AlertDialogTitle className="text-white text-lg">
+                Delete Project
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-gray-400 text-sm">
+              Are you sure you want to delete{" "}
+              <span className="text-white font-medium">"{projectToDelete?.title}"</span>?
+              This action cannot be undone and all project data will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-4">
+            <AlertDialogCancel 
+              className="bg-[#2a2a2a] border-[#444] text-white hover:bg-[#333] hover:text-white"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white border-0"
+              onClick={() => {
+                if (projectToDelete) {
+                  handleDeleteProject(projectToDelete.id);
+                }
+                setProjectToDelete(null);
+              }}
+            >
+              Delete Project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

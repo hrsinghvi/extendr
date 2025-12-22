@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { Zap, LogOut, Settings, HelpCircle } from "lucide-react";
+import { LogOut, Settings, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -71,11 +71,9 @@ export function Header() {
           <div className="flex items-center justify-between h-16">
             {/* Logo & Brand */}
             <div className="flex items-center">
-              <button onClick={() => navigate('/')} className="flex items-center gap-2 font-bold text-xl focus:outline-none hover:opacity-80 transition-opacity">
-                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <span>Bolt</span>
+              <button onClick={() => navigate('/')} className="flex items-center gap-2.5 font-bold text-xl focus:outline-none hover:opacity-80 transition-opacity">
+                <img src="/logo.svg" alt="extendr" className="w-10 h-10 rounded-lg" />
+                <span>extendr</span>
               </button>
             </div>
 

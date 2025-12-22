@@ -87,6 +87,9 @@ export class AIService {
     // Get system prompt
     const systemPrompt = getSystemPrompt();
     
+    // Track intro text from first response (before tools execute)
+    let introText = '';
+    
     // Iteration loop - AI may make multiple tool calls
     let iterations = 0;
     
@@ -115,13 +118,21 @@ export class AIService {
         
         if (response.type === 'text') {
           // Final text response - we're done
-          result.response = response.content || '';
+          // Combine intro (if any) with final response
+          const finalText = response.content || '';
+          result.response = introText ? `${introText}\n\n${finalText}` : finalText;
           break;
         }
         
         if (response.type === 'tool_calls' && response.toolCalls) {
           // Execute tool calls
           const toolCalls = response.toolCalls;
+          
+          // Capture intro text from first response with tool calls
+          if (iterations === 1 && response.content) {
+            introText = response.content;
+            console.log('[AIService] Captured intro text:', introText.substring(0, 100));
+          }
           
           // Notify about tool calls
           for (const tc of toolCalls) {
@@ -132,7 +143,7 @@ export class AIService {
           // Add assistant message with tool calls to conversation
           messages.push({
             role: 'assistant',
-            content: '',
+            content: response.content || '',
             toolCalls
           });
           

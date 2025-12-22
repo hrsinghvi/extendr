@@ -67,7 +67,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-xl sm:text-2xl text-white max-w-3xl mx-auto"
           >
-            Create custom Chrome extensions in minutes with AI.
+            Create custom Chrome extensions in seconds.
           </motion.p>
         </div>
 

@@ -5,10 +5,11 @@
  */
 
 import React, { useRef, useEffect, useState } from 'react';
-import { RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { PreviewFrameProps } from '../types';
+import { BuildStatus } from '../useWebContainer';
 
 /**
  * PreviewFrame component
@@ -17,12 +18,31 @@ export function PreviewFrame({
   url,
   className,
   onLoad,
-  onError
+  onError,
+  hasFiles = false,
+  buildStatus,
+  isAIWorking = false
 }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [key, setKey] = useState(0);
+  
+  // Track if we've successfully loaded the current URL (prevents flicker on tab switch)
+  const lastLoadedUrlRef = useRef<string | null>(null);
+  
+  // Check if we're currently building
+  const isBuilding = buildStatus === BuildStatus.BOOTING || 
+                     buildStatus === BuildStatus.MOUNTING || 
+                     buildStatus === BuildStatus.INSTALLING || 
+                     buildStatus === BuildStatus.STARTING;
+  
+  // Clear lastLoadedUrlRef when URL is cleared (project switch)
+  useEffect(() => {
+    if (!url) {
+      lastLoadedUrlRef.current = null;
+    }
+  }, [url]);
 
   /**
    * Handle iframe load
@@ -30,6 +50,8 @@ export function PreviewFrame({
   const handleLoad = () => {
     setIsLoading(false);
     setHasError(false);
+    // Remember that we successfully loaded this URL
+    lastLoadedUrlRef.current = url;
     onLoad?.();
   };
 
@@ -51,25 +73,40 @@ export function PreviewFrame({
     setHasError(false);
   };
 
-  /**
-   * Open in new tab
-   */
-  const openInNewTab = () => {
-    if (url) {
-      window.open(url, '_blank');
-    }
-  };
-
-  // Reset state when URL changes
+  // Reset state when URL changes to a NEW URL (not on tab switch)
   useEffect(() => {
-    if (url) {
+    if (url && url !== lastLoadedUrlRef.current) {
+      // Only show loading for a genuinely new URL
       setIsLoading(true);
       setHasError(false);
     }
   }, [url]);
 
-  // No URL state
+  // No URL state - show loading if files exist or building, otherwise show empty state
   if (!url) {
+    // If we have files or are actively building, show loading/building state
+    if (hasFiles || isBuilding) {
+      return (
+        <div className={cn(
+          'flex flex-col items-center justify-center h-full bg-[#1a1a1a] text-gray-400',
+          className
+        )}>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#5A9665] to-[#5f87a3] animate-pulse shadow-[0_0_15px_rgba(90,150,101,0.5)]" />
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-300 mb-1">
+                {isBuilding ? 'Building your extension...' : 'Preparing preview...'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {isBuilding ? 'This may take a moment' : 'Your extension will appear here'}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Truly empty state - only for new projects with no files
     return (
       <div className={cn(
         'flex flex-col items-center justify-center h-full bg-[#1a1a1a] text-gray-400',
@@ -98,41 +135,35 @@ export function PreviewFrame({
 
   return (
     <div className={cn('relative flex flex-col h-full bg-[#1a1a1a]', className)}>
-      {/* Preview toolbar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 bg-[#232323]">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* URL bar */}
-          <div className="flex-1 px-3 py-1.5 bg-[#1a1a1a] rounded text-xs text-gray-400 truncate border border-gray-700">
-            {url}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1 ml-2">
+      {/* Preview content */}
+      <div className="relative flex-1">
+        {/* Floating reload button - top right corner */}
+        <div className="absolute top-3 right-3 z-20">
           <Button
             variant="ghost"
             size="sm"
             onClick={refresh}
-            className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
-            title="Refresh"
+            className="h-8 w-8 p-0 text-gray-400 hover:text-white bg-[#232323]/90 hover:bg-[#232323] backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-lg"
+            title="Refresh preview"
           >
-            <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={openInNewTab}
-            className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
-            title="Open in new tab"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
           </Button>
         </div>
-      </div>
-
-      {/* Preview content */}
-      <div className="relative flex-1">
-        {/* Loading overlay */}
-        {isLoading && (
+        {/* AI Working overlay - shows when AI is creating/modifying the extension */}
+        {isAIWorking && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#1a1a1a] z-10">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#5A9665] to-[#5f87a3] animate-pulse shadow-[0_0_15px_rgba(90,150,101,0.5)]" />
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-300 mb-1">AI is working...</p>
+                <p className="text-xs text-gray-500">Your extension will appear here</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Loading overlay - only when not AI working */}
+        {isLoading && !isAIWorking && (
           <div className="absolute inset-0 flex items-center justify-center bg-[#1a1a1a] z-10">
             <div className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#5A9665] to-[#5f87a3] animate-pulse shadow-[0_0_15px_rgba(90,150,101,0.5)]" />

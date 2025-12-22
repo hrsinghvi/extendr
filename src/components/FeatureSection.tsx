@@ -44,7 +44,7 @@ export function FeatureSection() {
             Everything you need to scale. Built in.
           </h2>
           <p className="text-lg text-muted-foreground">
-            Stop stitching together platforms. Bolt Cloud gives you enterprise-grade
+            Stop stitching together platforms. extendr gives you enterprise-grade
             backend infrastructure without the complexity.
           </p>
         </div>
@@ -79,7 +79,7 @@ export function FeatureSection() {
           </div>
           <div className="relative flex justify-center">
             <span className="px-6 bg-surface-elevated text-sm text-muted-foreground">
-              Bolt gives you everything you need inside one familiar interface—no extra accounts, no steep learning curve.
+              extendr gives you everything you need inside one familiar interface—no extra accounts, no steep learning curve.
             </span>
           </div>
         </div>

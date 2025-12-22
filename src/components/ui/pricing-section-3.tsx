@@ -10,64 +10,85 @@ import { useRef, useState } from "react";
 
 const plans = [
   {
-    name: "Starter",
+    name: "Free",
     description:
-      "Great for small businesses and startups looking to get started with AI",
-    price: 12,
-    yearlyPrice: 99,
+      "Perfect for trying out Extendr and building your first extension",
+    price: 0,
+    yearlyPrice: 0,
     buttonText: "Get started",
     buttonVariant: "outline" as const,
     features: [
-      { text: "Up to 10 boards per workspace", icon: <Briefcase size={20} /> },
-      { text: "Up to 10GB storage", icon: <Database size={20} /> },
-      { text: "Limited analytics", icon: <Server size={20} /> },
+      { text: "Up to 3 extensions", icon: <Briefcase size={20} /> },
+      { text: "Basic templates", icon: <Database size={20} /> },
+      { text: "Community support", icon: <Server size={20} /> },
     ],
     includes: [
       "Free includes:",
-      "Unlimted Cards",
-      "Custom background & stickers",
-      "2-factor authentication",
+      "AI-powered generation",
+      "Live preview",
+      "Export to ZIP",
     ],
   },
   {
-    name: "Business",
+    name: "Pro",
     description:
-      "Best value for growing businesses that need more advanced features",
-    price: 48,
-    yearlyPrice: 399,
+      "Best for indie developers building multiple extensions",
+    price: 20,
+    yearlyPrice: 190,
     buttonText: "Get started",
     buttonVariant: "outline" as const,
     features: [
-      { text: "Unlimted boards", icon: <Briefcase size={20} /> },
-      { text: "Storage (250MB/file)", icon: <Database size={20} /> },
-      { text: "100 workspace command runs", icon: <Server size={20} /> },
+      { text: "Unlimited extensions", icon: <Briefcase size={20} /> },
+      { text: "All templates", icon: <Database size={20} /> },
+      { text: "Priority AI generation", icon: <Server size={20} /> },
     ],
     includes: [
-      "Everything in Starter, plus:",
-      "Advanced checklists",
-      "Custom fields",
-      "Servedless functions",
+      "Everything in Free, plus:",
+      "Advanced customization",
+      "Version history",
+      "Email support",
+    ],
+  },
+  {
+    name: "Premium",
+    description:
+      "For power users who need advanced features and faster generation",
+    price: 40,
+    yearlyPrice: 380,
+    popular: true,
+    buttonText: "Get started",
+    buttonVariant: "default" as const,
+    features: [
+      { text: "Unlimited everything", icon: <Briefcase size={20} /> },
+      { text: "Custom branding", icon: <Database size={20} /> },
+      { text: "Fastest AI generation", icon: <Server size={20} /> },
+    ],
+    includes: [
+      "Everything in Pro, plus:",
+      "Priority support",
+      "Advanced analytics",
+      "API access",
     ],
   },
   {
     name: "Enterprise",
     description:
-      "Advanced plan with enhanced security and unlimited access for large teams",
-    price: 96,
-    yearlyPrice: 899,
-    popular: true,
-    buttonText: "Get started",
-    buttonVariant: "default" as const,
+      "Custom solutions for teams with dedicated support and SLAs",
+    price: null,
+    yearlyPrice: null,
+    isCustom: true,
+    buttonText: "Contact sales",
+    buttonVariant: "outline" as const,
     features: [
-      { text: "Unlimited board", icon: <Briefcase size={20} /> },
-      { text: "Unlimited storage ", icon: <Database size={20} /> },
-      { text: "Unlimited workspaces", icon: <Server size={20} /> },
+      { text: "Custom integrations", icon: <Briefcase size={20} /> },
+      { text: "Dedicated support", icon: <Database size={20} /> },
+      { text: "SLA guarantees", icon: <Server size={20} /> },
     ],
     includes: [
-      "Everything in Business, plus:",
-      "Multi-board management",
-      "Multi-board guest",
-      "Attachment permissions",
+      "Everything in Premium, plus:",
+      "SSO & SAML",
+      "Custom contracts",
+      "Dedicated account manager",
     ],
   },
 ];
@@ -212,7 +233,7 @@ export default function PricingSection3() {
         animationNum={2}
         timelineRef={pricingRef}
         customVariants={revealVariants}
-        className="grid md:grid-cols-3 gap-4 mx-auto bg-muted/30 sm:p-2 rounded-lg"
+        className="grid md:grid-cols-4 gap-4 mx-auto bg-muted/30 sm:p-2 rounded-lg"
       >
         {plans.map((plan, index) => (
           <TimelineContent
@@ -223,7 +244,7 @@ export default function PricingSection3() {
             customVariants={revealVariants}
           >
             <Card
-              className={`relative flex-col flex justify-between  ${
+              className={`relative flex flex-col h-full ${
                 plan.popular
                   ? "scale-105 ring-2 ring-primary bg-gradient-to-t from-primary to-primary/90 text-primary-foreground"
                   : "border bg-card text-card-foreground pt-4"
@@ -240,25 +261,31 @@ export default function PricingSection3() {
                   )}
 
                   <div className="flex items-baseline">
-                    <span className="text-4xl font-semibold ">
-                      $
-                      <NumberFlow
-                        format={{
-                          currency: "USD",
-                        }}
-                        value={isYearly ? plan.yearlyPrice : plan.price}
-                        className="text-4xl font-semibold"
-                      />
-                    </span>
-                    <span
-                      className={
-                        plan.popular
-                          ? "text-primary-foreground/70 ml-1"
-                          : "text-muted-foreground ml-1"
-                      }
-                    >
-                      /{isYearly ? "year" : "month"}
-                    </span>
+                    {plan.isCustom ? (
+                      <span className="text-3xl font-semibold">Custom</span>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-semibold ">
+                          $
+                          <NumberFlow
+                            format={{
+                              currency: "USD",
+                            }}
+                            value={isYearly ? plan.yearlyPrice! : plan.price!}
+                            className="text-4xl font-semibold"
+                          />
+                        </span>
+                        <span
+                          className={
+                            plan.popular
+                              ? "text-primary-foreground/70 ml-1"
+                              : "text-muted-foreground ml-1"
+                          }
+                        >
+                          /{isYearly ? "year" : "month"}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -305,9 +332,9 @@ export default function PricingSection3() {
                   </ul>
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="mt-auto pt-4">
                 <button
-                  className={`w-full mb-6 p-4 text-xl rounded-xl transition-colors ${
+                  className={`w-full p-4 text-xl rounded-xl transition-colors ${
                     plan.popular
                       ? "bg-primary-foreground text-primary font-semibold shadow-lg border border-primary-foreground/20 hover:bg-primary-foreground/90"
                       : plan.buttonVariant === "outline"

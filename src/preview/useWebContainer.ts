@@ -203,13 +203,15 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
 
   /**
    * Build extension
+   * Note: We do NOT clear previewUrl here - instead we keep the old preview visible
+   * until the new one is ready. This prevents the "No Preview Available" flash.
    */
   const build = useCallback(async (files: FileMap, installDeps = true) => {
     console.log('[useWebContainer] build() called with', Object.keys(files).length, 'files');
     
     setIsLoading(true);
     setError(null);
-    setPreviewUrl(null);
+    // Don't clear previewUrl - keep old preview visible during rebuild
     addLog('info', 'Starting build...', 'build');
     
     try {
@@ -267,6 +269,17 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
   }, []);
 
   /**
+   * Clear/reset preview state (used when switching projects)
+   */
+  const clearPreview = useCallback(() => {
+    console.log('[useWebContainer] Clearing preview state');
+    setPreviewUrl(null);
+    setStatus(BuildStatus.IDLE);
+    setError(null);
+    setIsLoading(false);
+  }, []);
+
+  /**
    * Auto-init if enabled
    */
   useEffect(() => {
@@ -289,6 +302,7 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
     stop,
     destroy,
     clearLogs,
+    clearPreview,
     connectTerminal,
     disconnectTerminal
   };

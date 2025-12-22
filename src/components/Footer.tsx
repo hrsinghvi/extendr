@@ -1,5 +1,4 @@
 import { MessageCircle, Linkedin, Youtube, Twitter, Instagram, Circle, ArrowUpRight } from "lucide-react";
-import { Zap } from "lucide-react";
 
 const footerLinks = {
   Resources: [
@@ -31,11 +30,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Brand column */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                <Zap className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-lg">Bolt</span>
+            <div className="flex items-center gap-2.5 mb-4">
+              <img src="/logo.svg" alt="extendr" className="w-10 h-10 rounded-lg" />
+              <span className="font-bold text-lg">extendr</span>
             </div>
           </div>
 
@@ -81,7 +78,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground text-center">
-            © 2025 StackBlitz - All rights reserved.
+            © 2025 extendr - All rights reserved.
           </p>
         </div>
       </div>

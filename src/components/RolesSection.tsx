@@ -36,10 +36,10 @@ export function RolesSection() {
         {/* Section header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Bolt gives you superpowers
+            extendr gives you superpowers
           </h2>
           <p className="text-lg text-muted-foreground">
-            From idea to live product in record time. Bolt adapts to the way you work,
+            From idea to live product in record time. extendr adapts to the way you work,
             amplifying your unique strengths.
           </p>
         </div>

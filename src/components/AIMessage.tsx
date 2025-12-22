@@ -1,5 +1,20 @@
-import React from 'react';
-import { FileCode, Terminal, Package, Play, Search, Trash2, Edit3 } from 'lucide-react';
+import { useState } from 'react';
+import { 
+  Terminal, 
+  Package, 
+  Play, 
+  Search, 
+  Trash2, 
+  Pencil,
+  Eye,
+  Download,
+  FolderOpen,
+  Wrench,
+  ChevronDown,
+  ChevronUp,
+  MessageCircle,
+  Square
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { ToolCall } from '@/lib/ai/types';
 
@@ -12,63 +27,197 @@ interface AIMessageProps {
 }
 
 /**
- * Get icon for a tool based on its name
+ * Tool action type for display
  */
-function getToolIcon(toolName: string) {
-  if (toolName.includes('write_file') || toolName.includes('read_file')) {
-    return FileCode;
-  }
-  if (toolName.includes('delete_file')) {
-    return Trash2;
-  }
-  if (toolName.includes('rename_file')) {
-    return Edit3;
-  }
-  if (toolName.includes('search')) {
-    return Search;
-  }
-  if (toolName.includes('dependency') || toolName.includes('package')) {
-    return Package;
-  }
-  if (toolName.includes('build') || toolName.includes('run') || toolName.includes('command')) {
-    return Terminal;
-  }
-  if (toolName.includes('preview')) {
-    return Play;
-  }
-  return Terminal;
+interface ToolAction {
+  icon: React.ElementType;
+  label: string;
+  detail?: string;
+  color: string;
 }
 
 /**
- * Format tool name for display
+ * Parse a tool call into a displayable action
  */
-function formatToolName(toolName: string): string {
-  return toolName
-    .replace('ext_', '')
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, l => l.toUpperCase());
-}
-
-/**
- * Group tool calls by type for cleaner display
- */
-function groupToolCalls(toolCalls: ToolCall[]): Record<string, ToolCall[]> {
-  const groups: Record<string, ToolCall[]> = {};
+function parseToolAction(tc: ToolCall): ToolAction {
+  const args = tc.arguments as Record<string, unknown>;
   
-  for (const tc of toolCalls) {
-    const category = tc.name.includes('file') ? 'files' :
-                     tc.name.includes('dependency') ? 'packages' :
-                     tc.name.includes('build') || tc.name.includes('preview') ? 'build' :
-                     tc.name.includes('command') ? 'commands' :
-                     'other';
+  switch (tc.name) {
+    case 'ext_write_file':
+      return {
+        icon: Pencil,
+        label: 'Wrote',
+        detail: args.file_path as string,
+        color: 'text-green-400'
+      };
     
-    if (!groups[category]) {
-      groups[category] = [];
-    }
-    groups[category].push(tc);
+    case 'ext_read_file':
+      return {
+        icon: Eye,
+        label: 'Read',
+        detail: args.file_path as string,
+        color: 'text-blue-400'
+      };
+    
+    case 'ext_delete_file':
+      return {
+        icon: Trash2,
+        label: 'Deleted',
+        detail: args.file_path as string,
+        color: 'text-red-400'
+      };
+    
+    case 'ext_rename_file':
+      return {
+        icon: Pencil,
+        label: 'Renamed',
+        detail: `${args.old_path} → ${args.new_path}`,
+        color: 'text-yellow-400'
+      };
+    
+    case 'ext_list_files':
+      return {
+        icon: FolderOpen,
+        label: 'Listed files',
+        detail: args.directory as string || 'root',
+        color: 'text-gray-400'
+      };
+    
+    case 'ext_search_files':
+      return {
+        icon: Search,
+        label: 'Searched',
+        detail: `"${args.query}"`,
+        color: 'text-purple-400'
+      };
+    
+    case 'ext_replace_lines':
+      return {
+        icon: Pencil,
+        label: 'Edited',
+        detail: args.file_path as string,
+        color: 'text-orange-400'
+      };
+    
+    case 'ext_download_file':
+      return {
+        icon: Download,
+        label: 'Downloaded',
+        detail: args.file_path as string,
+        color: 'text-cyan-400'
+      };
+    
+    case 'ext_add_dependency':
+      return {
+        icon: Package,
+        label: 'Installed',
+        detail: args.package as string,
+        color: 'text-green-400'
+      };
+    
+    case 'ext_remove_dependency':
+      return {
+        icon: Package,
+        label: 'Uninstalled',
+        detail: args.package as string,
+        color: 'text-red-400'
+      };
+    
+    case 'ext_build_preview':
+      return {
+        icon: Play,
+        label: 'Built the project',
+        color: 'text-[#5A9665]'
+      };
+    
+    case 'ext_stop_preview':
+      return {
+        icon: Square,
+        label: 'Stopped preview',
+        color: 'text-red-400'
+      };
+    
+    case 'ext_run_command':
+      return {
+        icon: Terminal,
+        label: 'Ran command',
+        detail: args.command as string,
+        color: 'text-yellow-400'
+      };
+    
+    case 'ext_read_console_logs':
+      return {
+        icon: Terminal,
+        label: 'Read logs',
+        color: 'text-gray-400'
+      };
+    
+    case 'ext_get_project_info':
+      return {
+        icon: Wrench,
+        label: 'Checked project',
+        color: 'text-gray-400'
+      };
+    
+    default:
+      return {
+        icon: Terminal,
+        label: tc.name.replace('ext_', '').replace(/_/g, ' '),
+        color: 'text-gray-400'
+      };
   }
+}
+
+/**
+ * Actions dropdown component
+ */
+function ActionsDropdown({ toolCalls }: { toolCalls: ToolCall[] }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   
-  return groups;
+  const actions = toolCalls.map(tc => parseToolAction(tc));
+  const actionCount = actions.length;
+  
+  if (actionCount === 0) return null;
+  
+  return (
+    <div className="mt-3 bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800">
+      {/* Collapsed header */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 transition-colors"
+      >
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <MessageCircle className="w-4 h-4" />
+          <span className="font-medium">{actionCount} action{actionCount !== 1 ? 's' : ''} taken</span>
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="w-4 h-4 text-gray-500" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-gray-500" />
+        )}
+      </button>
+      
+      {/* Expanded content */}
+      {isExpanded && (
+        <div className="border-t border-gray-800 px-3 py-2 space-y-2">
+          {actions.map((action, index) => {
+            const Icon = action.icon;
+            return (
+              <div key={index} className="flex items-center gap-2.5 text-sm min-w-0">
+                <Icon className={`w-4 h-4 flex-shrink-0 ${action.color}`} />
+                <span className="text-gray-300 flex-shrink-0">{action.label}</span>
+                {action.detail && (
+                  <code className="text-xs bg-gray-800 px-1.5 py-0.5 rounded text-gray-400 font-mono truncate min-w-0">
+                    {action.detail}
+                  </code>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function AIMessage({ content, modifiedFiles, toolCalls }: AIMessageProps) {
@@ -93,9 +242,7 @@ const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
     }
   }
 
-  // Group tool calls for display
-  const groupedToolCalls = toolCalls ? groupToolCalls(toolCalls) : null;
-  const hasToolActivity = filesCreated.length > 0 || (toolCalls && toolCalls.length > 0);
+  const hasToolCalls = toolCalls && toolCalls.length > 0;
 
   return (
     <div className="prose prose-invert prose-sm max-w-none break-words overflow-hidden [word-break:break-word]">
@@ -104,47 +251,19 @@ const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
         <ReactMarkdown
           components={{
             // Ensure all elements break words properly
-            p: ({ children }) => <p className="break-words [overflow-wrap:anywhere]">{children}</p>,
+            p: ({ children }) => <p className="break-words [overflow-wrap:anywhere] m-0">{children}</p>,
             a: ({ children, href }) => <a href={href} className="break-all text-[#5A9665] hover:underline">{children}</a>,
             code: ({ children }) => <code className="break-all bg-gray-700/50 px-1 py-0.5 rounded text-xs">{children}</code>,
+            ul: ({ children }) => <ul className="list-disc pl-4 mt-2 space-y-1">{children}</ul>,
+            li: ({ children }) => <li className="text-gray-300">{children}</li>,
           }}
         >
           {explanatoryText}
         </ReactMarkdown>
       </div>
       
-      {/* Tool activity summary */}
-      {hasToolActivity && (
-        <div className="mt-4 bg-gray-800/50 rounded-lg p-3 not-prose">
-          {/* Files created/modified */}
-          {filesCreated.length > 0 && (
-            <div className="mb-3">
-              <h4 className="font-semibold text-xs text-gray-400 mb-2 flex items-center gap-1.5">
-                <FileCode className="w-3.5 h-3.5" />
-                Files created
-              </h4>
-              <ul className="space-y-1 list-none p-0 m-0">
-                {filesCreated.map(file => (
-              <li key={file} className="flex items-center gap-2 text-xs text-gray-300">
-                    <span className="text-green-400">+</span>
-                    <span className="font-mono">{file}</span>
-              </li>
-            ))}
-          </ul>
-            </div>
-          )}
-          
-          {/* Tool calls breakdown - Only showing Preview status */}
-          {groupedToolCalls && groupedToolCalls.build && (
-            <div>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-                <Play className="w-3 h-3 text-[#5A9665]" />
-                <span>Preview started</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Tool actions dropdown */}
+      {hasToolCalls && <ActionsDropdown toolCalls={toolCalls} />}
     </div>
   );
 }

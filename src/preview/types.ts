@@ -142,6 +142,12 @@ export interface PreviewFrameProps {
   className?: string;
   onLoad?: () => void;
   onError?: (error: string) => void;
+  /** Whether there are files in the project (used to show loading vs empty state) */
+  hasFiles?: boolean;
+  /** Current build status */
+  buildStatus?: string;
+  /** Whether AI is currently working on the extension */
+  isAIWorking?: boolean;
 }
 
 /**

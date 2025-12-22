@@ -27,11 +27,37 @@ export interface WebContainerStatus {
 }
 
 // ============================================================================
-// State
+// State (stored on window to persist across HMR)
 // ============================================================================
 
-let webcontainerInstance: WebContainer | null = null;
-let bootPromise: Promise<WebContainer> | null = null;
+// Extend Window interface for our global state
+declare global {
+  interface Window {
+    __webcontainer_instance__?: WebContainer;
+    __webcontainer_boot_promise__?: Promise<WebContainer>;
+    __webcontainer_session_id__?: string;
+  }
+}
+
+// Generate a unique session ID for this page load
+const SESSION_ID = `wc-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+// Check if this is a fresh page load (not HMR)
+// If the session ID doesn't match, clear the cached state
+const storedSessionId = window.__webcontainer_session_id__;
+if (storedSessionId && storedSessionId !== SESSION_ID) {
+  // This is a new page load, not HMR - clear stale references
+  // Note: The actual WebContainer may still be alive in the service worker
+  console.log('[WebContainer] Detected new session, clearing stale references');
+  window.__webcontainer_instance__ = undefined;
+  window.__webcontainer_boot_promise__ = undefined;
+}
+window.__webcontainer_session_id__ = SESSION_ID;
+
+// Use window storage to survive HMR reloads
+// This prevents "Only a single WebContainer instance can be booted" errors
+let webcontainerInstance: WebContainer | null = window.__webcontainer_instance__ || null;
+let bootPromise: Promise<WebContainer> | null = window.__webcontainer_boot_promise__ || null;
 let currentProcess: WebContainerProcess | null = null;
 let serverUrl: string | null = null;
 
@@ -113,7 +139,7 @@ export async function bootWebContainer(): Promise<WebContainer> {
   updateStatus('booting', 'Initializing WebContainer...', 0);
   writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Booting...\r\n');
 
-  bootPromise = (async () => {
+  const promise = (async () => {
     try {
       // Check if we're in a secure context (required for WebContainers)
       if (!window.isSecureContext) {
@@ -124,9 +150,25 @@ export async function bootWebContainer(): Promise<WebContainer> {
       // Note: We can't directly check headers, but we can try to boot and catch errors
       console.log('[WebContainer] Attempting to boot with credentialless COEP...');
       
-      const instance = await WebContainer.boot({
-        coep: 'credentialless' // More permissive than 'require-corp'
-      });
+      let instance: WebContainer;
+      try {
+        instance = await WebContainer.boot({
+          coep: 'credentialless' // More permissive than 'require-corp'
+        });
+      } catch (bootError: any) {
+        // Handle "Only a single WebContainer instance can be booted" error
+        if (bootError.message?.includes('single WebContainer')) {
+          console.warn('[WebContainer] Instance already exists. Page reload may be needed.');
+          // If we have a cached instance, return it
+          if (window.__webcontainer_instance__) {
+            console.log('[WebContainer] Returning cached instance from window');
+            return window.__webcontainer_instance__;
+          }
+          // Otherwise, we need to tell the user to refresh
+          throw new Error('WebContainer already running. Please refresh the page to restart.');
+        }
+        throw bootError;
+      }
 
       console.log('[WebContainer] Boot successful!');
       writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Boot successful!\r\n');
@@ -146,11 +188,14 @@ export async function bootWebContainer(): Promise<WebContainer> {
       });
 
       webcontainerInstance = instance;
+      // Store on window so it persists across HMR
+      window.__webcontainer_instance__ = instance;
       updateStatus('idle', 'WebContainer ready', 10);
       
       return instance;
     } catch (error: any) {
       bootPromise = null;
+      window.__webcontainer_boot_promise__ = undefined;
       
       // Provide helpful error messages
       let errorMessage = error.message || 'Unknown error';
@@ -170,7 +215,11 @@ export async function bootWebContainer(): Promise<WebContainer> {
     }
   })();
 
-  return bootPromise;
+  // Store on both module variable and window
+  bootPromise = promise;
+  window.__webcontainer_boot_promise__ = promise;
+
+  return promise;
 }
 
 // ============================================================================
@@ -450,16 +499,13 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
         type: 'module',
         scripts: {
           dev: 'vite --host',
-          build: 'tsc && vite build',
+          build: 'vite build',
           preview: 'vite preview'
         },
         dependencies: {
           'react': '^18.3.1',
           'react-dom': '^18.3.1',
-          'lucide-react': '^0.468.0',
-          'class-variance-authority': '^0.7.0',
-          'clsx': '^2.1.1',
-          'tailwind-merge': '^2.5.5'
+          'lucide-react': '^0.468.0'
         },
         devDependencies: {
           '@types/react': '^18.3.16',
@@ -473,7 +519,7 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
         }
       };
       allFiles['package.json'] = JSON.stringify(defaultPackageJson, null, 2);
-      console.log('[WebContainer] Using default package.json with React/Tailwind/shadcn deps');
+      console.log('[WebContainer] Using default package.json with React/Tailwind');
     } else {
       console.log('[WebContainer] Using AI-provided package.json');
     }
@@ -485,6 +531,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
+  },
   server: {
     host: true,
     port: 3000
@@ -495,7 +546,7 @@ export default defineConfig({
 });
 `;
       allFiles['vite.config.ts'] = defaultViteConfig;
-      console.log('[WebContainer] Using default vite.config.ts with React plugin');
+      console.log('[WebContainer] Using default vite.config.ts with React plugin and @ alias');
     } else {
       console.log('[WebContainer] Using AI-provided vite config');
     }
@@ -509,50 +560,13 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-    },
+    extend: {},
   },
   plugins: [],
 }
 `;
       allFiles['tailwind.config.js'] = defaultTailwindConfig;
-      console.log('[WebContainer] Using default tailwind.config.js with shadcn theme');
+      console.log('[WebContainer] Using default tailwind.config.js');
     }
 
     // Create default postcss.config.js if not provided
@@ -598,79 +612,19 @@ export default {
       console.log('[WebContainer] Using default tsconfig.json');
     }
 
-    // Create default src/lib/utils.ts (cn utility for shadcn) if not provided
-    if (!files['src/lib/utils.ts']) {
-      const cnUtility = `import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-`;
-      allFiles['src/lib/utils.ts'] = cnUtility;
-      console.log('[WebContainer] Created src/lib/utils.ts (cn utility)');
-    }
-
-    // Create default src/styles/index.css with Tailwind and shadcn CSS variables
-    if (!files['src/styles/index.css'] && !files['src/index.css']) {
+    // Create default src/index.css with Tailwind
+    if (!files['src/index.css'] && !files['src/styles/index.css']) {
       const defaultCss = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355 100% 97%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 142 76% 36%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --primary: 142 76% 46%;
-    --primary-foreground: 144 80% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 142 76% 46%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+body {
+  margin: 0;
+  padding: 0;
 }
 `;
-      allFiles['src/styles/index.css'] = defaultCss;
-      console.log('[WebContainer] Created src/styles/index.css with shadcn CSS variables');
+      allFiles['src/index.css'] = defaultCss;
+      console.log('[WebContainer] Created src/index.css with Tailwind');
     }
 
     // Only create index.html if not provided
@@ -699,7 +653,7 @@ export function cn(...inputs: ClassValue[]) {
       const defaultMain = `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './styles/index.css';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -714,30 +668,25 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     // Create default src/App.tsx if not provided
     if (!files['src/App.tsx'] && !files['src/pages/popup/App.tsx']) {
       const defaultApp = `import { useState } from 'react';
-import { cn } from './lib/utils';
 
 export default function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-80 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-center mb-4">
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+      <div className="w-80 bg-gray-800 rounded-xl p-6 shadow-lg">
+        <h1 className="text-xl font-bold text-center mb-4">
           Extension Preview
         </h1>
-        <p className="text-sm text-muted-foreground text-center mb-6">
+        <p className="text-sm text-gray-400 text-center mb-6">
           Your extension will appear here. The AI is setting up your project.
         </p>
+        <p className="text-4xl font-mono text-center mb-4">{count}</p>
         <button
           onClick={() => setCount(c => c + 1)}
-          className={cn(
-            "w-full inline-flex items-center justify-center rounded-md text-sm font-medium",
-            "h-10 px-4 py-2",
-            "bg-primary text-primary-foreground hover:bg-primary/90",
-            "transition-colors"
-          )}
+          className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
         >
-          Count: {count}
+          Click me!
         </button>
       </div>
     </div>
@@ -746,191 +695,6 @@ export default function App() {
 `;
       allFiles['src/App.tsx'] = defaultApp;
       console.log('[WebContainer] Created default src/App.tsx');
-    }
-
-    // ============ PRE-INSTALLED SHADCN/UI COMPONENTS ============
-
-    // shadcn/ui Button component
-    if (!files['src/components/ui/button.tsx']) {
-      const buttonComponent = `import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
-
-const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-);
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
-    return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    );
-  }
-);
-Button.displayName = "Button";
-
-export { Button, buttonVariants };
-`;
-      allFiles['src/components/ui/button.tsx'] = buttonComponent;
-      console.log('[WebContainer] Created shadcn Button component');
-    }
-
-    // shadcn/ui Card component
-    if (!files['src/components/ui/card.tsx']) {
-      const cardComponent = `import * as React from "react";
-import { cn } from "@/lib/utils";
-
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}
-      {...props}
-    />
-  )
-);
-Card.displayName = "Card";
-
-const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
-  )
-);
-CardHeader.displayName = "CardHeader";
-
-const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h3
-      ref={ref}
-      className={cn("text-2xl font-semibold leading-none tracking-tight", className)}
-      {...props}
-    />
-  )
-);
-CardTitle.displayName = "CardTitle";
-
-const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-  ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
-  )
-);
-CardDescription.displayName = "CardDescription";
-
-const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-  )
-);
-CardContent.displayName = "CardContent";
-
-const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
-  )
-);
-CardFooter.displayName = "CardFooter";
-
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
-`;
-      allFiles['src/components/ui/card.tsx'] = cardComponent;
-      console.log('[WebContainer] Created shadcn Card component');
-    }
-
-    // shadcn/ui Input component
-    if (!files['src/components/ui/input.tsx']) {
-      const inputComponent = `import * as React from "react";
-import { cn } from "@/lib/utils";
-
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
-
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    );
-  }
-);
-Input.displayName = "Input";
-
-export { Input };
-`;
-      allFiles['src/components/ui/input.tsx'] = inputComponent;
-      console.log('[WebContainer] Created shadcn Input component');
-    }
-
-    // shadcn/ui Badge component
-    if (!files['src/components/ui/badge.tsx']) {
-      const badgeComponent = `import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
-
-const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-  {
-    variants: {
-      variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
-
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
-}
-
-export { Badge, badgeVariants };
-`;
-      allFiles['src/components/ui/badge.tsx'] = badgeComponent;
-      console.log('[WebContainer] Created shadcn Badge component');
     }
 
     await mountFiles(allFiles);
@@ -1011,6 +775,9 @@ export async function teardown(): Promise<void> {
     webcontainerInstance = null;
     bootPromise = null;
     serverUrl = null;
+    // Clear window storage
+    window.__webcontainer_instance__ = undefined;
+    window.__webcontainer_boot_promise__ = undefined;
     writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Torn down\r\n');
   }
 }

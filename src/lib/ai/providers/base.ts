@@ -102,11 +102,15 @@ export abstract class BaseAIProvider implements AIProvider {
   
   /**
    * Create a tool calls response
+   * @param toolCalls The tool calls to return
+   * @param raw Raw response from the API
+   * @param content Optional text content that came with the tool calls
    */
-  protected toolCallsResponse(toolCalls: ToolCall[], raw?: unknown): AIResponse {
+  protected toolCallsResponse(toolCalls: ToolCall[], raw?: unknown, content?: string): AIResponse {
     return {
       type: 'tool_calls',
       toolCalls,
+      content, // Include any text that came with tool calls
       raw
     };
   }
