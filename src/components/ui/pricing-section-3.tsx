@@ -100,7 +100,7 @@ const PricingSwitch = ({
   onSwitch: (value: string) => void;
   className?: string;
 }) => {
-  const [selected, setSelected] = useState("0");
+  const [selected, setSelected] = useState("1");
 
   const handleSwitch = (value: string) => {
     setSelected(value);
@@ -158,7 +158,7 @@ const PricingSwitch = ({
 };
 
 export default function PricingSection3() {
-  const [isYearly, setIsYearly] = useState(false);
+  const [isYearly, setIsYearly] = useState(true);
   const pricingRef = useRef<HTMLDivElement>(null);
 
   const revealVariants = {
