@@ -243,7 +243,6 @@ export default function Build() {
     build,
     stop,
     clearLogs,
-    clearPreview,
     updateFiles,
     connectTerminal,
     isBooted
@@ -610,6 +609,7 @@ export default function Build() {
       } else {
         setUser(session.user);
       }
+    });
 
     return () => subscription.unsubscribe();
   }, [navigate, location, searchParams, setSearchParams]);
@@ -804,9 +804,6 @@ export default function Build() {
   async function initializeProjectFiles(projectId: string): Promise<FileMap> {
     console.log('[Init] === LOADING PROJECT FILES ===');
     
-    // IMPORTANT: Clear any existing preview from previous project
-    clearPreview();
-    
     // Step 1: Load files from Supabase
     const files = await loadFilesFromSupabase(projectId);
     
@@ -996,46 +993,7 @@ export default function Build() {
     build(extensionFiles, false);
   }, [build, extensionFiles, project, saveFilesToSupabase]);
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving project:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save changes",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handlePublish = async () => {
-    if (!projectId) return;
-
-    try {
-      const { error } = await (supabase
-        .from('projects') as any)
-        .update({ is_published: true })
-        .eq('id', projectId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Project published successfully!",
-      });
-    } catch (error) {
-      console.error('Error publishing project:', error);
-      toast({
-        title: "Error",
-        description: "Failed to publish project",
-        variant: "destructive",
-      });
-    }
-  };
-
-
-
-
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="h-screen w-screen bg-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
