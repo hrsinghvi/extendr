@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/context/AuthContext";
 
 // Preview system imports
 import { 
@@ -609,7 +610,6 @@ export default function Build() {
       } else {
         setUser(session.user);
       }
-    });
 
     return () => subscription.unsubscribe();
   }, [navigate, location, searchParams, setSearchParams]);
@@ -996,7 +996,46 @@ export default function Build() {
     build(extensionFiles, false);
   }, [build, extensionFiles, project, saveFilesToSupabase]);
 
-  if (isLoading) {
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!projectId) return;
+
+    try {
+      const { error } = await (supabase
+        .from('projects') as any)
+        .update({ is_published: true })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Project published successfully!",
+      });
+    } catch (error) {
+      console.error('Error publishing project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to publish project",
+        variant: "destructive",
+      });
+    }
+  };
+
+
+
+
+  if (authLoading || isLoading) {
     return (
       <div className="h-screen w-screen bg-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>

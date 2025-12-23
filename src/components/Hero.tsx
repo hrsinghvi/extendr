@@ -1,35 +1,21 @@
 import { MorphingText } from "./ui/morphing-text";
 import { motion } from "framer-motion";
 import { PromptInputBox } from "./ui/prompt-input-box";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AuthModal } from "./AuthModal";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { RecentProjects } from "./RecentProjects";
+import { useAuth } from "@/context/AuthContext";
 
 export function Hero() {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    // Check initial auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      // Don't redirect on initial check - only redirect when user actually signs in
-    });
-
-    // Listen for auth changes (only redirect on actual sign-in events)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-      // No automatic navigation; user stays on current page unless they explicitly navigate.
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
+  /**
+   * Handle prompt submission
+   * Shows auth modal if not authenticated, otherwise navigates to build page
+   */
   const handleSend = (message: string, files?: File[]) => {
     // Check if user is authenticated
     if (!isAuthenticated) {
@@ -71,6 +57,8 @@ export function Hero() {
           </motion.p>
         </div>
 
+        {/* Authenticated user badge removed for restart; header handles login state */}
+
         {/* AI Prompt Box */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -85,7 +73,7 @@ export function Hero() {
           />
         </motion.div>
 
-        {/* Recent Projects Section */}
+        {/* Recent Projects Section remains below the hero as part of the landing page */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -94,7 +82,6 @@ export function Hero() {
         >
           <RecentProjects />
         </motion.div>
-
       </div>
 
       {/* Auth Modal */}

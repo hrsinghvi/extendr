@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
+import { AuthProvider } from "@/context/AuthContext";
+import { GlobalErrorListener } from "./components/ui/GlobalErrorListener";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Features from "./pages/Features";
@@ -37,10 +39,10 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
       isDragging.current = false;
       return;
     }
-    
+
     const distance = touchStartX.current - touchEndX.current;
     const absDistance = Math.abs(distance);
-    
+
     // Only trigger if it's a significant horizontal swipe
     if (absDistance < minSwipeDistance) {
       isDragging.current = false;
@@ -92,7 +94,7 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
       if (mouseStartX !== null && mouseStartY !== null && e.buttons === 1) {
         const deltaX = Math.abs(e.clientX - mouseStartX);
         const deltaY = Math.abs(e.clientY - mouseStartY);
-        
+
         // Only trigger if horizontal movement is significant and greater than vertical
         if (deltaX > 20 && deltaX > deltaY * 1.5) {
           if (!isMouseDragging) {
@@ -135,7 +137,7 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
 
 const AnimatedRoutes = () => {
   const location = useLocation();
-  
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -225,15 +227,18 @@ const AnimatedRoutes = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <AuthProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <GlobalErrorListener />
       <BrowserRouter>
         <SwipeHandler>
           <AnimatedRoutes />
         </SwipeHandler>
       </BrowserRouter>
     </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

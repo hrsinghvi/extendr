@@ -1,3 +1,9 @@
+/**
+ * AuthModal - Quick auth modal for inline sign-up/sign-in
+ * 
+ * Used when user tries to perform authenticated action (e.g., build prompt)
+ * without being signed in. Offers Google OAuth and email auth options.
+ */
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { X } from "lucide-react";
@@ -16,6 +22,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  /**
+   * Handle Google OAuth sign-in
+   */
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
@@ -25,6 +34,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
           redirectTo: window.location.origin,
         },
       });
+
       if (error) throw error;
     } catch (error: any) {
       console.error("Error with Google auth:", error);
@@ -37,15 +47,18 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     }
   };
 
-
+  /**
+   * Navigate to email auth page
+   */
   const handleEmailAuth = () => {
     onClose();
-    navigate("/auth");
+    navigate("/auth", { state: { isSignUp: mode === "signup" } });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[350px] bg-[#212121] border-[#2a2a2a] text-white p-0 overflow-hidden">
+        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
@@ -54,12 +67,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
           <X className="h-4 w-4 text-white" />
           <span className="sr-only">Close</span>
         </button>
+
         <div className="relative p-4">
           {/* Title and subtitle */}
           <div className="mb-4">
-            <h2 className="text-xl font-bold mb-1" role="heading" aria-level={2}>Start building.</h2>
+            <h2 className="text-xl font-bold mb-1" role="heading" aria-level={2}>
+              Start building.
+            </h2>
             <p className="text-sm text-gray-500" role="contentinfo">
-              {mode === "signup" ? "Create your free account and start building!" : "Log in to your account!"}
+              {mode === "signup" 
+                ? "Create your free account and start building!" 
+                : "Log in to your account!"}
             </p>
           </div>
 
@@ -89,7 +107,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-xs font-medium">Continue with Google</span>
+              <span className="text-xs font-medium">
+                {isLoading ? "Connecting..." : "Continue with Google"}
+              </span>
             </button>
 
             {/* Divider */}
@@ -131,4 +151,3 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     </Dialog>
   );
 }
-
