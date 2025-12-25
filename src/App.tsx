@@ -135,11 +135,40 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+/**
+ * ScrollToTop - Resets scroll position on route changes.
+ * Delays scroll until exit animation is mostly complete (~200ms)
+ * to avoid visible jump on the outgoing page.
+ */
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    // Don't scroll on initial mount
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // Delay scroll until exit animation is ~70% done (opacity is low)
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  return null;
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      <ScrollToTop />
+      <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route
           path="/"
@@ -221,7 +250,8 @@ const AnimatedRoutes = () => {
           }
         />
       </Routes>
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 };
 

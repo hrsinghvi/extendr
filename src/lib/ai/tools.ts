@@ -16,7 +16,12 @@ import type { ToolDefinition } from './types';
  */
 export const EXT_WRITE_FILE: ToolDefinition = {
   name: 'ext_write_file',
-  description: `Create or update a file in the extension sandbox. Use this for all file creation and modification.
+  description: `Create or update a file in the extension sandbox.
+
+IMPORTANT: Before using this tool, use ext_list_files to check what files already exist.
+- If scaffolding files already exist (package.json, index.html, manifest.json, configs), DO NOT recreate them
+- Only write files that are NEW or that specifically need modifications
+- For modifications to existing files, only change the files the user asked about
 
 Guidelines:
 - Always use forward slashes for paths (e.g., 'popup/popup.html')
@@ -117,7 +122,15 @@ export const EXT_RENAME_FILE: ToolDefinition = {
  */
 export const EXT_LIST_FILES: ToolDefinition = {
   name: 'ext_list_files',
-  description: 'List all files in the sandbox or a specific directory. Returns file paths.',
+  description: `List all files in the sandbox or a specific directory. Returns file paths.
+
+IMPORTANT: Use this tool FIRST before creating any files to:
+- Check what files already exist in the project
+- Avoid recreating existing config files (package.json, vite.config.ts, etc.)
+- Only modify files that actually need changes
+
+If you see package.json, index.html, manifest.json, and config files already exist,
+DO NOT recreate them - only modify the specific file(s) the user requested.`,
   parameters: {
     type: 'object',
     properties: {
@@ -279,13 +292,16 @@ export const EXT_REMOVE_DEPENDENCY: ToolDefinition = {
  */
 export const EXT_BUILD_PREVIEW: ToolDefinition = {
   name: 'ext_build_preview',
-  description: `Build the extension and start the preview server. Call this after creating/updating files to show the user their extension.
+  description: `Build the extension and start the preview server. Call this after creating/updating files.
 
 This will:
 1. Mount all files to the sandbox
 2. Install dependencies if needed
 3. Start the Vite dev server
-4. Return the preview URL`,
+4. Return the preview URL
+
+NOTE: You can call this tool after modifying just 1 file - no need to recreate all files before building.
+For modifications, just update the specific file(s) and then call this tool.`,
   parameters: {
     type: 'object',
     properties: {

@@ -220,12 +220,26 @@ function ActionsDropdown({ toolCalls }: { toolCalls: ToolCall[] }) {
   );
 }
 
+/**
+ * Clean up excessive newlines in content
+ * - Reduces 3+ consecutive newlines to 2
+ * - Trims leading/trailing whitespace
+ */
+function cleanContent(text: string): string {
+  return text
+    .replace(/\n{3,}/g, '\n\n')  // Max 2 consecutive newlines
+    .replace(/^\s+|\s+$/g, '');   // Trim
+}
+
 export function AIMessage({ content, modifiedFiles, toolCalls }: AIMessageProps) {
   // Check for legacy JSON code block format (fallback)
-const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
+  const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
   const codeBlockMatch = content.match(codeBlockRegex);
   const jsonString = codeBlockMatch ? codeBlockMatch[0] : null;
-  const explanatoryText = jsonString ? content.replace(jsonString, '').trim() : content;
+  const rawText = jsonString ? content.replace(jsonString, '').trim() : content;
+  
+  // Clean up excessive spacing
+  const explanatoryText = cleanContent(rawText);
 
   // Get files from either new tool system or legacy JSON parsing
   let filesCreated: string[] = modifiedFiles || [];
@@ -246,16 +260,21 @@ const codeBlockRegex = /```json\n([\s\S]*?)\n```/;
 
   return (
     <div className="prose prose-invert prose-sm max-w-none break-words overflow-hidden [word-break:break-word]">
-      {/* Main text content */}
-      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+      {/* Main text content - removed whitespace-pre-wrap to avoid excessive spacing */}
+      <div className="break-words [overflow-wrap:anywhere]">
         <ReactMarkdown
           components={{
-            // Ensure all elements break words properly
-            p: ({ children }) => <p className="break-words [overflow-wrap:anywhere] m-0">{children}</p>,
+            // Tighter spacing between paragraphs
+            p: ({ children }) => <p className="break-words [overflow-wrap:anywhere] my-2 first:mt-0 last:mb-0">{children}</p>,
             a: ({ children, href }) => <a href={href} className="break-all text-[#5A9665] hover:underline">{children}</a>,
             code: ({ children }) => <code className="break-all bg-gray-700/50 px-1 py-0.5 rounded text-xs">{children}</code>,
-            ul: ({ children }) => <ul className="list-disc pl-4 mt-2 space-y-1">{children}</ul>,
-            li: ({ children }) => <li className="text-gray-300">{children}</li>,
+            ul: ({ children }) => <ul className="list-disc pl-4 my-2 space-y-1">{children}</ul>,
+            ol: ({ children }) => <ol className="list-decimal pl-4 my-2 space-y-1">{children}</ol>,
+            li: ({ children }) => <li className="text-gray-300 my-0.5">{children}</li>,
+            h1: ({ children }) => <h1 className="text-lg font-bold mt-3 mb-2">{children}</h1>,
+            h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-2">{children}</h2>,
+            h3: ({ children }) => <h3 className="text-sm font-bold mt-2 mb-1">{children}</h3>,
+            pre: ({ children }) => <pre className="bg-gray-800 p-2 rounded my-2 overflow-x-auto">{children}</pre>,
           }}
         >
           {explanatoryText}

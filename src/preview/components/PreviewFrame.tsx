@@ -197,7 +197,7 @@ export function PreviewFrame({
           src={url}
           onLoad={handleLoad}
           onError={handleError}
-          className="w-full h-full border-0 bg-white"
+          className="w-full h-full border-0 bg-[#1a1a1a]"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
           title="Extension Preview"
         />

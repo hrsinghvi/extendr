@@ -618,9 +618,26 @@ export default {
 @tailwind components;
 @tailwind utilities;
 
-body {
+/* Dark background to fill the preview area */
+html, body {
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  background-color: #1a1a1a;
+}
+
+/* Center the extension in the preview */
+#root {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Make extension fill viewport if no explicit width set */
+#root > * {
+  max-width: 100%;
 }
 `;
       allFiles['src/index.css'] = defaultCss;
@@ -663,38 +680,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 `;
       allFiles['src/main.tsx'] = defaultMain;
       console.log('[WebContainer] Created default src/main.tsx');
-    }
-
-    // Create default src/App.tsx if not provided
-    if (!files['src/App.tsx'] && !files['src/pages/popup/App.tsx']) {
-      const defaultApp = `import { useState } from 'react';
-
-export default function App() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-      <div className="w-80 bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h1 className="text-xl font-bold text-center mb-4">
-          Extension Preview
-        </h1>
-        <p className="text-sm text-gray-400 text-center mb-6">
-          Your extension will appear here. The AI is setting up your project.
-        </p>
-        <p className="text-4xl font-mono text-center mb-4">{count}</p>
-        <button
-          onClick={() => setCount(c => c + 1)}
-          className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
-        >
-          Click me!
-        </button>
-      </div>
-    </div>
-  );
-}
-`;
-      allFiles['src/App.tsx'] = defaultApp;
-      console.log('[WebContainer] Created default src/App.tsx');
     }
 
     await mountFiles(allFiles);
