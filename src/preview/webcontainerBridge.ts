@@ -42,6 +42,10 @@ declare global {
 // Generate a unique session ID for this page load
 const SESSION_ID = `wc-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+// Track boot attempts to prevent infinite loops
+let bootAttempts = 0;
+const MAX_BOOT_ATTEMPTS = 2;
+
 // Check if this is a fresh page load (not HMR)
 // If the session ID doesn't match, clear the cached state
 const storedSessionId = window.__webcontainer_session_id__;
@@ -120,6 +124,28 @@ function reportError(error: string, details?: string): void {
 // ============================================================================
 
 /**
+ * Try to clear any existing WebContainer service workers
+ * This helps recover from "Unable to create more instances" errors
+ */
+async function clearWebContainerServiceWorkers(): Promise<void> {
+  try {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        // Only unregister WebContainer-related service workers
+        if (registration.scope.includes('webcontainer') || 
+            registration.active?.scriptURL.includes('webcontainer')) {
+          console.log('[WebContainer] Unregistering service worker:', registration.scope);
+          await registration.unregister();
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[WebContainer] Failed to clear service workers:', e);
+  }
+}
+
+/**
  * Boot WebContainer instance
  * This is the first step - must be called before any other operations
  */
@@ -186,23 +212,55 @@ export async function bootWebContainer(): Promise<WebContainer> {
             return webcontainerInstance;
           }
           
-          // Clear stale state and inform user
-          bootPromise = null;
-          window.__webcontainer_boot_promise__ = undefined;
-          
-          // Don't throw - instead update status and return a promise that never resolves
-          // This prevents cascading errors while user refreshes
-          updateStatus('error', 'Please refresh the page to restart the preview');
-          writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m A previous session is still active.\r\n');
-          writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Please refresh the page to restart.\r\n');
-          
-          throw new Error('Please refresh the page to restart the preview');
+          // First attempt: try to clear service workers and retry
+          if (bootAttempts < MAX_BOOT_ATTEMPTS) {
+            bootAttempts++;
+            console.log(`[WebContainer] Attempting recovery (attempt ${bootAttempts}/${MAX_BOOT_ATTEMPTS})...`);
+            writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Attempting to recover...\r\n');
+            
+            // Clear state
+            bootPromise = null;
+            window.__webcontainer_boot_promise__ = undefined;
+            
+            // Try clearing service workers
+            await clearWebContainerServiceWorkers();
+            
+            // Wait a moment for cleanup
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Retry boot
+            try {
+              instance = await WebContainer.boot({
+                coep: 'credentialless'
+              });
+              console.log('[WebContainer] Recovery successful!');
+              writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Recovery successful!\r\n');
+            } catch (retryError: any) {
+              // Recovery failed - give up and ask for refresh
+              console.error('[WebContainer] Recovery failed:', retryError);
+              updateStatus('error', 'Please close all other tabs and hard refresh (Ctrl+Shift+R)');
+              writeToTerminal('\x1b[1;31m[WebContainer]\x1b[0m Recovery failed.\r\n');
+              writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Please:\r\n');
+              writeToTerminal('  1. Close ALL other tabs with this site\r\n');
+              writeToTerminal('  2. Hard refresh: Ctrl+Shift+R (or Cmd+Shift+R on Mac)\r\n');
+              writeToTerminal('  3. If still failing, clear browser data for this site\r\n');
+              throw new Error('Please hard refresh (Ctrl+Shift+R) to restart');
+            }
+          } else {
+            // Max attempts reached
+            updateStatus('error', 'Please hard refresh (Ctrl+Shift+R)');
+            writeToTerminal('\x1b[1;31m[WebContainer]\x1b[0m Could not start WebContainer.\r\n');
+            writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Please hard refresh: Ctrl+Shift+R\r\n');
+            throw new Error('Please hard refresh (Ctrl+Shift+R) to restart');
+          }
+        } else {
+          throw bootError;
         }
-        throw bootError;
       }
 
       console.log('[WebContainer] Boot successful!');
       writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Boot successful!\r\n');
+      bootAttempts = 0; // Reset on success
 
       // Set up server-ready listener
       instance.on('server-ready', (port: number, url: string) => {
