@@ -130,9 +130,23 @@ export async function bootWebContainer(): Promise<WebContainer> {
     return webcontainerInstance;
   }
 
+  // Check window cache first (survives HMR)
+  if (window.__webcontainer_instance__) {
+    console.log('[WebContainer] Found cached instance on window');
+    webcontainerInstance = window.__webcontainer_instance__;
+    return webcontainerInstance;
+  }
+
   // Return pending boot promise if boot is in progress
   if (bootPromise) {
     console.log('[WebContainer] Boot in progress, waiting...');
+    return bootPromise;
+  }
+
+  // Check window cache for pending promise
+  if (window.__webcontainer_boot_promise__) {
+    console.log('[WebContainer] Found cached boot promise on window');
+    bootPromise = window.__webcontainer_boot_promise__;
     return bootPromise;
   }
 
@@ -156,16 +170,33 @@ export async function bootWebContainer(): Promise<WebContainer> {
           coep: 'credentialless' // More permissive than 'require-corp'
         });
       } catch (bootError: any) {
-        // Handle "Only a single WebContainer instance can be booted" error
-        if (bootError.message?.includes('single WebContainer')) {
-          console.warn('[WebContainer] Instance already exists. Page reload may be needed.');
-          // If we have a cached instance, return it
+        const errorMsg = bootError.message || String(bootError);
+        
+        // Handle various forms of "instance already exists" error
+        if (errorMsg.includes('single WebContainer') || 
+            errorMsg.includes('Unable to create') || 
+            errorMsg.includes('already') ||
+            errorMsg.includes('more instances')) {
+          console.warn('[WebContainer] Instance already exists:', errorMsg);
+          
+          // If we have a cached instance, use it
           if (window.__webcontainer_instance__) {
             console.log('[WebContainer] Returning cached instance from window');
-            return window.__webcontainer_instance__;
+            webcontainerInstance = window.__webcontainer_instance__;
+            return webcontainerInstance;
           }
-          // Otherwise, we need to tell the user to refresh
-          throw new Error('WebContainer already running. Please refresh the page to restart.');
+          
+          // Clear stale state and inform user
+          bootPromise = null;
+          window.__webcontainer_boot_promise__ = undefined;
+          
+          // Don't throw - instead update status and return a promise that never resolves
+          // This prevents cascading errors while user refreshes
+          updateStatus('error', 'Please refresh the page to restart the preview');
+          writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m A previous session is still active.\r\n');
+          writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Please refresh the page to restart.\r\n');
+          
+          throw new Error('Please refresh the page to restart the preview');
         }
         throw bootError;
       }
@@ -208,6 +239,9 @@ export async function bootWebContainer(): Promise<WebContainer> {
           'Cross-Origin-Opener-Policy: same-origin';
       } else if (errorMessage.includes('secure context')) {
         details = 'WebContainers only work on HTTPS or localhost';
+      } else if (errorMessage.includes('refresh')) {
+        // Already handled above, just re-throw
+        throw error;
       }
       
       reportError(errorMessage, details);
