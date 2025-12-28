@@ -5,7 +5,7 @@
  * Connects the Terminal to WebContainer for live output.
  */
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { 
   Code2, 
   Eye, 
@@ -17,7 +17,10 @@ import {
   Loader2,
   AlertCircle,
   PanelLeft,
-  Download
+  Download,
+  Image as ImageIcon,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +32,132 @@ import { PreviewFrame } from './PreviewFrame';
 import { LogPanel } from './LogPanel';
 import { BuildStatus } from '../useWebContainer';
 import type { FileMap, PreviewPanelProps, LogEntry } from '../types';
+import { getFileExtension } from '../types';
+
+/**
+ * Image file extensions
+ */
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'bmp'];
+
+/**
+ * Check if a file is an image based on extension
+ */
+function isImageFile(path: string): boolean {
+  const ext = getFileExtension(path);
+  return IMAGE_EXTENSIONS.includes(ext);
+}
+
+/**
+ * ImagePreview Component
+ * Displays an image with zoom controls
+ */
+function ImagePreview({ 
+  content, 
+  fileName 
+}: { 
+  content: string; 
+  fileName: string;
+}) {
+  const [zoom, setZoom] = useState(100);
+  const ext = getFileExtension(fileName);
+  
+  // Determine the image source
+  const imageSrc = useMemo(() => {
+    // If content is already a data URL, use it directly
+    if (content.startsWith('data:')) {
+      return content;
+    }
+    
+    // For SVG, we can use it as inline or convert to data URL
+    if (ext === 'svg') {
+      // Check if it's SVG markup
+      if (content.trim().startsWith('<')) {
+        return `data:image/svg+xml;base64,${btoa(content)}`;
+      }
+    }
+    
+    // Try to detect if it's base64 encoded
+    try {
+      // If it looks like base64, create a data URL
+      if (/^[A-Za-z0-9+/=]+$/.test(content.replace(/\s/g, ''))) {
+        const mimeType = ext === 'svg' ? 'image/svg+xml' : 
+                         ext === 'ico' ? 'image/x-icon' :
+                         `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+        return `data:${mimeType};base64,${content}`;
+      }
+    } catch (e) {
+      // Not base64
+    }
+    
+    // For SVG text content
+    if (ext === 'svg') {
+      return `data:image/svg+xml;base64,${btoa(content)}`;
+    }
+    
+    // Fallback: assume it's a path or URL
+    return content;
+  }, [content, ext]);
+
+  return (
+    <div className="flex flex-col h-full bg-[#1a1a1a]">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-4 py-2 bg-[#232323] border-b border-gray-800">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <ImageIcon className="w-4 h-4" />
+          <span>{fileName}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setZoom(z => Math.max(25, z - 25))}
+            className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+            title="Zoom out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <span className="text-xs text-gray-500 min-w-[3rem] text-center">{zoom}%</span>
+          <button
+            onClick={() => setZoom(z => Math.min(400, z + 25))}
+            className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+            title="Zoom in"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setZoom(100)}
+            className="px-2 py-1 text-xs rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+      
+      {/* Image container */}
+      <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-[#151515]">
+        <div 
+          className="relative bg-[#0a0a0a] rounded-lg border border-gray-800 p-4"
+          style={{
+            backgroundImage: 'linear-gradient(45deg, #1a1a1a 25%, transparent 25%), linear-gradient(-45deg, #1a1a1a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1a1a1a 75%), linear-gradient(-45deg, transparent 75%, #1a1a1a 75%)',
+            backgroundSize: '16px 16px',
+            backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px'
+          }}
+        >
+          <img
+            src={imageSrc}
+            alt={fileName}
+            className="max-w-none transition-transform duration-200"
+            style={{ 
+              transform: `scale(${zoom / 100})`,
+              transformOrigin: 'center center'
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Status badge component
@@ -213,19 +342,12 @@ export function PreviewPanel({
           <div className="h-6 w-px bg-gray-700" />
 
           <Button 
-            variant="ghost" 
             size="sm" 
-            className="h-8 text-sm text-gray-400 hover:text-white hover:bg-[#2a2a2a] gap-2"
+            className="h-8 text-sm bg-[#5A9665] hover:bg-[#4A8655] text-white gap-2 px-4"
             onClick={onExport}
           >
             <Download className="w-4 h-4" />
             Export
-          </Button>
-          <Button 
-            className="h-8 text-sm bg-[#5A9665] hover:bg-[#4A8655] text-white px-4"
-            onClick={onPublish}
-          >
-            Publish
           </Button>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
             <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#5A9665] to-[#5f87a3] flex items-center justify-center text-xs font-medium">
@@ -290,12 +412,21 @@ export function PreviewPanel({
             activeTab !== 'code' && "hidden"
           )}>
             {selectedFile ? (
-              <CodeEditor
-                value={selectedFileContent}
-                onChange={handleCodeChange}
-                fileName={selectedFile}
-                className="flex-1 overflow-hidden"
-              />
+              isImageFile(selectedFile) ? (
+                // Image Preview
+                <ImagePreview 
+                  content={selectedFileContent} 
+                  fileName={selectedFile} 
+                />
+              ) : (
+                // Code Editor
+                <CodeEditor
+                  value={selectedFileContent}
+                  onChange={handleCodeChange}
+                  fileName={selectedFile}
+                  className="flex-1 overflow-hidden"
+                />
+              )
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500 text-sm">
                 <FileCode className="w-5 h-5 mr-2" />

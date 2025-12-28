@@ -165,6 +165,8 @@ export function validateApiKey(key: string, provider: AIProviderType): boolean {
       return key.startsWith('sk-ant-');
     case 'deepseek':
       return key.startsWith('sk-');
+    case 'openrouter':
+      return key.startsWith('sk-or-');
     default:
       return key.length > 10;
   }

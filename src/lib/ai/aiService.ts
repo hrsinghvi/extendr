@@ -231,27 +231,58 @@ export function createAIService(options: AIServiceOptions): AIService {
 /**
  * Create an AI service from environment variables
  * Tries to auto-detect the provider based on available keys
+ * Priority: OpenRouter > Gemini > OpenAI > Claude
  */
 export function createAIServiceFromEnv(callbacks?: {
   onToolCall?: (toolCall: ToolCall) => void;
   onToolResult?: (result: ToolResult) => void;
 }): AIService | null {
-  // Try Gemini first (current default)
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (geminiKey) {
-    console.log('[AIService] Using Gemini API Key:', geminiKey.substring(0, 4) + '...');
+  // Helper to clean API keys
+  const cleanKey = (key: string | undefined): string => {
+    if (!key) return "";
+    return key.replace(/^["'](.*)["']$/, '$1').trim();
+  };
+  
+  const openrouterKey = cleanKey(import.meta.env.VITE_OPENROUTER_API_KEY);
+  const geminiKey = cleanKey(import.meta.env.VITE_GEMINI_API_KEY);
+  const openaiKey = cleanKey(import.meta.env.VITE_OPENAI_API_KEY);
+  const claudeKey = cleanKey(import.meta.env.VITE_CLAUDE_API_KEY);
+  
+  // Debug: Show which keys are available
+  console.log('[AIService] Keys detected:', {
+    openrouter: openrouterKey ? 'YES' : 'NO',
+    gemini: geminiKey ? 'YES' : 'NO',
+    openai: openaiKey ? 'YES' : 'NO',
+    claude: claudeKey ? 'YES' : 'NO'
+  });
+  
+  // Try OpenRouter first (ALWAYS priority if available)
+  if (openrouterKey && openrouterKey.length > 10) {
+    console.log('[AIService] ✓ Using OpenRouter API');
+    return new AIService({
+      provider: {
+        type: 'openrouter',
+        apiKey: openrouterKey
+      },
+      ...callbacks
+    });
+  }
+  
+  // Try Gemini
+  if (geminiKey && geminiKey.length > 10) {
+    console.log('[AIService] Using Gemini API (OpenRouter not available)');
     return new AIService({
       provider: {
         type: 'gemini',
-        apiKey: geminiKey.replace(/^["'](.*)["']$/, '$1').trim()
+        apiKey: geminiKey
       },
       ...callbacks
     });
   }
   
   // Try OpenAI
-  const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (openaiKey) {
+  if (openaiKey && openaiKey.length > 10) {
+    console.log('[AIService] Using OpenAI API');
     return new AIService({
       provider: {
         type: 'openai',
@@ -262,8 +293,8 @@ export function createAIServiceFromEnv(callbacks?: {
   }
   
   // Try Claude
-  const claudeKey = import.meta.env.VITE_CLAUDE_API_KEY;
-  if (claudeKey) {
+  if (claudeKey && claudeKey.length > 10) {
+    console.log('[AIService] Using Claude API');
     return new AIService({
       provider: {
         type: 'claude',
@@ -273,6 +304,7 @@ export function createAIServiceFromEnv(callbacks?: {
     });
   }
   
+  console.error('[AIService] ❌ No valid API key found!');
   return null;
 }
 

@@ -5,16 +5,26 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { ChevronRight, ChevronDown, File, Folder, FolderOpen } from 'lucide-react';
+import { ChevronRight, ChevronDown, File, Folder, FolderOpen, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FileMap, FileTreeNode, FileTreeProps } from '../types';
 import { fileMapToTree, getFileExtension } from '../types';
+
+/**
+ * Image file extensions
+ */
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'bmp'];
 
 /**
  * File icon based on extension
  */
 function FileIcon({ path }: { path: string }) {
   const ext = getFileExtension(path);
+  
+  // Check if it's an image file
+  if (IMAGE_EXTENSIONS.includes(ext)) {
+    return <Image className="w-4 h-4 text-purple-400" />;
+  }
   
   const iconColors: Record<string, string> = {
     js: 'text-yellow-400',

@@ -8,7 +8,7 @@
  */
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { LogOut, Settings, HelpCircle } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -19,12 +19,14 @@ import {
 } from "./ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useCredits } from "@/hooks/useCredits";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, session, isAuthenticated, isLoading, signOut } = useAuth();
+  const { credits, totalAvailable } = useCredits();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -127,7 +129,7 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   sideOffset={8} 
-                  className="w-60 bg-[#0C1111] text-white border border-[#2a2a2a] rounded-lg shadow-lg p-2"
+                  className="w-60 bg-[#232323] text-white border border-[#3a3a3a] rounded-lg shadow-lg p-2"
                 >
                   {/* User info header */}
                   <div className="flex items-center gap-3 px-3 py-2">
@@ -150,35 +152,35 @@ export function Header() {
                   </div>
 
                   {/* Credits indicator */}
-                  <div className="px-3 py-2 border border-[#2a2a2a] rounded-md bg-[#161B1B] my-2">
+                  <div className="px-3 py-2 border border-[#3a3a3a] rounded-md bg-[#1a1a1a] my-2">
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="font-medium">Credits</span>
-                      <span className="font-medium">5 left</span>
+                      <span className="font-medium">{totalAvailable} left</span>
                     </div>
-                    <div className="h-1.5 w-full bg-[#2a2a2a] rounded-full overflow-hidden">
-                      <div className="h-full bg-violet-500" style={{ width: '60%' }} />
+                    <div className="h-1.5 w-full bg-[#3a3a3a] rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-violet-500 transition-all duration-300" 
+                        style={{ 
+                          width: credits 
+                            ? `${Math.min(100, (totalAvailable / (credits.dailyTotal + credits.monthlyTotal || 1)) * 100)}%` 
+                            : '0%' 
+                        }} 
+                      />
                     </div>
                   </div>
 
                   {/* Menu items */}
                   <DropdownMenuItem 
                     onSelect={() => navigate('/settings')} 
-                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#1a1a1a] rounded-md"
+                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#2f2f2f] rounded-md"
                   >
                     <Settings className="w-4 h-4" />
                     <span className="text-sm">Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onSelect={() => navigate('/help')} 
-                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#1a1a1a] rounded-md"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                    <span className="text-sm">Help Center</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="my-1 bg-[#2a2a2a] h-px" />
+                  <DropdownMenuSeparator className="my-1 bg-[#3a3a3a] h-px" />
                   <DropdownMenuItem 
                     onSelect={handleSignOut} 
-                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#1a1a1a] rounded-md"
+                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#2f2f2f] rounded-md"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Sign out</span>

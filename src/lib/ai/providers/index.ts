@@ -8,6 +8,7 @@ import type { AIProvider, AIProviderType, ProviderConfig } from '../types';
 import { GeminiProvider, createGeminiProvider } from './gemini';
 import { OpenAIProvider, createOpenAIProvider } from './openai';
 import { ClaudeProvider, createClaudeProvider } from './claude';
+import { OpenRouterProvider, createOpenRouterProvider } from './openrouter';
 
 // ============================================================================
 // Provider Factory
@@ -30,6 +31,8 @@ export function createProvider(config: ProviderConfig): AIProvider {
         ...config,
         baseUrl: config.baseUrl || 'https://api.deepseek.com/v1'
       });
+    case 'openrouter':
+      return new OpenRouterProvider(config);
     default:
       throw new Error(`Unknown provider type: ${config.type}`);
   }
@@ -47,6 +50,8 @@ export function createProviderFromKey(apiKey: string, preferredType?: AIProvider
       type = 'gemini';
     } else if (apiKey.startsWith('sk-ant-')) {
       type = 'claude';
+    } else if (apiKey.startsWith('sk-or-')) {
+      type = 'openrouter';
     } else if (apiKey.startsWith('sk-')) {
       type = 'openai';
     } else {
@@ -131,6 +136,26 @@ export function getProviderInfoList(): ProviderInfo[] {
         'deepseek-chat',
         'deepseek-coder'
       ]
+    },
+    {
+      type: 'openrouter',
+      displayName: 'OpenRouter',
+      keyPrefix: 'sk-or-',
+      keyPlaceholder: 'sk-or-...',
+      defaultModel: 'mistralai/devstral-2512:free',
+      models: [
+        'mistralai/devstral-2512:free',
+        'anthropic/claude-sonnet-4',
+        'anthropic/claude-3.5-sonnet',
+        'anthropic/claude-3-haiku',
+        'openai/gpt-4o',
+        'openai/gpt-4o-mini',
+        'google/gemini-2.0-flash-exp:free',
+        'google/gemini-flash-1.5',
+        'meta-llama/llama-3.1-70b-instruct',
+        'deepseek/deepseek-chat',
+        'qwen/qwen-2.5-72b-instruct'
+      ]
     }
   ];
 }
@@ -146,7 +171,7 @@ export function getProviderInfo(type: AIProviderType): ProviderInfo | undefined 
  * Check if a provider type is supported
  */
 export function isProviderSupported(type: string): type is AIProviderType {
-  return ['gemini', 'openai', 'claude', 'deepseek'].includes(type);
+  return ['gemini', 'openai', 'claude', 'deepseek', 'openrouter'].includes(type);
 }
 
 // ============================================================================
@@ -177,4 +202,10 @@ export {
   ClaudeProvider,
   createClaudeProvider
 } from './claude';
+
+export {
+  // OpenRouter
+  OpenRouterProvider,
+  createOpenRouterProvider
+} from './openrouter';
 

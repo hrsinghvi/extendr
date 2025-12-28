@@ -159,7 +159,7 @@ export interface ToolContext {
 // Provider Configuration
 // ============================================================================
 
-export type AIProviderType = 'gemini' | 'openai' | 'claude' | 'deepseek';
+export type AIProviderType = 'gemini' | 'openai' | 'claude' | 'deepseek' | 'openrouter';
 
 export interface ProviderConfig {
   type: AIProviderType;

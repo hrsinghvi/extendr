@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronDown, ArrowLeft, RefreshCw, Edit2, Moon, HelpCircle, ArrowUpRight, Settings, Download, Eye, Trash2, Play, Terminal, Package, Pencil } from "lucide-react";
+import { ChevronDown, ArrowLeft, Edit2, HelpCircle, ArrowUpRight, Settings, Download, Eye, Trash2, Play, Terminal, Package, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PromptInputBox } from "@/components/ui/prompt-input-box";
 import { AIMessage } from "@/components/AIMessage";
@@ -13,7 +13,19 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscriptionContext } from "@/context/SubscriptionContext";
+import { OutOfCreditsModal } from "@/components/OutOfCreditsModal";
+import { CreditDisplay } from "@/components/CreditDisplay";
 
 // Preview system imports
 import { 
@@ -103,6 +115,16 @@ export default function Build() {
   
   // Extension files state
   const [extensionFiles, setExtensionFiles] = useState<FileMap>(getDefaultExtensionFiles());
+  
+  // Credits modal state
+  const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
+  
+  // Rename modal state
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  
+  // Subscription/credits context
+  const { useCredit, hasCredits, isUsingCredit } = useSubscriptionContext();
   
   // Ref to track files for tool context
   const extensionFilesRef = useRef<FileMap>(extensionFiles);
@@ -369,28 +391,62 @@ export default function Build() {
 
   /**
    * Create AI service instance
+   * Priority: OpenRouter > Gemini > OpenAI > Claude
    */
   const aiService = useMemo(() => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY ?? "";
-    const cleanKey = apiKey.replace(/^["'](.*)["']$/, "$1").trim();
+    // Clean and extract API keys - handle various formats (quotes, whitespace, undefined)
+    const cleanKey = (key: string | undefined): string => {
+      if (!key) return "";
+      return key.replace(/^["'](.*)["']$/, "$1").trim();
+    };
     
-    if (!cleanKey) {
-      console.warn('[Build] No API key configured');
+    const openrouterKey = cleanKey(import.meta.env.VITE_OPENROUTER_API_KEY);
+    const geminiKey = cleanKey(import.meta.env.VITE_GEMINI_API_KEY);
+    const openaiKey = cleanKey(import.meta.env.VITE_OPENAI_API_KEY);
+    const claudeKey = cleanKey(import.meta.env.VITE_CLAUDE_API_KEY);
+    
+    // Debug logging - shows which keys are available (masked for security)
+    console.log('[Build] API Keys available:', {
+      openrouter: openrouterKey ? `${openrouterKey.substring(0, 10)}...` : 'NOT SET',
+      gemini: geminiKey ? `${geminiKey.substring(0, 10)}...` : 'NOT SET',
+      openai: openaiKey ? `${openaiKey.substring(0, 10)}...` : 'NOT SET',
+      claude: claudeKey ? `${claudeKey.substring(0, 10)}...` : 'NOT SET'
+    });
+    
+    let apiKey = "";
+    let providerType: 'gemini' | 'openai' | 'claude' | 'openrouter' = 'gemini';
+    
+    // Priority: OpenRouter > Gemini > OpenAI > Claude
+    // OpenRouter takes ABSOLUTE priority if available
+    if (openrouterKey && openrouterKey.length > 10) {
+      apiKey = openrouterKey;
+      providerType = 'openrouter';
+      console.log('[Build] ✓ Using OpenRouter API (priority 1)');
+    } else if (geminiKey && geminiKey.length > 10) {
+      apiKey = geminiKey;
+      providerType = 'gemini';
+      console.log('[Build] Using Gemini API (priority 2 - OpenRouter not available)');
+    } else if (openaiKey && openaiKey.length > 10) {
+      apiKey = openaiKey;
+      providerType = 'openai';
+      console.log('[Build] Using OpenAI API (priority 3)');
+    } else if (claudeKey && claudeKey.length > 10) {
+      apiKey = claudeKey;
+      providerType = 'claude';
+      console.log('[Build] Using Claude API (priority 4)');
+    }
+    
+    if (!apiKey) {
+      console.error('[Build] ❌ No valid API key configured! Check your environment variables.');
       return null;
     }
     
-    // Detect provider type from key
-    let providerType: 'gemini' | 'openai' | 'claude' = 'gemini';
-    if (cleanKey.startsWith('sk-ant-')) {
-      providerType = 'claude';
-    } else if (cleanKey.startsWith('sk-')) {
-      providerType = 'openai';
-    }
+    console.log(`[Build] Final provider: ${providerType.toUpperCase()}`);
     
     return new AIService({
       provider: {
         type: providerType,
-        apiKey: cleanKey
+        apiKey: apiKey
       },
       onToolCall: (tc) => {
         console.log('[Build] Tool call:', tc.name);
@@ -824,6 +880,7 @@ export default function Build() {
 
   /**
    * Sends a message and gets AI response using the tool-based AI service
+   * Checks credits before sending - 1 message = 1 credit
    */
   async function sendMessage(content: string, chatId: string, userId: string) {
     if (!content.trim() || !chatId || !userId) return;
@@ -832,6 +889,35 @@ export default function Build() {
       toast({
         title: "API Key Required",
         description: "Please configure your AI API key in the .env file.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // FAST PATH: Check hasCredits immediately (already loaded in context)
+    // This shows the modal instantly without waiting for network call
+    if (!hasCredits) {
+      setShowOutOfCreditsModal(true);
+      return;
+    }
+    
+    // Use credit (deduct from balance) - only called if we have credits
+    try {
+      const creditResult = await useCredit();
+      
+      // Double-check the result (edge case: race condition where credits depleted)
+      if (!creditResult.allowed) {
+        setShowOutOfCreditsModal(true);
+        return;
+      }
+      
+      console.log('[Build] Credit used:', creditResult.message, 
+        `Daily: ${creditResult.dailyRemaining}, Monthly: ${creditResult.monthlyRemaining}`);
+    } catch (creditError) {
+      console.error('[Build] Credit check error:', creditError);
+      toast({
+        title: "Credit Check Failed",
+        description: "Unable to verify credits. Please try again.",
         variant: "destructive"
       });
       return;
@@ -981,6 +1067,42 @@ export default function Build() {
   }, [stop]);
 
   /**
+   * Handle project rename
+   * Updates Supabase and local state
+   */
+  const handleRenameProject = useCallback(async () => {
+    if (!renameValue.trim() || !project) return;
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ title: renameValue.trim(), updated_at: new Date().toISOString() })
+        .eq("id", project.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setProjectTitle(renameValue.trim());
+      setProject(prev => prev ? { ...prev, title: renameValue.trim() } : null);
+      
+      setShowRenameModal(false);
+      setRenameValue("");
+      
+      toast({
+        title: "Project renamed",
+        description: `Project is now called "${renameValue.trim()}"`,
+      });
+    } catch (err: any) {
+      console.error("Error renaming project:", err);
+      toast({
+        title: "Error renaming project",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  }, [renameValue, project, toast]);
+
+  /**
    * Handle rebuild
    * Saves files to Supabase before rebuilding
    */
@@ -1031,20 +1153,7 @@ export default function Build() {
                 </div>
 
                 <div className="mx-2 p-3 bg-[#161B1B] border border-[#2a2a2a] rounded-lg mb-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Credits</span>
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                      <span>5 left</span>
-                      <ChevronDown className="w-3 h-3" />
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden mb-2">
-                    <div className="h-full bg-[#5A9665] w-[60%]"></div>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <div className="w-2 h-2 rounded-full bg-[#5A9665]"></div>
-                    Daily credits used first
-                  </div>
+                  <CreditDisplay showLabels={true} />
                 </div>
 
                 <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
@@ -1052,22 +1161,16 @@ export default function Build() {
                   Settings
                   <span className="ml-auto text-xs text-gray-500">⌘.</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Remix this project
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
+                <DropdownMenuItem 
+                  className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white"
+                  onClick={() => setShowRenameModal(true)}
+                >
                   <Edit2 className="w-4 h-4 mr-2" />
                   Rename project
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator className="bg-[#2a2a2a] my-2" />
 
-                <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
-                  <Moon className="w-4 h-4 mr-2" />
-                  Appearance
-                  <ChevronDown className="w-3 h-3 ml-auto text-gray-500" />
-                </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white">
                   <HelpCircle className="w-4 h-4 mr-2" />
                   Help
@@ -1273,6 +1376,63 @@ export default function Build() {
           />
         </div>
       </div>
+      
+      {/* Out of Credits Modal */}
+      <OutOfCreditsModal 
+        open={showOutOfCreditsModal} 
+        onOpenChange={setShowOutOfCreditsModal} 
+      />
+
+      {/* Rename Project Modal */}
+      <Dialog 
+        open={showRenameModal} 
+        onOpenChange={(open) => {
+          setShowRenameModal(open);
+          if (open) {
+            setRenameValue(projectTitle);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md bg-[#1F2020] border-[#2a2a2a] text-white">
+          <DialogHeader>
+            <DialogTitle>Rename project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="project-name" className="text-gray-400">Project name</Label>
+              <Input
+                id="project-name"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleRenameProject();
+                  }
+                }}
+                placeholder="Enter project name"
+                className="bg-[#161B1B] border-[#3a3a3a] text-white placeholder:text-gray-500 focus:border-[#5A9665] focus:ring-[#5A9665]"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setShowRenameModal(false)}
+              className="text-gray-400 hover:text-white hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRenameProject}
+              disabled={!renameValue.trim() || renameValue.trim() === projectTitle}
+              className="bg-[#5A9665] hover:bg-[#4a8655] text-white"
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

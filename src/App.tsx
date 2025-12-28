@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { AuthProvider } from "@/context/AuthContext";
+import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import { GlobalErrorListener } from "./components/ui/GlobalErrorListener";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -258,6 +259,7 @@ const AnimatedRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+    <SubscriptionProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -268,6 +270,7 @@ const App = () => (
         </SwipeHandler>
       </BrowserRouter>
     </TooltipProvider>
+    </SubscriptionProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

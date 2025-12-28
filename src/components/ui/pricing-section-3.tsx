@@ -4,19 +4,42 @@ import { TimelineContent } from "@/components/ui/timeline-animation";
 import { VerticalCutReveal } from "@/components/ui/vertical-cut-reveal";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
-import { Briefcase, CheckCheck, Database, Server } from "lucide-react";
+import { Briefcase, CheckCheck, Database, Server, Zap, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { redirectToCheckout, STRIPE_PRICES, type BillingInterval } from "@/lib/stripe";
+import { AuthModal } from "@/components/AuthModal";
 
-const plans = [
+interface Plan {
+  name: string;
+  description: string;
+  price: number | null;
+  yearlyPrice: number | null;
+  buttonText: string;
+  buttonVariant: "outline" | "default";
+  features: { text: string; icon: React.ReactNode }[];
+  includes: string[];
+  popular?: boolean;
+  isCustom?: boolean;
+  planId?: "free" | "pro" | "premium";
+  dailyCredits: number;
+  monthlyCredits: number;
+}
+
+const plans: Plan[] = [
   {
     name: "Free",
+    planId: "free",
     description:
       "Perfect for trying out Extendr and building your first extension",
     price: 0,
     yearlyPrice: 0,
     buttonText: "Get started",
     buttonVariant: "outline" as const,
+    dailyCredits: 3,
+    monthlyCredits: 0,
     features: [
       { text: "Up to 3 extensions", icon: <Briefcase size={20} /> },
       { text: "Basic templates", icon: <Database size={20} /> },
@@ -24,6 +47,7 @@ const plans = [
     ],
     includes: [
       "Free includes:",
+      "3 daily AI credits",
       "AI-powered generation",
       "Live preview",
       "Export to ZIP",
@@ -31,12 +55,15 @@ const plans = [
   },
   {
     name: "Pro",
+    planId: "pro",
     description:
       "Best for indie developers building multiple extensions",
     price: 20,
     yearlyPrice: 190,
-    buttonText: "Get started",
+    buttonText: "Upgrade to Pro",
     buttonVariant: "outline" as const,
+    dailyCredits: 3,
+    monthlyCredits: 40,
     features: [
       { text: "Unlimited extensions", icon: <Briefcase size={20} /> },
       { text: "All templates", icon: <Database size={20} /> },
@@ -44,6 +71,7 @@ const plans = [
     ],
     includes: [
       "Everything in Free, plus:",
+      "3 daily + 40 monthly credits",
       "Advanced customization",
       "Version history",
       "Email support",
@@ -51,13 +79,16 @@ const plans = [
   },
   {
     name: "Premium",
+    planId: "premium",
     description:
       "For power users who need all features and faster generation",
     price: 40,
     yearlyPrice: 380,
     popular: true,
-    buttonText: "Get started",
+    buttonText: "Upgrade to Premium",
     buttonVariant: "default" as const,
+    dailyCredits: 3,
+    monthlyCredits: 80,
     features: [
       { text: "Unlimited everything", icon: <Briefcase size={20} /> },
       { text: "Custom branding", icon: <Database size={20} /> },
@@ -65,13 +96,14 @@ const plans = [
     ],
     includes: [
       "Everything in Pro, plus:",
+      "3 daily + 80 monthly credits",
       "Priority support",
       "Advanced analytics",
       "API access",
     ],
   },
   {
-    name: "Enterprise",
+    name: " ",
     description:
       "Custom solutions for teams with dedicated support and SLAs",
     price: null,
@@ -79,6 +111,8 @@ const plans = [
     isCustom: true,
     buttonText: "Contact sales",
     buttonVariant: "outline" as const,
+    dailyCredits: 3,
+    monthlyCredits: 0,
     features: [
       { text: "Custom integrations", icon: <Briefcase size={20} /> },
       { text: "Dedicated support", icon: <Database size={20} /> },
@@ -86,6 +120,7 @@ const plans = [
     ],
     includes: [
       "Everything in Premium, plus:",
+      "Unlimited credits",
       "SSO & SAML",
       "Custom contracts",
       "Dedicated account manager",
@@ -159,7 +194,12 @@ const PricingSwitch = ({
 
 export default function PricingSection3() {
   const [isYearly, setIsYearly] = useState(true);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<{ plan: "pro" | "premium"; interval: BillingInterval } | null>(null);
   const pricingRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const revealVariants = {
     visible: (i: number) => ({
@@ -180,6 +220,68 @@ export default function PricingSection3() {
 
   const togglePricingPeriod = (value: string) =>
     setIsYearly(Number.parseInt(value) === 1);
+
+  /**
+   * Handle plan button click
+   * - Free: Go to build page
+   * - Pro/Premium: Redirect to Stripe Checkout (if authenticated)
+   * - Custom: Contact sales (placeholder)
+   */
+  const handlePlanClick = async (plan: Plan) => {
+    const interval: BillingInterval = isYearly ? "yearly" : "monthly";
+
+    // Free plan - just go to build
+    if (plan.planId === "free") {
+      navigate("/build");
+      return;
+    }
+
+    // Custom enterprise - contact sales
+    if (plan.isCustom) {
+      window.location.href = "mailto:sales@extendr.dev?subject=Enterprise%20Inquiry";
+      return;
+    }
+
+    // Paid plans - check auth first
+    if (!isAuthenticated) {
+      setPendingPlan({ plan: plan.planId as "pro" | "premium", interval });
+      setShowAuthModal(true);
+      return;
+    }
+
+    // Proceed with checkout
+    await handleCheckout(plan.planId as "pro" | "premium", interval);
+  };
+
+  /**
+   * Handle Stripe Checkout redirect
+   */
+  const handleCheckout = async (planId: "pro" | "premium", interval: BillingInterval) => {
+    setLoadingPlan(planId);
+    
+    try {
+      await redirectToCheckout(planId, interval);
+    } catch (error) {
+      console.error("Checkout error:", error);
+      // If checkout fails, show error (toast would be better)
+      alert("Failed to start checkout. Please try again.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  /**
+   * Handle auth modal close - if user just signed in and had pending plan, proceed with checkout
+   */
+  const handleAuthModalClose = () => {
+    setShowAuthModal(false);
+    
+    // If user signed in and had a pending plan, proceed with checkout
+    if (isAuthenticated && pendingPlan) {
+      handleCheckout(pendingPlan.plan, pendingPlan.interval);
+      setPendingPlan(null);
+    }
+  };
 
   return (
     <div
@@ -262,7 +364,7 @@ export default function PricingSection3() {
 
                   <div className="flex items-baseline">
                     {plan.isCustom ? (
-                      <span className="text-3xl font-semibold">Custom</span>
+                      <span className="text-3xl font-semibold">Custom Enterprise</span>
                     ) : (
                       <>
                         <span className="text-4xl font-semibold ">
@@ -302,6 +404,29 @@ export default function PricingSection3() {
                   {plan.description}
                 </p>
 
+                {/* Credits highlight */}
+                {!plan.isCustom && (
+                  <div className={cn(
+                    "flex items-center gap-2 mb-4 p-2 rounded-lg",
+                    plan.popular 
+                      ? "bg-primary-foreground/10" 
+                      : "bg-muted"
+                  )}>
+                    <Zap className={cn(
+                      "h-4 w-4",
+                      plan.popular ? "text-primary-foreground" : "text-primary"
+                    )} />
+                    <span className={cn(
+                      "text-sm font-medium",
+                      plan.popular ? "text-primary-foreground" : "text-foreground"
+                    )}>
+                      {plan.dailyCredits} daily
+                      {plan.monthlyCredits > 0 && ` + ${plan.monthlyCredits} monthly`}
+                      {" "}credits
+                    </span>
+                  </div>
+                )}
+
                 <div className="space-y-3 pt-4 border-t border-border">
                   <h4 className="font-medium text-base  mb-3">
                     {plan.includes[0]}
@@ -334,21 +459,39 @@ export default function PricingSection3() {
               </CardContent>
               <CardFooter className="mt-auto pt-4">
                 <button
-                  className={`w-full p-4 text-xl rounded-xl transition-colors ${
+                  onClick={() => handlePlanClick(plan)}
+                  disabled={loadingPlan === plan.planId}
+                  className={cn(
+                    "w-full p-4 text-xl rounded-xl transition-colors flex items-center justify-center gap-2",
+                    "disabled:opacity-70 disabled:cursor-not-allowed",
                     plan.popular
                       ? "bg-primary-foreground text-primary font-semibold shadow-lg border border-primary-foreground/20 hover:bg-primary-foreground/90"
                       : plan.buttonVariant === "outline"
                         ? "bg-primary text-primary-foreground shadow-lg border border-primary/20 hover:bg-primary/90"
                         : ""
-                  }`}
+                  )}
                 >
-                  {plan.buttonText}
+                  {loadingPlan === plan.planId ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    plan.buttonText
+                  )}
                 </button>
               </CardFooter>
             </Card>
           </TimelineContent>
         ))}
       </TimelineContent>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={handleAuthModalClose}
+        mode="signup"
+      />
     </div>
   );
 }
