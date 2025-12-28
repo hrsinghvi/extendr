@@ -159,7 +159,7 @@ export function Header() {
                     </div>
                     <div className="h-1.5 w-full bg-[#3a3a3a] rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-violet-500 transition-all duration-300" 
+                        className="h-full bg-[#5A9665] transition-all duration-300" 
                         style={{ 
                           width: credits 
                             ? `${Math.min(100, (totalAvailable / (credits.dailyTotal + credits.monthlyTotal || 1)) * 100)}%` 
