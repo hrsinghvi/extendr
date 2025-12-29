@@ -618,11 +618,35 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
 
     // Only create default vite.config.ts if not provided
     if (!hasViteConfig) {
+      // Vite config with plugin to copy manifest.json to dist for Chrome extension export
       const defaultViteConfig = `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
+
+// Plugin to copy manifest.json to dist after build
+const copyManifestPlugin = () => ({
+  name: 'copy-manifest',
+  closeBundle() {
+    // Ensure dist exists
+    if (!existsSync('dist')) {
+      mkdirSync('dist', { recursive: true });
+    }
+    // Copy manifest.json to dist
+    if (existsSync('manifest.json')) {
+      copyFileSync('manifest.json', 'dist/manifest.json');
+      console.log('✓ Copied manifest.json to dist/');
+    } else if (existsSync('public/manifest.json')) {
+      copyFileSync('public/manifest.json', 'dist/manifest.json');
+      console.log('✓ Copied public/manifest.json to dist/');
+    }
+  }
+});
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), copyManifestPlugin()],
+  // Use relative paths for Chrome extension compatibility
+  base: './',
   resolve: {
     alias: {
       '@': '/src'
@@ -633,12 +657,21 @@ export default defineConfig({
     port: 3000
   },
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    // Generate clean output for Chrome extension
+    rollupOptions: {
+      output: {
+        // Use simple filenames without hashes for extension compatibility
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]'
+      }
+    }
   }
 });
 `;
       allFiles['vite.config.ts'] = defaultViteConfig;
-      console.log('[WebContainer] Using default vite.config.ts with React plugin and @ alias');
+      console.log('[WebContainer] Using default vite.config.ts with manifest copy plugin');
     } else {
       console.log('[WebContainer] Using AI-provided vite config');
     }
@@ -824,6 +857,123 @@ export function stopExtension(): void {
 }
 
 // ============================================================================
+// Production Build (for Export)
+// ============================================================================
+
+/**
+ * Build extension for production
+ * Runs `npm run build` and waits for completion
+ * 
+ * @returns true if build succeeded, false otherwise
+ */
+export async function buildForProduction(): Promise<boolean> {
+  const wc = await bootWebContainer();
+  
+  writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Building for production...\r\n');
+  console.log('[WebContainer] Starting production build');
+  
+  try {
+    const exitCode = await runCommand('npm', ['run', 'build']);
+    
+    if (exitCode !== 0) {
+      writeToTerminal(`\x1b[1;31m[WebContainer]\x1b[0m Build failed with exit code ${exitCode}\r\n`);
+      return false;
+    }
+    
+    writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Production build complete!\r\n');
+    console.log('[WebContainer] Production build succeeded');
+    return true;
+  } catch (error: any) {
+    reportError('Production build failed', error.message);
+    return false;
+  }
+}
+
+/**
+ * Read all files from a directory recursively
+ * Used to read the built files from dist/
+ * 
+ * @param dirPath - Directory path to read (e.g., 'dist')
+ * @returns FileMap of all files in the directory
+ */
+export async function readDirectory(dirPath: string): Promise<FileMap> {
+  const wc = await bootWebContainer();
+  const files: FileMap = {};
+  
+  async function readDirRecursive(currentPath: string, basePath: string): Promise<void> {
+    try {
+      const entries = await wc.fs.readdir(currentPath, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const entryPath = currentPath === '.' ? entry.name : `${currentPath}/${entry.name}`;
+        // Remove the base path prefix to get relative path
+        const relativePath = entryPath.startsWith(basePath + '/') 
+          ? entryPath.slice(basePath.length + 1) 
+          : entryPath;
+        
+        if (entry.isDirectory()) {
+          await readDirRecursive(entryPath, basePath);
+        } else if (entry.isFile()) {
+          try {
+            const content = await wc.fs.readFile(entryPath, 'utf-8');
+            files[relativePath] = content;
+            console.log(`[WebContainer] Read file: ${relativePath}`);
+          } catch (e) {
+            // Skip binary files or files that can't be read as utf-8
+            console.warn(`[WebContainer] Skipped file (may be binary): ${relativePath}`);
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error(`[WebContainer] Error reading directory ${currentPath}:`, error.message);
+    }
+  }
+  
+  await readDirRecursive(dirPath, dirPath);
+  return files;
+}
+
+/**
+ * Build for production and read the output files
+ * Combined helper for export functionality
+ * 
+ * @param sourceFiles - Original source files (used to get manifest.json if not in dist)
+ * @returns FileMap of built files ready for export, or null if build failed
+ */
+export async function buildAndReadDist(sourceFiles: FileMap): Promise<FileMap | null> {
+  // Run the production build
+  const buildSuccess = await buildForProduction();
+  if (!buildSuccess) {
+    return null;
+  }
+  
+  // Read files from dist/
+  writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Reading build output...\r\n');
+  const distFiles = await readDirectory('dist');
+  
+  console.log('[WebContainer] Built files:', Object.keys(distFiles));
+  
+  if (Object.keys(distFiles).length === 0) {
+    writeToTerminal('\x1b[1;31m[WebContainer]\x1b[0m No files found in dist/\r\n');
+    return null;
+  }
+  
+  // Ensure manifest.json is included (copy from source if not in dist)
+  if (!distFiles['manifest.json']) {
+    if (sourceFiles['manifest.json']) {
+      distFiles['manifest.json'] = sourceFiles['manifest.json'];
+      console.log('[WebContainer] Copied manifest.json from source');
+    } else if (sourceFiles['public/manifest.json']) {
+      distFiles['manifest.json'] = sourceFiles['public/manifest.json'];
+      console.log('[WebContainer] Copied manifest.json from public/');
+    }
+  }
+  
+  writeToTerminal(`\x1b[1;32m[WebContainer]\x1b[0m Read ${Object.keys(distFiles).length} files from dist/\r\n`);
+  return distFiles;
+}
+
+// ============================================================================
 // Getters
 // ============================================================================
 
@@ -884,5 +1034,9 @@ export default {
   setStatusCallback,
   setErrorCallback,
   setUrlCallback,
-  fileMapToFileSystemTree
+  fileMapToFileSystemTree,
+  // Export build functions
+  buildForProduction,
+  readDirectory,
+  buildAndReadDist
 };

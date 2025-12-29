@@ -654,10 +654,11 @@ export async function exportExtension(
 }
 
 /**
- * Export and download extension
+ * Export and download extension (source files - legacy)
  * 
  * @param files - Extension files map
  * @param projectName - Project name for ZIP filename
+ * @deprecated Use buildAndDownloadExtension instead for proper Chrome extension export
  */
 export async function downloadExtension(
   files: FileMap,
@@ -668,3 +669,47 @@ export async function downloadExtension(
   downloadBlob(blob, `${sanitizedName}.zip`);
 }
 
+/**
+ * Build extension for production and download as ZIP
+ * 
+ * This is the proper way to export Chrome extensions:
+ * 1. Runs `vite build` in WebContainer to compile TypeScript/React
+ * 2. Reads the compiled files from dist/
+ * 3. Packages them into a ZIP ready for Chrome
+ * 
+ * @param sourceFiles - Original source files (used for manifest.json fallback)
+ * @param projectName - Project name for ZIP filename
+ * @param onProgress - Optional progress callback
+ * @returns Promise that resolves when download starts
+ * @throws Error if build fails
+ */
+export async function buildAndDownloadExtension(
+  sourceFiles: FileMap,
+  projectName: string,
+  onProgress?: (message: string) => void
+): Promise<void> {
+  // Import dynamically to avoid circular dependencies
+  const { buildAndReadDist } = await import('@/preview/webcontainerBridge');
+  
+  onProgress?.('Building extension for production...');
+  console.log('[Export] Starting production build...');
+  
+  // Build and read the dist files
+  const builtFiles = await buildAndReadDist(sourceFiles);
+  
+  if (!builtFiles) {
+    throw new Error('Build failed. Check the terminal for errors.');
+  }
+  
+  console.log('[Export] Build complete, got files:', Object.keys(builtFiles));
+  onProgress?.('Packaging extension...');
+  
+  // Use the built files for export
+  const blob = await exportExtension(builtFiles, projectName);
+  const sanitizedName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  
+  onProgress?.('Downloading...');
+  downloadBlob(blob, `${sanitizedName}.zip`);
+  
+  console.log('[Export] Download started');
+}

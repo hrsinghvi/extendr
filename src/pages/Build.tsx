@@ -47,7 +47,7 @@ import {
   type ToolContext
 } from "@/lib/ai";
 import { determineCategoryFromText } from "@/lib/categories";
-import { downloadExtension } from "@/lib/export";
+import { buildAndDownloadExtension } from "@/lib/export";
 
 // Types for chat and messages (from Supabase)
 interface DBMessage {
@@ -1352,17 +1352,33 @@ export default function Build() {
             userEmail={user?.email}
             isAIWorking={isThinking}
             onExport={async () => {
+              // Show building toast
+              const buildingToast = toast({
+                title: "Building Extension...",
+                description: "Compiling your extension for Chrome. This may take a moment.",
+              });
+              
               try {
-                await downloadExtension(extensionFiles, projectTitle);
+                await buildAndDownloadExtension(
+                  extensionFiles, 
+                  projectTitle,
+                  (progress) => {
+                    console.log('[Export Progress]', progress);
+                  }
+                );
+                
+                // Dismiss building toast and show success
+                buildingToast.dismiss?.();
                 toast({
                   title: "Exported!",
-                  description: "Extension downloaded as ZIP file.",
+                  description: "Extension built and downloaded. Ready to load in Chrome!",
                 });
               } catch (error: any) {
                 console.error("Export error:", error);
+                buildingToast.dismiss?.();
                 toast({
                   title: "Export Failed",
-                  description: error.message || "Failed to export extension. Please try again.",
+                  description: error.message || "Failed to build extension. Check the terminal for errors.",
                   variant: "destructive",
                 });
               }

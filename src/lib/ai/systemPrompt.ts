@@ -377,14 +377,30 @@ export const MANDATORY_TEMPLATES = {
 
   'vite.config.ts': `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
+
+// Plugin to copy manifest.json to dist for Chrome extension export
+const copyManifestPlugin = () => ({
+  name: 'copy-manifest',
+  closeBundle() {
+    if (!existsSync('dist')) mkdirSync('dist', { recursive: true });
+    if (existsSync('manifest.json')) {
+      copyFileSync('manifest.json', 'dist/manifest.json');
+    }
+  }
+});
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), copyManifestPlugin()],
+  base: './',
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: {
-        popup: 'index.html'
+      input: { popup: 'index.html' },
+      output: {
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]'
       }
     }
   }
