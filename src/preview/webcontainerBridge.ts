@@ -514,19 +514,73 @@ export function killProcess(): void {
 // Build & Run Extension
 // ============================================================================
 
+// Track installed package.json to skip unnecessary reinstalls
+let lastInstalledPackageJsonHash: string | null = null;
+
 /**
- * Install npm dependencies
+ * Simple hash function for package.json comparison
  */
-export async function installDependencies(): Promise<boolean> {
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString(16);
+}
+
+/**
+ * Check if node_modules exists and has packages installed
+ */
+async function hasNodeModules(): Promise<boolean> {
+  const wc = await bootWebContainer();
+  try {
+    const entries = await wc.fs.readdir('node_modules', { withFileTypes: true });
+    // Check if there are actual packages (not just .bin)
+    const hasPackages = entries.some(e => e.isDirectory() && !e.name.startsWith('.'));
+    return hasPackages;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Install npm dependencies (with smart caching)
+ * 
+ * Skips installation if:
+ * 1. node_modules already exists AND
+ * 2. package.json hasn't changed since last install
+ */
+export async function installDependencies(packageJsonContent?: string): Promise<boolean> {
+  // Check if we can skip installation
+  const currentHash = packageJsonContent ? hashString(packageJsonContent) : null;
+  
+  if (currentHash && currentHash === lastInstalledPackageJsonHash) {
+    const hasModules = await hasNodeModules();
+    if (hasModules) {
+      console.log('[WebContainer] Skipping npm install - deps already installed');
+      writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Dependencies already installed (cached)\r\n');
+      updateStatus('installing', 'Dependencies ready (cached)', 60);
+      return true;
+    }
+  }
+  
   updateStatus('installing', 'Installing dependencies...', 30);
   writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Installing dependencies...\r\n');
 
   try {
-    const exitCode = await runCommand('npm', ['install']);
+    // Use npm ci if package-lock exists (faster), otherwise npm install
+    const exitCode = await runCommand('npm', ['install', '--prefer-offline']);
     
     if (exitCode !== 0) {
       reportError('npm install failed', `Exit code: ${exitCode}`);
       return false;
+    }
+    
+    // Cache the hash for future checks
+    if (currentHash) {
+      lastInstalledPackageJsonHash = currentHash;
     }
     
     updateStatus('installing', 'Dependencies installed', 60);
@@ -538,9 +592,33 @@ export async function installDependencies(): Promise<boolean> {
 }
 
 /**
- * Start the Vite development server
+ * Clear the dependency cache (call when project changes)
  */
-export async function startDevServer(): Promise<void> {
+export function clearDependencyCache(): void {
+  lastInstalledPackageJsonHash = null;
+  console.log('[WebContainer] Dependency cache cleared');
+}
+
+/**
+ * Start the Vite development server
+ * 
+ * If server is already running and we have a URL, skip restart
+ */
+export async function startDevServer(forceRestart = false): Promise<void> {
+  // If server is already running, just use existing URL
+  if (!forceRestart && serverUrl && currentProcess) {
+    console.log('[WebContainer] Dev server already running at', serverUrl);
+    writeToTerminal(`\x1b[1;32m[WebContainer]\x1b[0m Dev server already running at ${serverUrl}\r\n`);
+    updateStatus('running', 'Running', 100);
+    urlCallback?.(serverUrl);
+    return;
+  }
+  
+  // Kill existing process if any
+  if (currentProcess) {
+    killProcess();
+  }
+  
   updateStatus('starting', 'Starting development server...', 80);
   writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Starting dev server...\r\n');
 
@@ -809,9 +887,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
     await mountFiles(allFiles);
 
-    // Step 3: Install dependencies
+    // Step 3: Install dependencies (with caching based on package.json)
     if (installDeps) {
-      const success = await installDependencies();
+      const packageJsonContent = allFiles['package.json'];
+      const success = await installDependencies(packageJsonContent);
       if (!success) {
         return;
       }
@@ -854,6 +933,39 @@ export function stopExtension(): void {
   killProcess();
   serverUrl = null;
   updateStatus('idle', 'Extension stopped');
+}
+
+/**
+ * Check if preview is already running
+ * Returns the server URL if running, null otherwise
+ */
+export function getRunningPreview(): string | null {
+  if (webcontainerInstance && currentProcess && serverUrl) {
+    return serverUrl;
+  }
+  return null;
+}
+
+/**
+ * Quick start - if preview is already running, just return URL
+ * Otherwise trigger a full build
+ * 
+ * This is much faster for reopening existing projects
+ */
+export async function quickStartPreview(files: FileMap): Promise<string | null> {
+  // Check if already running
+  const existingUrl = getRunningPreview();
+  if (existingUrl) {
+    console.log('[WebContainer] Preview already running, returning existing URL');
+    writeToTerminal(`\x1b[1;32m[WebContainer]\x1b[0m Preview already running at ${existingUrl}\r\n`);
+    updateStatus('running', 'Running', 100);
+    urlCallback?.(existingUrl);
+    return existingUrl;
+  }
+  
+  // Otherwise do full build
+  await buildExtension(files, true);
+  return serverUrl;
 }
 
 // ============================================================================
@@ -1038,5 +1150,10 @@ export default {
   // Export build functions
   buildForProduction,
   readDirectory,
-  buildAndReadDist
+  buildAndReadDist,
+  // Cache management
+  clearDependencyCache,
+  // Quick start
+  getRunningPreview,
+  quickStartPreview
 };

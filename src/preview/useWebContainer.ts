@@ -17,6 +17,7 @@ import {
   setErrorCallback,
   setUrlCallback,
   isBooted as checkIsBooted,
+  getRunningPreview,
   type WebContainerStatus
 } from './webcontainerBridge';
 import type { FileMap, LogEntry } from './types';
@@ -205,9 +206,24 @@ export function useWebContainer(options: UseWebContainerOptions = {}): UseWebCon
    * Build extension
    * Note: We do NOT clear previewUrl here - instead we keep the old preview visible
    * until the new one is ready. This prevents the "No Preview Available" flash.
+   * 
+   * Optimization: If preview is already running, skip rebuild and just use existing URL
    */
   const build = useCallback(async (files: FileMap, installDeps = true) => {
     console.log('[useWebContainer] build() called with', Object.keys(files).length, 'files');
+    
+    // Quick check: if preview is already running, just use it
+    const existingUrl = getRunningPreview();
+    if (existingUrl && !installDeps) {
+      // For rebuilds (installDeps=false), only skip if we already have a URL
+      // This handles HMR-style updates where we just need to refresh
+      console.log('[useWebContainer] Preview already running, skipping rebuild');
+      setPreviewUrl(existingUrl);
+      setStatus(BuildStatus.RUNNING);
+      setIsLoading(false);
+      addLog('info', 'Preview already running (cached)', 'build');
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
