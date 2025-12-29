@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
 import Build from "./pages/Build";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -233,6 +234,19 @@ const AnimatedRoutes = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <Build />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <Settings />
             </motion.div>
           }
         />
