@@ -825,6 +825,12 @@ export default {
       console.log('[WebContainer] Created src/index.css with Tailwind');
     }
 
+    // Preview-only CSS to make content fill the preview area
+    // This is NOT included in export - only for preview display
+    const previewCss = `<style id="preview-fullscreen">
+      html, body, #root { width: 100%; min-height: 100vh; margin: 0; padding: 0; }
+    </style>`;
+
     // Create default index.html if not provided
     if (!hasIndexHtml) {
       const indexHtml = `<!DOCTYPE html>
@@ -833,6 +839,7 @@ export default {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Extension Preview</title>
+    ${previewCss}
   </head>
   <body class="dark">
     <div id="root"></div>
@@ -842,7 +849,17 @@ export default {
       allFiles['index.html'] = indexHtml;
       console.log('[WebContainer] Using default React index.html');
     } else {
-      console.log('[WebContainer] Using AI-provided index.html');
+      // Inject preview CSS into AI-provided index.html
+      let existingHtml = allFiles['index.html'];
+      if (existingHtml && !existingHtml.includes('preview-fullscreen')) {
+        if (existingHtml.includes('</head>')) {
+          existingHtml = existingHtml.replace('</head>', `${previewCss}\n  </head>`);
+        } else if (existingHtml.includes('<head>')) {
+          existingHtml = existingHtml.replace('<head>', `<head>\n    ${previewCss}`);
+        }
+        allFiles['index.html'] = existingHtml;
+      }
+      console.log('[WebContainer] Using AI-provided index.html with preview CSS');
     }
 
     // Create default src/main.tsx if not provided

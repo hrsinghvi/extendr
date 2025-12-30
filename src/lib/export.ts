@@ -465,7 +465,7 @@ export async function exportExtension(
   };
   
   // Add all existing files to ZIP, ensuring manifest.json is at root
-  // Also inject popup dimensions into HTML files
+  // Strip preview-only CSS from HTML files
   for (const [path, content] of Object.entries(filesToExport)) {
     // Skip node_modules and other build artifacts
     if (path.includes('node_modules') || path.includes('.git')) {
@@ -478,7 +478,13 @@ export async function exportExtension(
       continue;
     }
     
-    zip.file(path, content);
+    // Strip preview-only CSS from HTML files (used for preview display only)
+    if (path.endsWith('.html')) {
+      const cleanedContent = content.replace(/<style id="preview-fullscreen">[\s\S]*?<\/style>\s*/g, '');
+      zip.file(path, cleanedContent);
+    } else {
+      zip.file(path, content);
+    }
   }
   
   // Ensure manifest.json is always at root (double-check it exists)
