@@ -822,34 +822,20 @@ export default {
 @tailwind utilities;
 
 /* 
- * Chrome Extension Popup Styles
- * - Fixed width for consistent popup sizing
- * - Height grows based on content
+ * Chrome Extension Base Styles
+ * - Minimal defaults, AI controls dimensions via Tailwind classes
  * - Works in both preview and actual Chrome extension
  */
 html, body {
   margin: 0;
   padding: 0;
-  /* Fixed width for Chrome extension popup */
-  width: 380px;
-  min-height: 200px;
   background-color: #1a1a1a;
-  /* Prevent horizontal scrollbar */
-  overflow-x: hidden;
 }
 
-/* Root container */
+/* Root container - flexbox for proper layout */
 #root {
-  width: 100%;
-  min-height: 200px;
   display: flex;
   flex-direction: column;
-}
-
-/* Ensure app fills the container */
-#root > * {
-  width: 100%;
-  flex: 1;
 }
 `;
       allFiles['src/index.css'] = defaultCss;

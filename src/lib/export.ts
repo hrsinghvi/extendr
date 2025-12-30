@@ -71,6 +71,47 @@ function parseManifest(files: FileMap): Manifest | null {
 }
 
 /**
+ * CSS to inject into popup HTML for Chrome extension compatibility
+ * Only sets minimums as a fallback - doesn't override AI-set dimensions
+ */
+const POPUP_DIMENSION_CSS = `
+<style id="extendr-popup-dimensions">
+  /* Chrome Extension Popup Fallback - Injected by Extendr */
+  /* Only sets minimums - AI/user dimensions take priority */
+  html, body {
+    min-width: 200px;
+    min-height: 100px;
+    margin: 0;
+    padding: 0;
+  }
+</style>
+`;
+
+/**
+ * Inject popup dimension CSS into HTML content
+ * Adds the CSS right before </head> to ensure proper popup sizing
+ */
+function injectPopupDimensions(htmlContent: string): string {
+  // Check if already injected
+  if (htmlContent.includes('extendr-popup-dimensions')) {
+    return htmlContent;
+  }
+  
+  // Try to inject before </head>
+  if (htmlContent.includes('</head>')) {
+    return htmlContent.replace('</head>', `${POPUP_DIMENSION_CSS}</head>`);
+  }
+  
+  // Fallback: inject after <head> or at the start
+  if (htmlContent.includes('<head>')) {
+    return htmlContent.replace('<head>', `<head>${POPUP_DIMENSION_CSS}`);
+  }
+  
+  // Last resort: prepend to content
+  return POPUP_DIMENSION_CSS + htmlContent;
+}
+
+/**
  * Generate placeholder icon SVG
  */
 function generatePlaceholderIcon(size: number, initial: string): string {
@@ -465,6 +506,7 @@ export async function exportExtension(
   };
   
   // Add all existing files to ZIP, ensuring manifest.json is at root
+  // Also inject popup dimensions into HTML files
   for (const [path, content] of Object.entries(filesToExport)) {
     // Skip node_modules and other build artifacts
     if (path.includes('node_modules') || path.includes('.git')) {
@@ -477,7 +519,14 @@ export async function exportExtension(
       continue;
     }
     
-    zip.file(path, content);
+    // Inject popup dimensions into HTML files (index.html, popup.html, etc.)
+    if (path.endsWith('.html')) {
+      const injectedContent = injectPopupDimensions(content);
+      zip.file(path, injectedContent);
+      console.log(`[Export] Injected popup dimensions into ${path}`);
+    } else {
+      zip.file(path, content);
+    }
   }
   
   // Ensure manifest.json is always at root (double-check it exists)
@@ -654,11 +703,29 @@ export async function exportExtension(
 }
 
 /**
+ * Export and download extension source files directly
+ * 
+ * This is the FAST export - no build step required.
+ * Works even when WebContainer isn't running.
+ * 
+ * @param files - Extension files map
+ * @param projectName - Project name for ZIP filename
+ */
+export async function downloadSourceFiles(
+  files: FileMap,
+  projectName: string
+): Promise<void> {
+  const blob = await exportExtension(files, projectName);
+  const sanitizedName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  downloadBlob(blob, `${sanitizedName}_source.zip`);
+}
+
+/**
  * Export and download extension (source files - legacy)
  * 
  * @param files - Extension files map
  * @param projectName - Project name for ZIP filename
- * @deprecated Use buildAndDownloadExtension instead for proper Chrome extension export
+ * @deprecated Use downloadSourceFiles or buildAndDownloadExtension instead
  */
 export async function downloadExtension(
   files: FileMap,

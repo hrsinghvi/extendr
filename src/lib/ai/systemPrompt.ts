@@ -184,7 +184,7 @@ export default function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="w-full min-h-[200px] bg-gray-900 text-white p-6">
+    <div className="w-[350px] bg-gray-900 text-white p-6">
       <h1 className="text-xl font-bold mb-4">Counter Extension</h1>
       <p className="text-3xl font-mono mb-4">{count}</p>
       <button 
@@ -202,8 +202,11 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
-- **IMPORTANT - Chrome Extension Sizing**: Use \`w-full min-h-[200px] p-4\` on outer container (NOT min-h-screen - that breaks in Chrome popups!)
-- **Let height grow**: Don't set fixed heights, let content determine height
+- **Chrome Extension Sizing**: 
+  - Set explicit width on outer container: \`w-[350px]\` for small, \`w-[400px]\` for medium, \`w-[500px]\` for large extensions
+  - NEVER use \`min-h-screen\` or \`100vh\` - these break in Chrome popups!
+  - Let content determine height naturally, or set explicit height if needed
+  - User can request specific dimensions - adjust width/height classes accordingly
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
 - **Spacing**: \`p-4\`, \`p-6\`, \`gap-4\`, \`space-y-4\`
@@ -247,9 +250,10 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 - Call ext_build_preview after changes
 
 **STYLE RULES:**
-- Use w-full min-h-[200px] p-4 on outer container (NOT min-h-screen - breaks Chrome popups!)
+- Set explicit width: w-[350px] small, w-[400px] medium, w-[500px] large
+- NEVER use min-h-screen or 100vh (breaks Chrome popups!)
 - Dark theme: bg-gray-900, text-white
-- Let content determine height naturally`;
+- Adjust dimensions if user requests specific size`;
 
 /**
  * Get the appropriate system prompt based on context
