@@ -465,7 +465,6 @@ export async function exportExtension(
   };
   
   // Add all existing files to ZIP, ensuring manifest.json is at root
-  // Strip preview-only CSS from HTML files
   for (const [path, content] of Object.entries(filesToExport)) {
     // Skip node_modules and other build artifacts
     if (path.includes('node_modules') || path.includes('.git')) {
@@ -478,13 +477,7 @@ export async function exportExtension(
       continue;
     }
     
-    // Strip preview-only CSS from HTML files (used for preview display only)
-    if (path.endsWith('.html')) {
-      const cleanedContent = content.replace(/<style id="preview-fullscreen">[\s\S]*?<\/style>\s*/g, '');
-      zip.file(path, cleanedContent);
-    } else {
-      zip.file(path, content);
-    }
+    zip.file(path, content);
   }
   
   // Ensure manifest.json is always at root (double-check it exists)
@@ -661,29 +654,11 @@ export async function exportExtension(
 }
 
 /**
- * Export and download extension source files directly
- * 
- * This is the FAST export - no build step required.
- * Works even when WebContainer isn't running.
- * 
- * @param files - Extension files map
- * @param projectName - Project name for ZIP filename
- */
-export async function downloadSourceFiles(
-  files: FileMap,
-  projectName: string
-): Promise<void> {
-  const blob = await exportExtension(files, projectName);
-  const sanitizedName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  downloadBlob(blob, `${sanitizedName}_source.zip`);
-}
-
-/**
  * Export and download extension (source files - legacy)
  * 
  * @param files - Extension files map
  * @param projectName - Project name for ZIP filename
- * @deprecated Use downloadSourceFiles or buildAndDownloadExtension instead
+ * @deprecated Use buildAndDownloadExtension instead for proper Chrome extension export
  */
 export async function downloadExtension(
   files: FileMap,

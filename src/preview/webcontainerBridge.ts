@@ -820,26 +820,51 @@ export default {
       const defaultCss = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 
+ * Chrome Extension Popup Styles
+ * - Fixed width for consistent popup sizing
+ * - Height grows based on content
+ * - Works in both preview and actual Chrome extension
+ */
+html, body {
+  margin: 0;
+  padding: 0;
+  /* Fixed width for Chrome extension popup */
+  width: 380px;
+  min-height: 200px;
+  background-color: #1a1a1a;
+  /* Prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* Root container */
+#root {
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure app fills the container */
+#root > * {
+  width: 100%;
+  flex: 1;
+}
 `;
       allFiles['src/index.css'] = defaultCss;
       console.log('[WebContainer] Created src/index.css with Tailwind');
     }
 
-    // Preview-only CSS to make content fill the preview area
-    // This is NOT included in export - only for preview display
-    const previewCss = `<style id="preview-fullscreen">
-      html, body, #root { width: 100%; min-height: 100vh; margin: 0; padding: 0; }
-    </style>`;
-
-    // Create default index.html if not provided
+    // Only create index.html if not provided
     if (!hasIndexHtml) {
+      // Create a proper React entry index.html
       const indexHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Extension Preview</title>
-    ${previewCss}
   </head>
   <body class="dark">
     <div id="root"></div>
@@ -849,17 +874,7 @@ export default {
       allFiles['index.html'] = indexHtml;
       console.log('[WebContainer] Using default React index.html');
     } else {
-      // Inject preview CSS into AI-provided index.html
-      let existingHtml = allFiles['index.html'];
-      if (existingHtml && !existingHtml.includes('preview-fullscreen')) {
-        if (existingHtml.includes('</head>')) {
-          existingHtml = existingHtml.replace('</head>', `${previewCss}\n  </head>`);
-        } else if (existingHtml.includes('<head>')) {
-          existingHtml = existingHtml.replace('<head>', `<head>\n    ${previewCss}`);
-        }
-        allFiles['index.html'] = existingHtml;
-      }
-      console.log('[WebContainer] Using AI-provided index.html with preview CSS');
+      console.log('[WebContainer] Using AI-provided index.html');
     }
 
     // Create default src/main.tsx if not provided

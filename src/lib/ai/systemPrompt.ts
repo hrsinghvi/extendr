@@ -52,7 +52,6 @@ For SQL/database needs, use browser-compatible libraries:
 The system automatically provides these files. **NEVER create them:**
 - **postcss.config.js** - Auto-generated with Tailwind/autoprefixer
 - **src/main.tsx** - Auto-generated React entry point
-- **src/index.css** - Auto-generated with Tailwind directives
 
 ## CRITICAL: WORK INCREMENTALLY - DON'T RECREATE EXISTING FILES
 
@@ -73,7 +72,8 @@ Create these files:
 3. manifest.json - Chrome extension config (ROOT LEVEL)
 4. vite.config.ts - Vite configuration
 5. tailwind.config.js - Tailwind configuration
-6. src/App.tsx - Main component (and any other components needed)
+6. src/index.css - Tailwind directives
+7. src/App.tsx - Main component (and any other components needed)
 
 ## Required File Templates (for NEW projects only)
 
@@ -168,6 +168,13 @@ export default {
 }
 \`\`\`
 
+### src/index.css
+\`\`\`css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+\`\`\`
+
 ## Example App.tsx
 
 \`\`\`tsx
@@ -177,7 +184,7 @@ export default function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="bg-gray-900 text-white p-6">
+    <div className="w-full min-h-[200px] bg-gray-900 text-white p-6">
       <h1 className="text-xl font-bold mb-4">Counter Extension</h1>
       <p className="text-3xl font-mono mb-4">{count}</p>
       <button 
@@ -195,6 +202,8 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
+- **IMPORTANT - Chrome Extension Sizing**: Use \`w-full min-h-[200px] p-4\` on outer container (NOT min-h-screen - that breaks in Chrome popups!)
+- **Let height grow**: Don't set fixed heights, let content determine height
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
 - **Spacing**: \`p-4\`, \`p-6\`, \`gap-4\`, \`space-y-4\`
@@ -216,7 +225,6 @@ export const EXTENSION_SHORT_PROMPT = `You are Extendr, creating Chrome extensio
 **AUTO-GENERATED FILES - DO NOT CREATE:**
 - postcss.config.js (auto-generated)
 - src/main.tsx (auto-generated)
-- src/index.css (auto-generated with Tailwind)
 
 **FILE FLEXIBILITY:**
 You can create ANY files: components, hooks, utils, services, SQL files, etc.
@@ -229,7 +237,7 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 
 **For NEW projects, create these files:**
 1. package.json, index.html, manifest.json (ROOT LEVEL)
-2. vite.config.ts, tailwind.config.js
+2. vite.config.ts, tailwind.config.js, src/index.css
 3. src/App.tsx (and any other components needed)
 4. Call ext_build_preview
 
@@ -239,8 +247,9 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 - Call ext_build_preview after changes
 
 **STYLE RULES:**
+- Use w-full min-h-[200px] p-4 on outer container (NOT min-h-screen - breaks Chrome popups!)
 - Dark theme: bg-gray-900, text-white
-- Green accents: bg-green-600`;
+- Let content determine height naturally`;
 
 /**
  * Get the appropriate system prompt based on context

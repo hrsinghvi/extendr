@@ -47,7 +47,7 @@ import {
   type ToolContext
 } from "@/lib/ai";
 import { determineCategoryFromText } from "@/lib/categories";
-import { buildAndDownloadExtension, downloadSourceFiles } from "@/lib/export";
+import { buildAndDownloadExtension } from "@/lib/export";
 
 // Types for chat and messages (from Supabase)
 interface DBMessage {
@@ -1349,76 +1349,38 @@ export default function Build() {
             onClearLogs={clearLogs}
             onTerminalReady={handleTerminalReady}
             className="flex-1"
+            userEmail={user?.email}
             isAIWorking={isThinking}
             onExport={async () => {
-              // Check if we have files to export
-              if (Object.keys(extensionFiles).length === 0) {
+              // Show building toast
+              const buildingToast = toast({
+                title: "Building Extension...",
+                description: "Compiling your extension for Chrome. This may take a moment.",
+              });
+              
+              try {
+                await buildAndDownloadExtension(
+                  extensionFiles, 
+                  projectTitle,
+                  (progress) => {
+                    console.log('[Export Progress]', progress);
+                  }
+                );
+                
+                // Dismiss building toast and show success
+                buildingToast.dismiss?.();
                 toast({
-                  title: "No Files",
-                  description: "No extension files to export. Create some files first!",
+                  title: "Exported!",
+                  description: "Extension built and downloaded. Ready to load in Chrome!",
+                });
+              } catch (error: any) {
+                console.error("Export error:", error);
+                buildingToast.dismiss?.();
+                toast({
+                  title: "Export Failed",
+                  description: error.message || "Failed to build extension. Check the terminal for errors.",
                   variant: "destructive",
                 });
-                return;
-              }
-
-              // If WebContainer is booted and running, use the full build export
-              // Otherwise, export source files directly (faster, always works)
-              const canBuild = isBooted && (status === BuildStatus.RUNNING || previewUrl);
-              
-              if (canBuild) {
-                // Full build export - compiles the extension
-                const buildingToast = toast({
-                  title: "Building Extension...",
-                  description: "Compiling your extension for Chrome. This may take a moment.",
-                });
-                
-                try {
-                  await buildAndDownloadExtension(
-                    extensionFiles, 
-                    projectTitle,
-                    (progress) => {
-                      console.log('[Export Progress]', progress);
-                    }
-                  );
-                  
-                  buildingToast.dismiss?.();
-                  toast({
-                    title: "Exported!",
-                    description: "Extension built and downloaded. Ready to load in Chrome!",
-                  });
-                } catch (error: any) {
-                  console.error("Export error:", error);
-                  buildingToast.dismiss?.();
-                  toast({
-                    title: "Export Failed",
-                    description: error.message || "Failed to build extension. Check the terminal for errors.",
-                    variant: "destructive",
-                  });
-                }
-              } else {
-                // Direct source export - works even when preview isn't loaded
-                const exportingToast = toast({
-                  title: "Exporting Source Files...",
-                  description: "Packaging your extension source files.",
-                });
-                
-                try {
-                  await downloadSourceFiles(extensionFiles, projectTitle);
-                  
-                  exportingToast.dismiss?.();
-                  toast({
-                    title: "Source Exported!",
-                    description: "Source files downloaded. Run 'npm install && npm run build' to compile.",
-                  });
-                } catch (error: any) {
-                  console.error("Export error:", error);
-                  exportingToast.dismiss?.();
-                  toast({
-                    title: "Export Failed",
-                    description: error.message || "Failed to export source files.",
-                    variant: "destructive",
-                  });
-                }
               }
             }}
             onPublish={() => {
