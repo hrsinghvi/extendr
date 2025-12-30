@@ -815,36 +815,32 @@ export default {
       console.log('[WebContainer] Using default tsconfig.json');
     }
 
-    // Create default src/index.css with Tailwind
+    // Create default src/index.css with Tailwind - MINIMAL, no dimensions
+    // Dimensions are injected on EXPORT only, so preview fills the area
     if (!files['src/index.css'] && !files['src/styles/index.css']) {
       const defaultCss = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* 
- * Chrome Extension Base Styles
- * - Minimal defaults, AI controls dimensions via Tailwind classes
- * - Works in both preview and actual Chrome extension
- */
-html, body {
-  margin: 0;
-  padding: 0;
-  background-color: #1a1a1a;
-}
-
-/* Root container - flexbox for proper layout */
-#root {
-  display: flex;
-  flex-direction: column;
-}
 `;
       allFiles['src/index.css'] = defaultCss;
-      console.log('[WebContainer] Created src/index.css with Tailwind');
+      console.log('[WebContainer] Created minimal src/index.css with Tailwind');
     }
 
-    // Only create index.html if not provided
+    // Preview override - inject AFTER body to load LAST and override all CSS
+    // Uses script to inject style after DOM ready, guaranteeing it wins
+    const previewOverrideScript = `<script id="preview-override-script">
+      // Inject full-width override after all CSS loads
+      document.addEventListener('DOMContentLoaded', function() {
+        var style = document.createElement('style');
+        style.id = 'preview-override';
+        style.textContent = 'html, body, #root, #root > * { width: 100% !important; max-width: 100% !important; min-width: unset !important; margin: 0 auto !important; }';
+        document.head.appendChild(style);
+      });
+    </script>`;
+    
+    // Create or modify index.html
     if (!hasIndexHtml) {
-      // Create a proper React entry index.html
+      // Create a proper React entry index.html with preview override
       const indexHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -855,12 +851,25 @@ html, body {
   <body class="dark">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    ${previewOverrideScript}
   </body>
 </html>`;
       allFiles['index.html'] = indexHtml;
       console.log('[WebContainer] Using default React index.html');
     } else {
-      console.log('[WebContainer] Using AI-provided index.html');
+      // AI provided index.html - inject preview override if not present
+      let existingHtml = allFiles['index.html'];
+      if (existingHtml && !existingHtml.includes('preview-override')) {
+        if (existingHtml.includes('</body>')) {
+          existingHtml = existingHtml.replace('</body>', `${previewOverrideScript}\n  </body>`);
+        } else {
+          existingHtml += previewOverrideScript;
+        }
+        allFiles['index.html'] = existingHtml;
+        console.log('[WebContainer] Injected preview override into AI-provided index.html');
+      } else {
+        console.log('[WebContainer] Using AI-provided index.html (override already present)');
+      }
     }
 
     // Create default src/main.tsx if not provided

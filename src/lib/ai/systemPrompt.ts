@@ -168,18 +168,11 @@ export default {
 }
 \`\`\`
 
-### src/index.css (IMPORTANT - Set dimensions here!)
+### src/index.css (DO NOT add width/height - dimensions are auto-added on export!)
 \`\`\`css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Chrome Extension Popup Dimensions - CUSTOMIZE THESE */
-html, body {
-  width: 350px;  /* Adjust: 300px small, 350px medium, 450px large */
-  margin: 0;
-  padding: 0;
-}
 \`\`\`
 
 ## Example App.tsx
@@ -209,11 +202,11 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
-- **CRITICAL - Chrome Extension Sizing**: 
-  - Set popup width in \`src/index.css\` on \`html, body { width: Xpx; }\`
-  - 300px for small, 350px for medium, 450px+ for large extensions
-  - Adjust width in index.css if user requests different dimensions
-  - NEVER use \`min-h-screen\` or \`100vh\` - these break in Chrome popups!
+- **CRITICAL - NO FIXED DIMENSIONS**: 
+  - DO NOT set width/height on html, body, or root container
+  - DO NOT use \`w-[Xpx]\` on the outer App div
+  - Popup dimensions are AUTOMATICALLY added when user exports
+  - NEVER use \`min-h-screen\` or \`100vh\`
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
 - **Spacing**: \`p-4\`, \`p-6\`, \`gap-4\`, \`space-y-4\`
@@ -257,9 +250,9 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 - Call ext_build_preview after changes
 
 **STYLE RULES:**
-- Set popup width in src/index.css: html, body { width: 350px; }
-- Adjust width in index.css if user requests (300px small, 450px+ large)
-- NEVER use min-h-screen or 100vh (breaks Chrome popups!)
+- NO FIXED DIMENSIONS! Don't set width/height on body or containers
+- Popup dimensions are AUTOMATICALLY added on export
+- NEVER use min-h-screen or 100vh
 - Dark theme: bg-gray-900, text-white`;
 
 /**

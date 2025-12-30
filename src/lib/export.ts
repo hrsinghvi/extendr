@@ -71,18 +71,19 @@ function parseManifest(files: FileMap): Manifest | null {
 }
 
 /**
- * CSS to inject into popup HTML for Chrome extension compatibility
- * Only sets minimums as a fallback - doesn't override AI-set dimensions
+ * CSS to inject into popup HTML for Chrome extension popup sizing
+ * This ensures the popup displays correctly in Chrome
+ * Preview looks great (full width), export has fixed dimensions
  */
 const POPUP_DIMENSION_CSS = `
 <style id="extendr-popup-dimensions">
-  /* Chrome Extension Popup Fallback - Injected by Extendr */
-  /* Only sets minimums - AI/user dimensions take priority */
+  /* Chrome Extension Popup Dimensions - Injected by Extendr on Export */
   html, body {
-    min-width: 200px;
-    min-height: 100px;
+    width: 400px;
+    min-height: 150px;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
   }
 </style>
 `;
