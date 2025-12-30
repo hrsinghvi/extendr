@@ -822,26 +822,25 @@ export default {
 @tailwind utilities;
 
 /* 
- * Chrome Extension Popup Styles
- * - Fixed width for consistent popup sizing
- * - Height grows based on content
- * - Works in both preview and actual Chrome extension
+ * Chrome Extension Styles
+ * - Full width/height in preview mode
+ * - Adapts to Chrome popup dimensions when loaded as extension
  */
 html, body {
   margin: 0;
   padding: 0;
-  /* Fixed width for Chrome extension popup */
-  width: 380px;
-  min-height: 200px;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
   background-color: #1a1a1a;
-  /* Prevent horizontal scrollbar */
   overflow-x: hidden;
 }
 
-/* Root container */
+/* Root container - fills viewport */
 #root {
   width: 100%;
-  min-height: 200px;
+  height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -860,14 +859,14 @@ html, body {
     if (!hasIndexHtml) {
       // Create a proper React entry index.html
       const indexHtml = `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Extension Preview</title>
   </head>
-  <body class="dark">
-    <div id="root"></div>
+  <body class="dark h-full">
+    <div id="root" class="h-full"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`;
