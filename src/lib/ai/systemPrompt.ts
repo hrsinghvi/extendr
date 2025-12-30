@@ -168,11 +168,18 @@ export default {
 }
 \`\`\`
 
-### src/index.css
+### src/index.css (IMPORTANT - Set dimensions here!)
 \`\`\`css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Chrome Extension Popup Dimensions - CUSTOMIZE THESE */
+html, body {
+  width: 350px;  /* Adjust: 300px small, 350px medium, 450px large */
+  margin: 0;
+  padding: 0;
+}
 \`\`\`
 
 ## Example App.tsx
@@ -184,7 +191,7 @@ export default function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="w-[350px] bg-gray-900 text-white p-6">
+    <div className="bg-gray-900 text-white p-6">
       <h1 className="text-xl font-bold mb-4">Counter Extension</h1>
       <p className="text-3xl font-mono mb-4">{count}</p>
       <button 
@@ -202,11 +209,11 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
-- **Chrome Extension Sizing**: 
-  - Set explicit width on outer container: \`w-[350px]\` for small, \`w-[400px]\` for medium, \`w-[500px]\` for large extensions
+- **CRITICAL - Chrome Extension Sizing**: 
+  - Set popup width in \`src/index.css\` on \`html, body { width: Xpx; }\`
+  - 300px for small, 350px for medium, 450px+ for large extensions
+  - Adjust width in index.css if user requests different dimensions
   - NEVER use \`min-h-screen\` or \`100vh\` - these break in Chrome popups!
-  - Let content determine height naturally, or set explicit height if needed
-  - User can request specific dimensions - adjust width/height classes accordingly
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
 - **Spacing**: \`p-4\`, \`p-6\`, \`gap-4\`, \`space-y-4\`
@@ -250,10 +257,10 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 - Call ext_build_preview after changes
 
 **STYLE RULES:**
-- Set explicit width: w-[350px] small, w-[400px] medium, w-[500px] large
+- Set popup width in src/index.css: html, body { width: 350px; }
+- Adjust width in index.css if user requests (300px small, 450px+ large)
 - NEVER use min-h-screen or 100vh (breaks Chrome popups!)
-- Dark theme: bg-gray-900, text-white
-- Adjust dimensions if user requests specific size`;
+- Dark theme: bg-gray-900, text-white`;
 
 /**
  * Get the appropriate system prompt based on context

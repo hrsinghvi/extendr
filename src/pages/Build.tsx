@@ -1349,7 +1349,6 @@ export default function Build() {
             onClearLogs={clearLogs}
             onTerminalReady={handleTerminalReady}
             className="flex-1"
-            userEmail={user?.email}
             isAIWorking={isThinking}
             onExport={async () => {
               // Check if we have files to export

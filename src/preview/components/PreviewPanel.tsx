@@ -197,7 +197,6 @@ interface ExtendedPreviewPanelProps extends PreviewPanelProps {
   onStop?: () => void;
   onClearLogs?: () => void;
   onTerminalReady?: (writer: (data: string) => void) => void;
-  userEmail?: string;
   onExport?: () => void;
   onPublish?: () => void;
   /** Whether AI is currently working on the extension */
@@ -221,7 +220,6 @@ export function PreviewPanel({
   onStop,
   onClearLogs,
   onTerminalReady,
-  userEmail,
   onExport,
   onPublish,
   isAIWorking = false
@@ -348,11 +346,6 @@ export function PreviewPanel({
           >
             <Download className="w-4 h-4" />
             Export
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white hover:bg-[#2a2a2a]">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#5A9665] to-[#5f87a3] flex items-center justify-center text-xs font-medium">
-              {userEmail?.charAt(0).toUpperCase() || "U"}
-            </div>
           </Button>
         </div>
       </div>
