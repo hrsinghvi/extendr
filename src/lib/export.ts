@@ -71,48 +71,6 @@ function parseManifest(files: FileMap): Manifest | null {
 }
 
 /**
- * CSS to inject into popup HTML for Chrome extension popup sizing
- * This ensures the popup displays correctly in Chrome
- * Preview looks great (full width), export has fixed dimensions
- */
-const POPUP_DIMENSION_CSS = `
-<style id="extendr-popup-dimensions">
-  /* Chrome Extension Popup Dimensions - Injected by Extendr on Export */
-  html, body {
-    width: 400px;
-    min-height: 150px;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
-</style>
-`;
-
-/**
- * Inject popup dimension CSS into HTML content
- * Adds the CSS right before </head> to ensure proper popup sizing
- */
-function injectPopupDimensions(htmlContent: string): string {
-  // Check if already injected
-  if (htmlContent.includes('extendr-popup-dimensions')) {
-    return htmlContent;
-  }
-  
-  // Try to inject before </head>
-  if (htmlContent.includes('</head>')) {
-    return htmlContent.replace('</head>', `${POPUP_DIMENSION_CSS}</head>`);
-  }
-  
-  // Fallback: inject after <head> or at the start
-  if (htmlContent.includes('<head>')) {
-    return htmlContent.replace('<head>', `<head>${POPUP_DIMENSION_CSS}`);
-  }
-  
-  // Last resort: prepend to content
-  return POPUP_DIMENSION_CSS + htmlContent;
-}
-
-/**
  * Generate placeholder icon SVG
  */
 function generatePlaceholderIcon(size: number, initial: string): string {
@@ -520,14 +478,7 @@ export async function exportExtension(
       continue;
     }
     
-    // Inject popup dimensions into HTML files (index.html, popup.html, etc.)
-    if (path.endsWith('.html')) {
-      const injectedContent = injectPopupDimensions(content);
-      zip.file(path, injectedContent);
-      console.log(`[Export] Injected popup dimensions into ${path}`);
-    } else {
-      zip.file(path, content);
-    }
+    zip.file(path, content);
   }
   
   // Ensure manifest.json is always at root (double-check it exists)

@@ -52,6 +52,7 @@ For SQL/database needs, use browser-compatible libraries:
 The system automatically provides these files. **NEVER create them:**
 - **postcss.config.js** - Auto-generated with Tailwind/autoprefixer
 - **src/main.tsx** - Auto-generated React entry point
+- **src/index.css** - Auto-generated with Tailwind directives
 
 ## CRITICAL: WORK INCREMENTALLY - DON'T RECREATE EXISTING FILES
 
@@ -72,8 +73,7 @@ Create these files:
 3. manifest.json - Chrome extension config (ROOT LEVEL)
 4. vite.config.ts - Vite configuration
 5. tailwind.config.js - Tailwind configuration
-6. src/index.css - Tailwind directives
-7. src/App.tsx - Main component (and any other components needed)
+6. src/App.tsx - Main component (and any other components needed)
 
 ## Required File Templates (for NEW projects only)
 
@@ -168,13 +168,6 @@ export default {
 }
 \`\`\`
 
-### src/index.css (DO NOT add width/height - dimensions are auto-added on export!)
-\`\`\`css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-\`\`\`
-
 ## Example App.tsx
 
 \`\`\`tsx
@@ -202,11 +195,6 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
-- **CRITICAL - NO FIXED DIMENSIONS**: 
-  - DO NOT set width/height on html, body, or root container
-  - DO NOT use \`w-[Xpx]\` on the outer App div
-  - Popup dimensions are AUTOMATICALLY added when user exports
-  - NEVER use \`min-h-screen\` or \`100vh\`
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
 - **Spacing**: \`p-4\`, \`p-6\`, \`gap-4\`, \`space-y-4\`
@@ -228,6 +216,7 @@ export const EXTENSION_SHORT_PROMPT = `You are Extendr, creating Chrome extensio
 **AUTO-GENERATED FILES - DO NOT CREATE:**
 - postcss.config.js (auto-generated)
 - src/main.tsx (auto-generated)
+- src/index.css (auto-generated with Tailwind)
 
 **FILE FLEXIBILITY:**
 You can create ANY files: components, hooks, utils, services, SQL files, etc.
@@ -240,7 +229,7 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 
 **For NEW projects, create these files:**
 1. package.json, index.html, manifest.json (ROOT LEVEL)
-2. vite.config.ts, tailwind.config.js, src/index.css
+2. vite.config.ts, tailwind.config.js
 3. src/App.tsx (and any other components needed)
 4. Call ext_build_preview
 
@@ -250,10 +239,8 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 - Call ext_build_preview after changes
 
 **STYLE RULES:**
-- NO FIXED DIMENSIONS! Don't set width/height on body or containers
-- Popup dimensions are AUTOMATICALLY added on export
-- NEVER use min-h-screen or 100vh
-- Dark theme: bg-gray-900, text-white`;
+- Dark theme: bg-gray-900, text-white
+- Green accents: bg-green-600`;
 
 /**
  * Get the appropriate system prompt based on context
