@@ -7,7 +7,7 @@ export function GradientBackground() {
       <div className="fixed inset-0 z-0">
         {/* First gradient layer */}
         <motion.div
-          className="absolute bottom-[-400px] left-1/2 -translate-x-1/2 w-[150vw] h-[130vh]"
+          className="absolute bottom-[-550px] left-1/2 -translate-x-1/2 w-[150vw] h-[130vh]"
           style={{
             background:
               "radial-gradient(ellipse at center bottom, rgba(111,151,179,1.0) 0%, rgba(125,167,194,1.0) 25%, rgba(90,150,101,0.9) 55%, rgba(12,17,17,0) 75%)",
@@ -20,7 +20,7 @@ export function GradientBackground() {
         />
         {/* Second gradient layer */}
         <motion.div
-          className="absolute bottom-[-400px] left-1/2 -translate-x-1/2 w-[100vw] h-[90vh]"
+          className="absolute bottom-[-550px] left-1/2 -translate-x-1/2 w-[100vw] h-[90vh]"
           style={{
             background:
               "radial-gradient(ellipse at center bottom, rgba(152,193,218,1.0) 0%, rgba(111,151,179,0.7) 35%, rgba(90,150,101,0.25) 55%, rgba(90,150,101,0) 70%)",

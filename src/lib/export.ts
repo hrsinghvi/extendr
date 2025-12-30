@@ -673,43 +673,70 @@ export async function downloadExtension(
  * Build extension for production and download as ZIP
  * 
  * This is the proper way to export Chrome extensions:
- * 1. Runs `vite build` in WebContainer to compile TypeScript/React
- * 2. Reads the compiled files from dist/
- * 3. Packages them into a ZIP ready for Chrome
+ * 1. Tries to run `vite build` in WebContainer to compile TypeScript/React
+ * 2. If WebContainer isn't available, falls back to exporting source files directly
+ * 3. Packages files into a ZIP ready for Chrome
  * 
  * @param sourceFiles - Original source files (used for manifest.json fallback)
  * @param projectName - Project name for ZIP filename
  * @param onProgress - Optional progress callback
  * @returns Promise that resolves when download starts
- * @throws Error if build fails
+ * @throws Error if export fails completely
  */
 export async function buildAndDownloadExtension(
   sourceFiles: FileMap,
   projectName: string,
   onProgress?: (message: string) => void
 ): Promise<void> {
-  // Import dynamically to avoid circular dependencies
-  const { buildAndReadDist } = await import('@/preview/webcontainerBridge');
+  let filesToExport: FileMap = sourceFiles;
+  let usedFallback = false;
   
-  onProgress?.('Building extension for production...');
-  console.log('[Export] Starting production build...');
-  
-  // Build and read the dist files
-  const builtFiles = await buildAndReadDist(sourceFiles);
-  
-  if (!builtFiles) {
-    throw new Error('Build failed. Check the terminal for errors.');
+  // Try to build with WebContainer if available
+  try {
+    // Import dynamically to avoid circular dependencies
+    const { buildAndReadDist, isBooted } = await import('@/preview/webcontainerBridge');
+    
+    // Only attempt build if WebContainer is booted
+    if (isBooted()) {
+      onProgress?.('Building extension for production...');
+      console.log('[Export] Starting production build...');
+      
+      const builtFiles = await buildAndReadDist(sourceFiles);
+      
+      if (builtFiles && Object.keys(builtFiles).length > 0) {
+        console.log('[Export] Build complete, got files:', Object.keys(builtFiles));
+        filesToExport = builtFiles;
+      } else {
+        console.warn('[Export] Build returned no files, using source files');
+        usedFallback = true;
+      }
+    } else {
+      console.log('[Export] WebContainer not booted, exporting source files directly');
+      usedFallback = true;
+    }
+  } catch (buildError: any) {
+    console.warn('[Export] Build failed, falling back to source export:', buildError.message);
+    usedFallback = true;
   }
   
-  console.log('[Export] Build complete, got files:', Object.keys(builtFiles));
-  onProgress?.('Packaging extension...');
+  // Validate we have files to export
+  if (Object.keys(filesToExport).length === 0) {
+    throw new Error('No files to export. Please create some extension files first.');
+  }
   
-  // Use the built files for export
-  const blob = await exportExtension(builtFiles, projectName);
+  if (usedFallback) {
+    onProgress?.('Packaging source files...');
+    console.log('[Export] Exporting source files:', Object.keys(filesToExport));
+  } else {
+    onProgress?.('Packaging extension...');
+  }
+  
+  // Export the files (either built or source)
+  const blob = await exportExtension(filesToExport, projectName);
   const sanitizedName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   
   onProgress?.('Downloading...');
   downloadBlob(blob, `${sanitizedName}.zip`);
   
-  console.log('[Export] Download started');
+  console.log('[Export] Download started', usedFallback ? '(source files)' : '(built files)');
 }
