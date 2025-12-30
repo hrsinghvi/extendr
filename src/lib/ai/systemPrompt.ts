@@ -184,17 +184,15 @@ export default function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="w-full min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-md mx-auto">
-        <h1 className="text-xl font-bold mb-4">Counter Extension</h1>
-        <p className="text-3xl font-mono mb-4">{count}</p>
-        <button 
-          onClick={() => setCount(c => c + 1)}
-          className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
-        >
-          Increment
-        </button>
-      </div>
+    <div className="w-full min-h-[200px] bg-gray-900 text-white p-6">
+      <h1 className="text-xl font-bold mb-4">Counter Extension</h1>
+      <p className="text-3xl font-mono mb-4">{count}</p>
+      <button 
+        onClick={() => setCount(c => c + 1)}
+        className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
+      >
+        Increment
+      </button>
     </div>
   );
 }
@@ -204,8 +202,8 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
-- **IMPORTANT - Fill the viewport**: Use \`w-full min-h-screen\` on the outer container
-- **Content width**: Use \`max-w-md mx-auto\` for centered content (or \`max-w-lg\`, \`max-w-xl\`)
+- **IMPORTANT - Chrome Extension Sizing**: Use \`w-full min-h-[200px] p-4\` on outer container (NOT min-h-screen - that breaks in Chrome popups!)
+- **Let height grow**: Don't set fixed heights, let content determine height
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
 - **Spacing**: \`p-4\`, \`p-6\`, \`gap-4\`, \`space-y-4\`
@@ -249,9 +247,9 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 - Call ext_build_preview after changes
 
 **STYLE RULES:**
-- Use w-full min-h-screen on outer container (fills viewport)
-- Use max-w-md mx-auto for centered content
-- Dark theme: bg-gray-900, text-white`;
+- Use w-full min-h-[200px] p-4 on outer container (NOT min-h-screen - breaks Chrome popups!)
+- Dark theme: bg-gray-900, text-white
+- Let content determine height naturally`;
 
 /**
  * Get the appropriate system prompt based on context
