@@ -5,11 +5,38 @@
  * - All extension files in correct folder structure
  * - Auto-generated README with publishing checklist
  * - Placeholder icons if missing
+ * - Popup dimension injection for proper Chrome rendering
  */
 
 import JSZip from 'jszip';
 import type { FileMap } from '@/preview/types';
 import { MANDATORY_TEMPLATES } from './ai/systemPrompt';
+
+/**
+ * Popup dimensions for Chrome extension export.
+ * These dimensions are injected into the popup HTML during export only.
+ */
+export interface PopupDimensions {
+  width: number;
+  height: number;
+}
+
+/**
+ * Default popup dimensions (Medium size)
+ */
+export const DEFAULT_POPUP_DIMENSIONS: PopupDimensions = {
+  width: 400,
+  height: 550,
+};
+
+/**
+ * Preset popup sizes for user selection
+ */
+export const POPUP_SIZE_PRESETS = {
+  small: { width: 350, height: 450, label: 'Small (350 × 450)' },
+  medium: { width: 400, height: 550, label: 'Medium (400 × 550)' },
+  large: { width: 480, height: 640, label: 'Large (480 × 640)' },
+} as const;
 
 /**
  * Essential files that MUST exist in every Chrome extension export
@@ -111,6 +138,73 @@ function getIconPaths(manifest: Manifest): string[] {
   }
   
   return iconPaths;
+}
+
+/**
+ * Inject explicit dimensions into popup HTML for Chrome extension compatibility.
+ * 
+ * Chrome determines popup size from the rendered document. Without explicit dimensions,
+ * the popup may appear very small. This function injects sizing CSS into the HTML.
+ * 
+ * This is done ONLY during export - the preview remains full-screen and fluid.
+ * 
+ * @param html - The popup HTML content
+ * @param dimensions - The desired popup dimensions
+ * @returns Modified HTML with injected dimensions, or original HTML if injection fails
+ */
+function injectPopupDimensions(html: string, dimensions: PopupDimensions): string {
+  try {
+    // Validate inputs
+    if (!html || typeof html !== 'string') {
+      console.warn('[Export] Invalid popup HTML, skipping dimension injection');
+      return html || '';
+    }
+    
+    // Validate dimensions
+    const width = Math.max(200, Math.min(800, dimensions.width || DEFAULT_POPUP_DIMENSIONS.width));
+    const height = Math.max(200, Math.min(600, dimensions.height || DEFAULT_POPUP_DIMENSIONS.height));
+    
+    // Create the sizing style tag
+    // Using min-width/min-height ensures content can still expand if needed
+    // Using width ensures Chrome knows the initial size
+    const POPUP_STYLE = `<style data-extendr-popup-sizing>
+  /* Extendr: Popup dimensions for Chrome extension */
+  html, body {
+    min-width: ${width}px;
+    min-height: ${height}px;
+    width: ${width}px;
+  }
+</style>`;
+    
+    // Try to inject after <head> opening tag
+    if (html.includes('<head>')) {
+      console.log(`[Export] Injecting popup dimensions (${width}x${height}) after <head>`);
+      return html.replace('<head>', `<head>\n  ${POPUP_STYLE}`);
+    }
+    
+    // Handle <head with attributes (e.g., <head lang="en">)
+    if (html.includes('<head ')) {
+      console.log(`[Export] Injecting popup dimensions (${width}x${height}) after <head ...>`);
+      return html.replace(/<head\s[^>]*>/, (match) => `${match}\n  ${POPUP_STYLE}`);
+    }
+    
+    // If no <head> tag exists, try to add one after <html>
+    if (html.includes('<html')) {
+      console.log(`[Export] No <head> found, creating one with popup dimensions (${width}x${height})`);
+      return html.replace(/<html[^>]*>/, (match) => `${match}\n<head>\n  ${POPUP_STYLE}\n</head>`);
+    }
+    
+    // Last resort: prepend to the HTML
+    // This handles edge cases where the HTML might not have standard structure
+    console.log(`[Export] Non-standard HTML structure, prepending popup dimensions (${width}x${height})`);
+    return `<!DOCTYPE html>\n<html>\n<head>\n  ${POPUP_STYLE}\n</head>\n${html}`;
+    
+  } catch (error) {
+    // Never fail the export due to dimension injection
+    // Just log the error and return the original HTML
+    console.warn('[Export] Failed to inject popup dimensions:', error);
+    return html;
+  }
 }
 
 /**
@@ -255,11 +349,13 @@ function downloadBlob(blob: Blob, filename: string): void {
  * 
  * @param files - Extension files map
  * @param projectName - Project name for ZIP filename
+ * @param dimensions - Optional popup dimensions to inject (export-time only)
  * @returns Promise resolving to ZIP blob
  */
 export async function exportExtension(
   files: FileMap,
-  projectName: string
+  projectName: string,
+  dimensions?: PopupDimensions
 ): Promise<Blob> {
   const zip = new JSZip();
   
@@ -391,6 +487,60 @@ export async function exportExtension(
   // Get extension name for icon initial
   const extName = manifest?.name || manifest?.short_name || projectName;
   const initial = extName.charAt(0).toUpperCase();
+  
+  // =========================================================================
+  // POPUP DIMENSION INJECTION (Export-time only)
+  // This injects explicit sizing into the popup HTML so Chrome renders it
+  // at the correct size. The preview remains unaffected (full-screen/fluid).
+  // =========================================================================
+  if (dimensions && manifest?.action?.default_popup) {
+    const popupPath = manifest.action.default_popup.startsWith('/') 
+      ? manifest.action.default_popup.slice(1) 
+      : manifest.action.default_popup;
+    
+    console.log(`[Export] Looking for popup HTML at: ${popupPath}`);
+    
+    // Check if popup file exists in our export files
+    // Try exact path first, then common variations
+    const popupPaths = [
+      popupPath,
+      `dist/${popupPath}`,
+      popupPath.replace(/^popup\//, ''),
+      'index.html', // React apps often use index.html as popup
+      'dist/index.html',
+    ];
+    
+    let popupFound = false;
+    for (const tryPath of popupPaths) {
+      if (filesToExport[tryPath]) {
+        const content = filesToExport[tryPath];
+        // Only inject into HTML files
+        if (content.includes('<html') || content.includes('<!DOCTYPE') || content.includes('<head')) {
+          console.log(`[Export] Injecting popup dimensions into: ${tryPath}`);
+          filesToExport[tryPath] = injectPopupDimensions(content, dimensions);
+          popupFound = true;
+          break;
+        }
+      }
+    }
+    
+    if (!popupFound) {
+      console.warn(`[Export] Could not find popup HTML to inject dimensions. Tried: ${popupPaths.join(', ')}`);
+    }
+  } else if (dimensions) {
+    // No popup in manifest, but dimensions specified - try index.html as fallback
+    const fallbackPaths = ['index.html', 'dist/index.html', 'popup/index.html'];
+    for (const path of fallbackPaths) {
+      if (filesToExport[path]) {
+        const content = filesToExport[path];
+        if (content.includes('<html') || content.includes('<!DOCTYPE')) {
+          console.log(`[Export] Injecting popup dimensions into fallback: ${path}`);
+          filesToExport[path] = injectPopupDimensions(content, dimensions);
+          break;
+        }
+      }
+    }
+  }
   
   // DEBUG: Log all files in FileMap
   console.log('[Export] Files in FileMap:', Object.keys(filesToExport));
@@ -675,10 +825,12 @@ export async function downloadExtension(
  * This is the proper way to export Chrome extensions:
  * 1. Tries to run `vite build` in WebContainer to compile TypeScript/React
  * 2. If WebContainer isn't available, falls back to exporting source files directly
- * 3. Packages files into a ZIP ready for Chrome
+ * 3. Injects popup dimensions for proper Chrome rendering
+ * 4. Packages files into a ZIP ready for Chrome
  * 
  * @param sourceFiles - Original source files (used for manifest.json fallback)
  * @param projectName - Project name for ZIP filename
+ * @param dimensions - Optional popup dimensions (defaults to medium size)
  * @param onProgress - Optional progress callback
  * @returns Promise that resolves when download starts
  * @throws Error if export fails completely
@@ -686,6 +838,7 @@ export async function downloadExtension(
 export async function buildAndDownloadExtension(
   sourceFiles: FileMap,
   projectName: string,
+  dimensions?: PopupDimensions,
   onProgress?: (message: string) => void
 ): Promise<void> {
   let filesToExport: FileMap = sourceFiles;
@@ -731,8 +884,12 @@ export async function buildAndDownloadExtension(
     onProgress?.('Packaging extension...');
   }
   
-  // Export the files (either built or source)
-  const blob = await exportExtension(filesToExport, projectName);
+  // Use provided dimensions or default to medium size
+  const exportDimensions = dimensions || DEFAULT_POPUP_DIMENSIONS;
+  console.log(`[Export] Using popup dimensions: ${exportDimensions.width}x${exportDimensions.height}`);
+  
+  // Export the files (either built or source) with dimension injection
+  const blob = await exportExtension(filesToExport, projectName, exportDimensions);
   const sanitizedName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   
   onProgress?.('Downloading...');

@@ -202,7 +202,7 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
-- **Container sizing**: Use \`w-full h-full\` on outer container to fill available space
+- **Container sizing**: Use \`w-full h-full\` on outer container to fill available space. (Note: index.css already handles html/body height)
 - **Centering content**: Use \`flex flex-col items-center justify-center\` to center content vertically and horizontally
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
@@ -418,5 +418,14 @@ export default {
 
   'src/index.css': `@tailwind base;
 @tailwind components;
-@tailwind utilities;`,
+@tailwind utilities;
+
+/* Ensure full height for extension preview */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrolling on body, let App handle it */
+}`,
 };

@@ -47,7 +47,7 @@ import {
   type ToolContext
 } from "@/lib/ai";
 import { determineCategoryFromText } from "@/lib/categories";
-import { buildAndDownloadExtension } from "@/lib/export";
+import { buildAndDownloadExtension, type PopupDimensions } from "@/lib/export";
 
 // Types for chat and messages (from Supabase)
 interface DBMessage {
@@ -1351,17 +1351,18 @@ export default function Build() {
             className="flex-1"
             userEmail={user?.email}
             isAIWorking={isThinking}
-            onExport={async () => {
-              // Show building toast
+            onExport={async (dimensions: PopupDimensions) => {
+              // Show building toast with selected size
               const buildingToast = toast({
                 title: "Building Extension...",
-                description: "Compiling your extension for Chrome. This may take a moment.",
+                description: `Compiling your extension (${dimensions.width}×${dimensions.height}). This may take a moment.`,
               });
               
               try {
                 await buildAndDownloadExtension(
                   extensionFiles, 
                   projectTitle,
+                  dimensions,
                   (progress) => {
                     console.log('[Export Progress]', progress);
                   }
@@ -1371,7 +1372,7 @@ export default function Build() {
                 buildingToast.dismiss?.();
                 toast({
                   title: "Exported!",
-                  description: "Extension built and downloaded. Ready to load in Chrome!",
+                  description: `Extension built and downloaded (${dimensions.width}×${dimensions.height}). Ready to load in Chrome!`,
                 });
               } catch (error: any) {
                 console.error("Export error:", error);

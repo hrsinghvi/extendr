@@ -75,17 +75,19 @@ export const DEFAULT_POPUP_CSS = `* {
 }
 
 body {
-  width: 320px;
-  min-height: 200px;
+  width: 100%;
+  height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #ffffff;
+  overflow: hidden;
 }
 
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 200px;
+  height: 100%;
+  width: 100%;
 }
 
 .header {

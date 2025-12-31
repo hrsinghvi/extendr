@@ -20,11 +20,28 @@ import {
   Download,
   Image as ImageIcon,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { FileTree } from './FileTree';
 import { CodeEditor } from './CodeEditor';
 import { Terminal, type TerminalHandle } from './Terminal';
@@ -33,6 +50,7 @@ import { LogPanel } from './LogPanel';
 import { BuildStatus } from '../useWebContainer';
 import type { FileMap, PreviewPanelProps, LogEntry } from '../types';
 import { getFileExtension } from '../types';
+import { POPUP_SIZE_PRESETS, type PopupDimensions } from '@/lib/export';
 
 /**
  * Image file extensions
@@ -197,7 +215,8 @@ interface ExtendedPreviewPanelProps extends PreviewPanelProps {
   onStop?: () => void;
   onClearLogs?: () => void;
   onTerminalReady?: (writer: (data: string) => void) => void;
-  onExport?: () => void;
+  /** Export callback with popup dimensions for Chrome rendering */
+  onExport?: (dimensions: PopupDimensions) => void;
   onPublish?: () => void;
   /** Whether AI is currently working on the extension */
   isAIWorking?: boolean;
@@ -229,6 +248,24 @@ export function PreviewPanel({
   const [bottomTab, setBottomTab] = useState<'terminal' | 'logs'>('terminal');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const terminalRef = useRef<TerminalHandle>(null);
+  
+  // Custom size dialog state
+  const [showCustomSizeDialog, setShowCustomSizeDialog] = useState(false);
+  const [customWidth, setCustomWidth] = useState(400);
+  const [customHeight, setCustomHeight] = useState(550);
+
+  // Handle export with preset size
+  const handleExportWithSize = useCallback((dimensions: PopupDimensions) => {
+    onExport?.(dimensions);
+  }, [onExport]);
+
+  // Handle custom size export
+  const handleCustomExport = useCallback(() => {
+    const width = Math.max(200, Math.min(800, customWidth));
+    const height = Math.max(200, Math.min(800, customHeight));
+    onExport?.({ width, height });
+    setShowCustomSizeDialog(false);
+  }, [customWidth, customHeight, onExport]);
 
   // Get selected file content
   const selectedFileContent = selectedFile ? files[selectedFile] || '' : '';
@@ -339,16 +376,100 @@ export function PreviewPanel({
 
           <div className="h-6 w-px bg-gray-700" />
 
-          <Button 
-            size="sm" 
-            className="h-8 text-sm bg-[#5A9665] hover:bg-[#4A8655] text-white gap-2 px-4"
-            onClick={onExport}
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                size="sm" 
+                className="h-8 text-sm bg-[#5A9665] hover:bg-[#4A8655] text-white gap-2 px-4"
+              >
+                <Download className="w-4 h-4" />
+                Export
+                <ChevronDown className="w-3 h-3 ml-1 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem 
+                onClick={() => handleExportWithSize(POPUP_SIZE_PRESETS.small)}
+                className="cursor-pointer"
+              >
+                {POPUP_SIZE_PRESETS.small.label}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleExportWithSize(POPUP_SIZE_PRESETS.medium)}
+                className="cursor-pointer"
+              >
+                {POPUP_SIZE_PRESETS.medium.label}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleExportWithSize(POPUP_SIZE_PRESETS.large)}
+                className="cursor-pointer"
+              >
+                {POPUP_SIZE_PRESETS.large.label}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setShowCustomSizeDialog(true)}
+                className="cursor-pointer"
+              >
+                Custom dimensions...
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      {/* Custom Size Dialog */}
+      <Dialog open={showCustomSizeDialog} onOpenChange={setShowCustomSizeDialog}>
+        <DialogContent className="sm:max-w-[320px]">
+          <DialogHeader>
+            <DialogTitle>Custom Popup Size</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="width" className="text-right">
+                Width
+              </Label>
+              <Input
+                id="width"
+                type="number"
+                min={200}
+                max={800}
+                value={customWidth}
+                onChange={(e) => setCustomWidth(parseInt(e.target.value) || 400)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="height" className="text-right">
+                Height
+              </Label>
+              <Input
+                id="height"
+                type="number"
+                min={200}
+                max={800}
+                value={customHeight}
+                onChange={(e) => setCustomHeight(parseInt(e.target.value) || 550)}
+                className="col-span-3"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Dimensions in pixels (200-800px)
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCustomSizeDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCustomExport}
+              className="bg-[#5A9665] hover:bg-[#4A8655]"
+            >
+              Export
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Main layout */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
