@@ -165,18 +165,32 @@ function injectPopupDimensions(html: string, dimensions: PopupDimensions): strin
     const height = Math.max(200, Math.min(600, dimensions.height || DEFAULT_POPUP_DIMENSIONS.height));
     
     // Create the sizing style tag
-    // Using min-width/min-height ensures content can still expand if needed
-    // Using width ensures Chrome knows the initial size
+    // Using !important to ensure these override any framework defaults (Tailwind, etc.)
+    // that might be loaded later in the document.
     const POPUP_STYLE = `<style data-extendr-popup-sizing>
   /* Extendr: Popup dimensions for Chrome extension */
   html, body {
-    min-width: ${width}px;
-    min-height: ${height}px;
-    width: ${width}px;
+    min-width: ${width}px !important;
+    min-height: ${height}px !important;
+    width: ${width}px !important;
+    height: ${height}px !important;
+    overflow: auto !important; /* Ensure content is scrollable if it exceeds fixed height */
+  }
+  
+  /* Reset potentially conflicting styles */
+  body {
+    max-width: none !important;
+    max-height: none !important;
   }
 </style>`;
     
-    // Try to inject after <head> opening tag
+    // Try to inject before </head> closing tag (BEST PRACTICE: ensure it's last in head)
+    if (html.includes('</head>')) {
+      console.log(`[Export] Injecting popup dimensions (${width}x${height}) before </head>`);
+      return html.replace('</head>', `  ${POPUP_STYLE}\n</head>`);
+    }
+    
+    // Fallback: Try to inject after <head> opening tag if no closing tag found
     if (html.includes('<head>')) {
       console.log(`[Export] Injecting popup dimensions (${width}x${height}) after <head>`);
       return html.replace('<head>', `<head>\n  ${POPUP_STYLE}`);
