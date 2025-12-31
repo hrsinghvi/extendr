@@ -47,11 +47,12 @@ For SQL/database needs, use browser-compatible libraries:
 - **dexie**: IndexedDB wrapper
 - **idb-keyval**: Simple key-value IndexedDB
 
-## AUTO-GENERATED FILES - DO NOT CREATE THESE
+## AUTO-GENERATED FILES
 
-The system automatically provides these files. **NEVER create them:**
+The system automatically provides defaults, but you can override them if needed.
+- **index.html** - Defaults to a standard React entry point. ONLY override if you need custom fonts/scripts in <head>.
+- **src/main.tsx** - Auto-generated React entry point.
 - **postcss.config.js** - Auto-generated with Tailwind/autoprefixer
-- **src/main.tsx** - Auto-generated React entry point
 
 ## CRITICAL: WORK INCREMENTALLY - DON'T RECREATE EXISTING FILES
 
@@ -222,9 +223,10 @@ export default function App() {
  */
 export const EXTENSION_SHORT_PROMPT = `You are Extendr, creating Chrome extensions with React + Vite + Tailwind.
 
-**AUTO-GENERATED FILES - DO NOT CREATE:**
+**AUTO-GENERATED FILES:**
+- index.html (Standard React entry - override only for custom <head> tags)
+- src/main.tsx (Standard React mount)
 - postcss.config.js (auto-generated)
-- src/main.tsx (auto-generated)
 
 **FILE FLEXIBILITY:**
 You can create ANY files: components, hooks, utils, services, SQL files, etc.
@@ -236,7 +238,7 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 3. Only create/modify files needed for the user's specific request
 
 **For NEW projects, create these files:**
-1. package.json, index.html, manifest.json (ROOT LEVEL)
+1. package.json, manifest.json (ROOT LEVEL)
 2. vite.config.ts, tailwind.config.js, src/index.css
 3. src/App.tsx (and any other components needed)
 4. Call ext_build_preview
@@ -308,12 +310,11 @@ AUTO-GENERATED (do NOT create):
 
 Create these files:
 1. package.json (dependencies)
-2. index.html (entry point)
-3. manifest.json (Chrome config - ROOT LEVEL!)
-4. vite.config.ts, tailwind.config.js (configs)
-5. src/index.css (Tailwind directives)
-6. src/App.tsx (your component)
-7. Call ext_build_preview to install deps and build`
+2. manifest.json (Chrome config - ROOT LEVEL!)
+3. vite.config.ts, tailwind.config.js (configs)
+4. src/index.css (Tailwind directives)
+5. src/App.tsx (your component)
+6. Call ext_build_preview to install deps and build`
 };
 
 /**
