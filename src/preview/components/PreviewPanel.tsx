@@ -248,6 +248,7 @@ export function PreviewPanel({
   const [bottomTab, setBottomTab] = useState<'terminal' | 'logs'>('terminal');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const terminalRef = useRef<TerminalHandle>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Custom size dialog state
   const [showCustomSizeDialog, setShowCustomSizeDialog] = useState(false);
@@ -270,21 +271,24 @@ export function PreviewPanel({
   // Get selected file content
   const selectedFileContent = selectedFile ? files[selectedFile] || '' : '';
 
-  // Handle responsive sidebar
+  // Handle responsive sidebar with ResizeObserver
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+      // Collapse sidebar if panel width is too small (e.g. < 768px)
+      // This leaves enough room for the code editor
+      if (width < 768) {
         setIsSidebarOpen(false);
       } else {
         setIsSidebarOpen(true);
       }
-    };
+    });
     
-    // Set initial state
-    handleResize();
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
 
   // Handle file selection
@@ -339,7 +343,7 @@ export function PreviewPanel({
   const hasError = status === BuildStatus.ERROR;
 
   return (
-    <div className={cn('flex flex-col h-full bg-[#1a1a1a]', className)}>
+    <div ref={containerRef} className={cn('flex flex-col h-full bg-[#1a1a1a]', className)}>
       <div className="h-12 shrink-0 flex items-center justify-between px-4 bg-[#232323] border-b border-gray-800">
         {/* Left side - Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'code' | 'preview')} className="flex items-center">
@@ -380,14 +384,16 @@ export function PreviewPanel({
             <DropdownMenuTrigger asChild>
               <Button 
                 size="sm" 
-                className="h-8 text-sm bg-[#5A9665] hover:bg-[#4A8655] text-white gap-2 px-4"
+                className="h-8 text-sm bg-[#5A9665] hover:bg-[#4A8655] text-white w-48 justify-between px-4"
               >
-                <Download className="w-4 h-4" />
-                Export
-                <ChevronDown className="w-3 h-3 ml-1 opacity-70" />
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  Export
+                </div>
+                <ChevronDown className="w-3 h-3 opacity-70" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48" sideOffset={16}>
               <DropdownMenuItem 
                 onClick={() => handleExportWithSize(POPUP_SIZE_PRESETS.small)}
                 className="cursor-pointer"
@@ -476,30 +482,34 @@ export function PreviewPanel({
         {/* File tree sidebar - collapsible */}
         <div 
           className={cn(
-            "flex-shrink-0 border-r border-gray-800 bg-[#1e1e1e] flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
-            isSidebarOpen ? "w-56 opacity-100" : "w-0 opacity-0 border-none"
+            "flex-shrink-0 bg-[#1e1e1e] flex flex-col transition-[width] duration-300 ease-in-out overflow-hidden",
+            isSidebarOpen ? "w-56" : "w-0"
           )}
+          style={{ willChange: 'width' }}
         >
-          {/* FILES header with sidebar toggle */}
-          <div className="px-3 py-2 border-b border-gray-800 h-10 flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap">
-              Files
-            </span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 text-gray-400 hover:text-white"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <PanelLeft className="w-4 h-4" />
-            </Button>
+          {/* Inner wrapper with fixed width to prevent content reflow during animation */}
+          <div className="w-56 h-full flex flex-col border-r border-gray-800">
+            {/* FILES header with sidebar toggle */}
+            <div className="px-3 py-2 border-b border-gray-800 h-10 flex items-center justify-between shrink-0">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                Files
+              </span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 text-gray-400 hover:text-white"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <PanelLeft className="w-4 h-4" />
+              </Button>
+            </div>
+            <FileTree
+              files={files}
+              selectedFile={selectedFile}
+              onSelectFile={handleSelectFile}
+              className="flex-1 overflow-auto"
+            />
           </div>
-          <FileTree
-            files={files}
-            selectedFile={selectedFile}
-            onSelectFile={handleSelectFile}
-            className="flex-1 overflow-auto"
-          />
         </div>
 
         {/* Sidebar toggle when closed */}
