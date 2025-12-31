@@ -184,12 +184,12 @@ export default function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="w-full h-full bg-gray-900 text-white p-6 flex flex-col">
+    <div className="w-full h-full bg-gray-900 text-white p-6 flex flex-col items-center justify-center">
       <h1 className="text-xl font-bold mb-4">Counter Extension</h1>
       <p className="text-3xl font-mono mb-4">{count}</p>
       <button 
         onClick={() => setCount(c => c + 1)}
-        className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
+        className="py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
       >
         Increment
       </button>
@@ -202,7 +202,8 @@ export default function App() {
 
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
-- **Container sizing**: Use \`w-full h-full p-4\` or \`w-full min-h-full p-4\` on outer container to fill available space
+- **Container sizing**: Use \`w-full h-full\` on outer container to fill available space
+- **Centering content**: Use \`flex flex-col items-center justify-center\` to center content vertically and horizontally
 - **Rounded corners**: \`rounded-lg\`, \`rounded-xl\`
 - **Shadows**: \`shadow-lg\`
 - **Spacing**: \`p-4\`, \`p-6\`, \`gap-4\`, \`space-y-4\`
@@ -246,9 +247,9 @@ Use ext_add_dependency for libraries like sql.js, dexie, etc.
 - Call ext_build_preview after changes
 
 **STYLE RULES:**
-- Use w-full h-full p-4 on outer container to fill available space
-- Dark theme: bg-gray-900, text-white
-- Use flex flex-col for vertical layouts`;
+- Use w-full h-full on outer container to fill available space
+- Center content with flex flex-col items-center justify-center
+- Dark theme: bg-gray-900, text-white`;
 
 /**
  * Get the appropriate system prompt based on context
