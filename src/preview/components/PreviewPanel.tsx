@@ -220,6 +220,7 @@ interface ExtendedPreviewPanelProps extends PreviewPanelProps {
   onPublish?: () => void;
   /** Whether AI is currently working on the extension */
   isAIWorking?: boolean;
+  userEmail?: string;
 }
 
 /**
@@ -241,7 +242,8 @@ export function PreviewPanel({
   onTerminalReady,
   onExport,
   onPublish,
-  isAIWorking = false
+  isAIWorking = false,
+  userEmail
 }: ExtendedPreviewPanelProps) {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code');
