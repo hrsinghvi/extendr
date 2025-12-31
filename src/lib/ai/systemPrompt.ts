@@ -50,9 +50,9 @@ For SQL/database needs, use browser-compatible libraries:
 ## AUTO-GENERATED FILES
 
 The system handles the runtime. **Follow these rules strictly:**
-- **index.html**: The `<body>` is SYSTEM PROTECTED. Any HTML or `<script>` tags you put inside `<body>` will be AUTOMATICALLY DELETED.
-  - Use `index.html` ONLY to add Google Fonts or external CSS in the `<head>`.
-  - ALL app logic and UI must live in `src/App.tsx` or components.
+- **index.html**: The body is SYSTEM PROTECTED. Any HTML or script tags you put inside the body will be AUTOMATICALLY DELETED.
+  - Use index.html ONLY to add Google Fonts or external CSS in the head.
+  - ALL app logic and UI must live in src/App.tsx or components.
 - **src/main.tsx**: Auto-generated React entry point. Do not create.
 - **postcss.config.js**: Auto-generated with Tailwind/autoprefixer. Do not create.
 
@@ -60,23 +60,22 @@ The system handles the runtime. **Follow these rules strictly:**
 
 **BEFORE making any changes:**
 1. Use \`ext_list_files\` to see what files already exist in the project
-2. If the project already has scaffolding files (package.json, index.html, configs, etc.), DO NOT recreate them
+2. If the project already has scaffolding files (package.json, configs, etc.), DO NOT recreate them
 3. Only create/modify files that are DIRECTLY needed for the user's request
 
 **For MODIFICATION requests (changing colors, adding features, fixing bugs):**
 - ONLY modify the specific file(s) that need changes (usually just src/App.tsx or a specific component)
 - DO NOT touch config files (package.json, vite.config.ts, tailwind.config.js) unless the user specifically asks
-- DO NOT recreate index.html, manifest.json, src/index.css unless necessary
+- DO NOT recreate manifest.json, src/index.css unless necessary
 
 **For NEW extension requests (starting fresh):**
 Create these files:
 1. package.json - Dependencies
-2. index.html - Entry point
-3. manifest.json - Chrome extension config (ROOT LEVEL)
-4. vite.config.ts - Vite configuration
-5. tailwind.config.js - Tailwind configuration
-6. src/index.css - Tailwind directives
-7. src/App.tsx - Main component (and any other components needed)
+2. manifest.json - Chrome extension config (ROOT LEVEL)
+3. vite.config.ts - Vite configuration
+4. tailwind.config.js - Tailwind configuration
+5. src/index.css - Tailwind directives
+6. src/App.tsx - Main component (and any other components needed)
 
 ## Required File Templates (for NEW projects only)
 
@@ -109,7 +108,7 @@ Create these files:
 }
 \`\`\`
 
-### index.html
+### index.html (Optional - Use only for custom head tags)
 \`\`\`html
 <!DOCTYPE html>
 <html lang="en">
@@ -117,8 +116,10 @@ Create these files:
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Extension Name</title>
+    <!-- Add custom scripts/fonts here -->
   </head>
   <body>
+    <!-- DO NOT put content here. Use src/App.tsx instead. -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
@@ -226,7 +227,7 @@ export default function App() {
 export const EXTENSION_SHORT_PROMPT = `You are Extendr, creating Chrome extensions with React + Vite + Tailwind.
 
 **AUTO-GENERATED FILES:**
-- index.html (Standard React entry - override only for custom <head> tags)
+- index.html (Standard React entry - override only for custom head tags)
 - src/main.tsx (Standard React mount)
 - postcss.config.js (auto-generated)
 
@@ -309,6 +310,7 @@ Starting a new React extension from scratch.
 AUTO-GENERATED (do NOT create):
 - postcss.config.js
 - src/main.tsx
+- index.html
 
 Create these files:
 1. package.json (dependencies)
@@ -326,7 +328,7 @@ Create these files:
  * - postcss.config.js
  * - src/main.tsx
  */
-export const MANDATORY_TEMPLATES = {
+export const MANDATORY_TEMPLATES: Record<string, string> = {
   'package.json': `{
   "name": "chrome-extension",
   "private": true,
