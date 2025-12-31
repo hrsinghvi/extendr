@@ -882,40 +882,34 @@ html, body {
       allFiles['index.html'] = indexHtml;
       console.log('[WebContainer] Using default React index.html');
     } else {
-      // Case 2: AI provided index.html - Validate and Fix
-      let customHtml = files['index.html'];
-      let modified = false;
+      // Case 2: AI provided index.html - SURGICAL CLEANUP
+      const aiHtml = files['index.html'];
+      
+      // Extract ONLY the head content (for fonts, meta tags, etc.)
+      const headMatch = aiHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+      const aiHead = headMatch ? headMatch[1] : '';
+      
+      // Extract title
+      const titleMatch = aiHtml.match(/<title>(.*?)<\/title>/i);
+      const title = titleMatch ? titleMatch[1] : 'Extension Preview';
 
-      // SAFETY CHECK 1: Ensure #root exists for React to mount to
-      if (!customHtml.includes('id="root"')) {
-        console.log('[WebContainer] Fixing index.html: Injecting #root div');
-        // Try to inject gracefully inside body, otherwise append
-        if (customHtml.includes('<body')) {
-          customHtml = customHtml.replace(/<body([^>]*)>/, '<body$1>\n    <div id="root" class="h-full"></div>');
-        } else {
-          customHtml += '\n<div id="root" class="h-full"></div>';
-        }
-        modified = true;
-      }
-
-      // SAFETY CHECK 2: Ensure src/main.tsx script is actually loaded
-      if (!customHtml.includes('src="/src/main.tsx"') && !customHtml.includes("src='/src/main.tsx'")) {
-        console.log('[WebContainer] Fixing index.html: Injecting main.tsx script');
-        // Try to inject before closing body
-        if (customHtml.includes('</body>')) {
-          customHtml = customHtml.replace('</body>', '    <script type="module" src="/src/main.tsx"></script>\n  </body>');
-        } else {
-          customHtml += '\n<script type="module" src="/src/main.tsx"></script>';
-        }
-        modified = true;
-      }
-
-      if (modified) {
-        allFiles['index.html'] = customHtml;
-        console.log('[WebContainer] Validated and fixed AI-provided index.html');
-      } else {
-        console.log('[WebContainer] Using valid AI-provided index.html');
-      }
+      // RECONSTRUCT: Keep AI head, but FORCE our React body
+      // This deletes any vanilla HTML/scripts the AI tried to sneak into the body
+      allFiles['index.html'] = `<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${title}</title>
+    ${aiHead.replace(/<title>.*?<\/title>/i, '')} 
+  </head>
+  <body class="dark h-full">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`;
+      
+      console.log('[WebContainer] Purged AI body and enforced React mount point');
     }
 
     // Create default src/main.tsx if not provided

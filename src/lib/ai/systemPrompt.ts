@@ -49,10 +49,12 @@ For SQL/database needs, use browser-compatible libraries:
 
 ## AUTO-GENERATED FILES
 
-The system automatically provides defaults, but you can override them if needed.
-- **index.html** - Defaults to a standard React entry point. ONLY override if you need custom fonts/scripts in <head>.
-- **src/main.tsx** - Auto-generated React entry point.
-- **postcss.config.js** - Auto-generated with Tailwind/autoprefixer
+The system handles the runtime. **Follow these rules strictly:**
+- **index.html**: The `<body>` is SYSTEM PROTECTED. Any HTML or `<script>` tags you put inside `<body>` will be AUTOMATICALLY DELETED.
+  - Use `index.html` ONLY to add Google Fonts or external CSS in the `<head>`.
+  - ALL app logic and UI must live in `src/App.tsx` or components.
+- **src/main.tsx**: Auto-generated React entry point. Do not create.
+- **postcss.config.js**: Auto-generated with Tailwind/autoprefixer. Do not create.
 
 ## CRITICAL: WORK INCREMENTALLY - DON'T RECREATE EXISTING FILES
 
