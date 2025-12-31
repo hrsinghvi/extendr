@@ -815,16 +815,12 @@ export default {
       console.log('[WebContainer] Using default tsconfig.json');
     }
 
-    // Create default src/index.css with Tailwind
-    if (!files['src/index.css'] && !files['src/styles/index.css']) {
-      const defaultCss = `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+    // CRITICAL: Base height CSS that MUST be applied for preview to fill screen
+    // This is appended to any AI-provided CSS to ensure proper height behavior
+    const baseHeightCss = `
 /* 
- * Chrome Extension Styles
- * - Full width/height in preview mode
- * - Adapts to Chrome popup dimensions when loaded as extension
+ * Base Preview Styles (auto-injected)
+ * Ensures content fills the full preview viewport
  */
 html, body {
   margin: 0;
@@ -836,7 +832,6 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Root container - fills viewport */
 #root {
   width: 100%;
   height: 100%;
@@ -845,14 +840,28 @@ html, body {
   flex-direction: column;
 }
 
-/* Ensure app fills the container */
+/* Force app content to fill available space */
 #root > * {
   width: 100%;
   flex: 1;
+  min-height: 0;
 }
 `;
+
+    // Always ensure height CSS is applied - either append to AI CSS or use full default
+    if (files['src/index.css'] || files['src/styles/index.css']) {
+      // AI provided CSS - append our critical height rules
+      const existingCss = files['src/index.css'] || files['src/styles/index.css'];
+      allFiles['src/index.css'] = existingCss + '\n' + baseHeightCss;
+      console.log('[WebContainer] Appended base height CSS to AI-provided src/index.css');
+    } else {
+      // No CSS provided - use full default with Tailwind + height rules
+      const defaultCss = `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+` + baseHeightCss;
       allFiles['src/index.css'] = defaultCss;
-      console.log('[WebContainer] Created src/index.css with Tailwind');
+      console.log('[WebContainer] Created src/index.css with Tailwind + height rules');
     }
 
     // Only create index.html if not provided
