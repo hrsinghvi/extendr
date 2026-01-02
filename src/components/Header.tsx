@@ -81,13 +81,13 @@ export function Header() {
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 relative z-50">
              <NavbarLogo />
           </div>
          
           <NavItems items={navItems} />
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative z-50">
             {isLoading ? (
               // Loading state - skeleton avatar
               <div className="flex items-center gap-3">

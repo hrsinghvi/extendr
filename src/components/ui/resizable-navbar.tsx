@@ -129,7 +129,7 @@ export const NavItems = ({ items, className }: NavItemsProps) => {
     <motion.div
       onMouseLeave={() => setHovered(null)}
       className={cn(
-        "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-2",
+        "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-2 pointer-events-none",
         className,
       )}
     >
@@ -137,7 +137,7 @@ export const NavItems = ({ items, className }: NavItemsProps) => {
         <button
           onMouseEnter={() => setHovered(idx)}
           onClick={item.onClick}
-          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer bg-transparent border-none"
+          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer bg-transparent border-none pointer-events-auto"
           key={`link-${idx}`}
         >
           {hovered === idx && (
