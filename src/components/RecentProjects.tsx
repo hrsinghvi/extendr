@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { CATEGORIES, determineCategoryFromText, type ProjectCategory } from "@/lib/categories";
 import { GradientIcon } from "./GradientIcon";
+import { createOpenRouterProvider } from "@/lib/ai/providers";
 import {
   Select,
   SelectContent,
@@ -148,6 +149,31 @@ export function RecentProjects() {
     };
   }, [authLoading, isAuthenticated, user?.id, toast, projects.length]);
 
+  /**
+   * Generate a description based on title and category using AI
+   */
+  async function generateAIDescription(title: string, category: string): Promise<string> {
+    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    if (!apiKey) return generateDescription(title, category);
+
+    try {
+      // Use free model as requested
+      const provider = createOpenRouterProvider(apiKey, 'mistralai/mistral-7b-instruct:free');
+      
+      const response = await provider.chat([
+        { role: 'system', content: 'You are a helpful assistant that writes concise, engaging 1-sentence descriptions for Chrome extensions based on their title and category.' },
+        { role: 'user', content: `Write a short, engaging description (max 15 words) for a Chrome extension named "${title}" in the category "${category}". Do not include quotes.` }
+      ]);
+      
+      if (response.type === 'text' && response.content) {
+        return response.content.trim().replace(/^"|"$/g, '');
+      }
+    } catch (e) {
+      console.error("AI Description generation failed:", e);
+    }
+    return generateDescription(title, category);
+  }
+
   // Auto-categorize projects and generate descriptions
   useEffect(() => {
     if (loading || !projects.length) return;
@@ -162,8 +188,8 @@ export function RecentProjects() {
         // Generate description if missing
         let description = p.description;
         if (!description && p.title) {
-          // Create a simple description based on title and category
-          description = generateDescription(p.title, category);
+          // Create a description using AI
+          description = await generateAIDescription(p.title, category);
         }
         
         // Update DB

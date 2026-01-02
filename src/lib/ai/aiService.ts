@@ -256,7 +256,20 @@ export function createAIServiceFromEnv(callbacks?: {
     claude: claudeKey ? 'YES' : 'NO'
   });
   
-  // Try OpenRouter first (ALWAYS priority if available)
+  // Try Gemini
+  if (geminiKey && geminiKey.length > 10) {
+    console.log('[AIService] Using Gemini API');
+    return new AIService({
+      provider: {
+        type: 'gemini',
+        apiKey: geminiKey
+      },
+      ...callbacks
+    });
+  }
+  
+  // Try OpenRouter (Only if Gemini is not available, though user requested to remove it from chat, keeping it as fallback if Gemini is missing might be safer, but user was explicit: "only gemini should be used for that [AI Chat feature]". So I will skip OpenRouter here for general chat)
+  /*
   if (openrouterKey && openrouterKey.length > 10) {
     console.log('[AIService] ✓ Using OpenRouter API');
     return new AIService({
@@ -267,18 +280,7 @@ export function createAIServiceFromEnv(callbacks?: {
       ...callbacks
     });
   }
-  
-  // Try Gemini
-  if (geminiKey && geminiKey.length > 10) {
-    console.log('[AIService] Using Gemini API (OpenRouter not available)');
-    return new AIService({
-      provider: {
-        type: 'gemini',
-        apiKey: geminiKey
-      },
-      ...callbacks
-    });
-  }
+  */
   
   // Try OpenAI
   if (openaiKey && openaiKey.length > 10) {

@@ -1,13 +1,4 @@
-/**
- * Header component with auth-aware user display
- * 
- * States:
- * - Loading: Shows skeleton avatar
- * - Authenticated: Shows user avatar/initials + name with dropdown menu
- * - Unauthenticated: Shows Sign in and Get started buttons
- */
-import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
+import { useState } from "react";
 import { LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,26 +11,27 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useCredits } from "@/hooks/useCredits";
+import {
+  Navbar,
+  NavBody,
+  NavItems,
+  MobileNav,
+  NavbarLogo,
+  NavbarButton,
+  MobileNavHeader,
+  MobileNavToggle,
+  MobileNavMenu,
+} from "@/components/ui/resizable-navbar";
 
 export function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, session, isAuthenticated, isLoading, signOut } = useAuth();
   const { credits, totalAvailable } = useCredits();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   /**
    * Handle sign out
-   * AuthContext.signOut() handles error notification via errorBus
-   * We just show success toast here
    */
   const handleSignOut = async () => {
     try {
@@ -49,9 +41,9 @@ export function Header() {
         description: "You've been signed out successfully.",
       });
       navigate("/");
+      setIsMobileMenuOpen(false);
     } catch {
-      // Error already handled by AuthContext via errorBus
-      // No additional handling needed
+      // Error already handled
     }
   };
 
@@ -66,38 +58,35 @@ export function Header() {
     || null;
   const userInitial = userName.charAt(0).toUpperCase() || "U";
 
+  const navItems = [
+    {
+      name: "Features",
+      link: "/features",
+      onClick: () => navigate("/features"),
+    },
+    {
+      name: "Resources",
+      link: "#", // Placeholder
+      onClick: () => {},
+    },
+    {
+      name: "Pricing",
+      link: "/pricing",
+      onClick: () => navigate("/pricing"),
+    },
+  ];
+
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-base border-b border-border ${isScrolled ? "backdrop-blur-lg shadow-sm" : "backdrop-blur-lg shadow-sm"}`} style={{ backgroundColor: 'rgba(35, 35, 35, 0.6)' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo & Brand */}
-            <div className="flex items-center">
-              <button onClick={() => navigate('/')} className="flex items-center gap-2.5 font-bold text-xl focus:outline-none hover:opacity-80 transition-opacity">
-                <img src="/logo.svg" alt="extendr" className="w-10 h-10 rounded-lg" />
-                <span>extendr</span>
-              </button>
-            </div>
-
-          {/* Navigation - Centered */}
-          <nav className="hidden md:flex items-center gap-6 absolute left-1/2 transform -translate-x-1/2">
-            <button 
-              onClick={() => navigate('/features')} 
-              className="text-sm font-medium hover:text-primary transition-colors"
-            >
-              Features
-            </button>
-            <button className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-              Resources
-            </button>
-            <button 
-              onClick={() => navigate('/pricing')} 
-              className="text-sm font-medium hover:text-primary transition-colors"
-            >
-              Pricing
-            </button>
-          </nav>
-
-          {/* Right side - Auth state dependent */}
+    <div className="relative w-full">
+      <Navbar>
+        {/* Desktop Navigation */}
+        <NavBody>
+          <div className="flex items-center gap-4">
+             <NavbarLogo />
+          </div>
+         
+          <NavItems items={navItems} />
+          
           <div className="flex items-center gap-3">
             {isLoading ? (
               // Loading state - skeleton avatar
@@ -190,24 +179,120 @@ export function Header() {
             ) : (
               // Not authenticated - sign in buttons
               <>
-                <Button
+                <NavbarButton
                   variant="ghost"
-                  className="hidden sm:inline-flex"
+                  className="hidden sm:inline-block text-neutral-300 hover:text-white"
                   onClick={() => navigate('/auth')}
                 >
                   Sign in
-                </Button>
-                <Button
-                  className="bg-primary hover:bg-primary/90"
+                </NavbarButton>
+                <NavbarButton
+                  variant="primary"
                   onClick={() => navigate('/auth', { state: { isSignUp: true } })}
                 >
                   Get started
-                </Button>
+                </NavbarButton>
               </>
             )}
           </div>
-        </div>
-      </div>
-    </header>
+        </NavBody>
+
+        {/* Mobile Navigation */}
+        <MobileNav>
+          <MobileNavHeader>
+            <NavbarLogo />
+            <MobileNavToggle
+              isOpen={isMobileMenuOpen}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
+          </MobileNavHeader>
+
+          <MobileNavMenu
+            isOpen={isMobileMenuOpen}
+            onClose={() => setIsMobileMenuOpen(false)}
+          >
+            {navItems.map((item, idx) => (
+              <a
+                key={`mobile-link-${idx}`}
+                href={item.link}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsMobileMenuOpen(false);
+                  item.onClick();
+                }}
+                className="relative text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
+              >
+                <span className="block text-lg font-medium">{item.name}</span>
+              </a>
+            ))}
+            
+            <div className="w-full h-px bg-gray-200 dark:bg-gray-800 my-2" />
+            
+            {isAuthenticated ? (
+              <div className="flex flex-col gap-4 w-full">
+                 <div className="flex items-center gap-3">
+                    {userAvatar ? (
+                      <img 
+                        src={userAvatar} 
+                        alt={userName}
+                        className="w-8 h-8 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
+                        {userInitial}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {userName}
+                    </span>
+                 </div>
+                 <NavbarButton
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate('/settings');
+                    }}
+                    variant="secondary"
+                    className="w-full justify-start px-0"
+                  >
+                    Settings
+                  </NavbarButton>
+                  <NavbarButton
+                    onClick={() => {
+                      handleSignOut();
+                    }}
+                    variant="secondary"
+                    className="w-full justify-start px-0 text-red-500 hover:text-red-600"
+                  >
+                    Sign out
+                  </NavbarButton>
+              </div>
+            ) : (
+              <div className="flex w-full flex-col gap-4">
+                <NavbarButton
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    navigate('/auth');
+                  }}
+                  variant="secondary"
+                  className="w-full border border-gray-200 dark:border-gray-800"
+                >
+                  Sign in
+                </NavbarButton>
+                <NavbarButton
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    navigate('/auth', { state: { isSignUp: true } });
+                  }}
+                  variant="primary"
+                  className="w-full"
+                >
+                  Get started
+                </NavbarButton>
+              </div>
+            )}
+          </MobileNavMenu>
+        </MobileNav>
+      </Navbar>
+    </div>
   );
 }
