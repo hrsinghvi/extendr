@@ -118,7 +118,7 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   sideOffset={8} 
-                  className="w-60 bg-[#232323] text-white border border-[#3a3a3a] rounded-lg shadow-lg p-2"
+                  className="w-60 z-[100] bg-[#232323] text-white border border-[#3a3a3a] rounded-lg shadow-lg p-2"
                 >
                   {/* User info header */}
                   <div className="flex items-center gap-3 px-3 py-2">
