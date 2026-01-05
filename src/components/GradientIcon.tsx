@@ -28,7 +28,7 @@ function injectGradient() {
   svg.innerHTML = `
     <defs>
       <linearGradient id="${GRADIENT_ID}" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#3B82F6" />
+        <stop offset="0%" stop-color="#z" />
         <stop offset="50%" stop-color="#5A9665" />
         <stop offset="100%" stop-color="#22C55E" />
       </linearGradient>

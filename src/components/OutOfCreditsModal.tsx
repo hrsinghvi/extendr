@@ -62,7 +62,7 @@ export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps
   };
 
   const totalRemaining = (credits?.dailyRemaining ?? 0) + (credits?.monthlyRemaining ?? 0);
-  const totalMax = (credits?.dailyTotal ?? 3) + (credits?.monthlyTotal ?? 0);
+  const totalMax = (credits?.dailyTotal ?? 100) + (credits?.monthlyTotal ?? 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

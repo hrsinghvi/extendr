@@ -61,8 +61,8 @@ export interface UseCreditResult {
  * Credit allocation by plan
  */
 export const PLAN_CREDITS = {
-  free: { daily: 3, monthly: 0 },
-  pro: { daily: 3, monthly: 40 },
-  premium: { daily: 3, monthly: 80 },
+  free: { daily: 100, monthly: 0 },
+  pro: { daily: 100, monthly: 40 },
+  premium: { daily: 100, monthly: 80 },
 } as const;
 

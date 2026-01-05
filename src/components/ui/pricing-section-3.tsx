@@ -38,7 +38,7 @@ const plans: Plan[] = [
     yearlyPrice: 0,
     buttonText: "Get started",
     buttonVariant: "outline" as const,
-    dailyCredits: 3,
+    dailyCredits: 100,
     monthlyCredits: 0,
     features: [
       { text: "Up to 3 extensions", icon: <Briefcase size={20} /> },
@@ -47,7 +47,7 @@ const plans: Plan[] = [
     ],
     includes: [
       "Free includes:",
-      "3 daily AI credits",
+      "100 daily AI credits",
       "AI-powered generation",
       "Live preview",
       "Export to ZIP",
@@ -62,7 +62,7 @@ const plans: Plan[] = [
     yearlyPrice: 190,
     buttonText: "Upgrade to Pro",
     buttonVariant: "outline" as const,
-    dailyCredits: 3,
+    dailyCredits: 100,
     monthlyCredits: 40,
     features: [
       { text: "Unlimited extensions", icon: <Briefcase size={20} /> },
@@ -71,7 +71,7 @@ const plans: Plan[] = [
     ],
     includes: [
       "Everything in Free, plus:",
-      "3 daily + 40 monthly credits",
+      "100 daily + 40 monthly credits",
       "Advanced customization",
       "Version history",
       "Email support",
@@ -87,7 +87,7 @@ const plans: Plan[] = [
     popular: true,
     buttonText: "Upgrade to Premium",
     buttonVariant: "default" as const,
-    dailyCredits: 3,
+    dailyCredits: 100,
     monthlyCredits: 80,
     features: [
       { text: "Unlimited everything", icon: <Briefcase size={20} /> },
@@ -96,7 +96,7 @@ const plans: Plan[] = [
     ],
     includes: [
       "Everything in Pro, plus:",
-      "3 daily + 80 monthly credits",
+      "100 daily + 80 monthly credits",
       "Priority support",
       "Advanced analytics",
       "API access",
@@ -111,7 +111,7 @@ const plans: Plan[] = [
     isCustom: true,
     buttonText: "Contact sales",
     buttonVariant: "outline" as const,
-    dailyCredits: 3,
+    dailyCredits: 100,
     monthlyCredits: 0,
     features: [
       { text: "Custom integrations", icon: <Briefcase size={20} /> },

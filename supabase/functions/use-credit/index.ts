@@ -68,14 +68,14 @@ serve(async (req: Request) => {
         .from('user_credits')
         .insert({
           user_id: user.id,
-          daily_credits_remaining: 2, // 3 - 1 for this use
+          daily_credits_remaining: 99, // 100 - 1 for this use
           daily_credits_last_reset: getCurrentPSTDate(),
         });
 
       const response: CreditResponse = {
         allowed: true,
         message: 'Credit used from daily allowance',
-        dailyRemaining: 2,
+        dailyRemaining: 99,
         monthlyRemaining: 0,
         monthlyTotal: 0,
         planName,

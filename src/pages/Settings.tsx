@@ -465,7 +465,7 @@ export default function Settings() {
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Clock className="w-4 h-4 text-primary" />
                       <span>
-                        {credits?.dailyTotal ?? 3} credits reset on {formatResetDate(nextReset)}
+                        {credits?.dailyTotal ?? 100} credits reset on {formatResetDate(nextReset)}
                       </span>
                     </div>
 
