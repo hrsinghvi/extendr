@@ -25,7 +25,7 @@ export interface UseCreditsReturn {
   totalAvailable: number;
 }
 
-const DEFAULT_DAILY_CREDITS = 3;
+const DEFAULT_DAILY_CREDITS = 100;
 
 /**
  * Get current date in PST timezone (YYYY-MM-DD format)

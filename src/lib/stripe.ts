@@ -181,19 +181,19 @@ export function getPlanInfo(planName: PlanName): {
   const plans = {
     free: {
       name: 'Free',
-      dailyCredits: 3,
+      dailyCredits: 100,
       monthlyCredits: 0,
       features: ['Up to 3 extensions', 'Basic templates', 'Community support'],
     },
     pro: {
       name: 'Pro',
-      dailyCredits: 3,
+      dailyCredits: 100,
       monthlyCredits: 40,
       features: ['Unlimited extensions', 'All templates', 'Priority AI generation'],
     },
     premium: {
       name: 'Premium',
-      dailyCredits: 3,
+      dailyCredits: 100,
       monthlyCredits: 80,
       features: ['Unlimited everything', 'Custom branding', 'Fastest AI generation'],
     },
