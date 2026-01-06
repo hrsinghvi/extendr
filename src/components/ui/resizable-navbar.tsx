@@ -62,14 +62,14 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
         width: "calc(100% - 2rem)",
         y: 20,
         borderRadius: "9999px",
-        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        backgroundColor: "rgba(35, 35, 35, 0.5)",
         borderColor: "rgba(255, 255, 255, 0.1)",
       }}
       animate={{
         width: "calc(100% - 2rem)",
         y: 20,
         borderRadius: "9999px",
-        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        backgroundColor: "rgba(35, 35, 35, 0.5)",
         borderColor: "rgba(255, 255, 255, 0.1)",
       }}
       transition={{
@@ -130,14 +130,14 @@ export const MobileNav = ({ children, className }: MobileNavProps) => {
         width: "90%",
         borderRadius: "2rem",
         y: 20,
-        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        backgroundColor: "rgba(35, 35, 35, 0.5)",
         borderColor: "rgba(255, 255, 255, 0.1)",
       }}
       animate={{
         width: "90%",
         borderRadius: "2rem",
         y: 20,
-        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        backgroundColor: "rgba(35, 35, 35, 0.5)",
         borderColor: "rgba(255, 255, 255, 0.1)",
       }}
       transition={{
