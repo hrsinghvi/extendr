@@ -4,11 +4,9 @@ import { IconMenu2, IconX } from "@tabler/icons-react";
 import {
   motion,
   AnimatePresence,
-  useScroll,
-  useMotionValueEvent,
 } from "framer-motion";
 
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 
 
 interface NavbarProps {
@@ -19,7 +17,6 @@ interface NavbarProps {
 interface NavBodyProps {
   children: React.ReactNode;
   className?: string;
-  visible?: boolean;
 }
 
 interface NavItemsProps {
@@ -34,7 +31,6 @@ interface NavItemsProps {
 interface MobileNavProps {
   children: React.ReactNode;
   className?: string;
-  visible?: boolean;
 }
 
 interface MobileNavHeaderProps {
@@ -50,55 +46,31 @@ interface MobileNavMenuProps {
 }
 
 export const Navbar = ({ children, className }: NavbarProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollY } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
-  const [visible, setVisible] = useState<boolean>(false);
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    if (latest > 10) {
-      setVisible(true);
-    } else {
-      setVisible(false);
-    }
-  });
-
   return (
-    <motion.div
-      ref={ref}
-      // Fixed at top, with transition for basic properties
+    <div
       className={cn("fixed inset-x-0 top-0 z-50 w-full transition-all duration-200", className)}
     >
-      {React.Children.map(children, (child) =>
-        React.isValidElement(child)
-          ? React.cloneElement(
-              child as React.ReactElement<{ visible?: boolean }>,
-              { visible },
-            )
-          : child,
-      )}
-    </motion.div>
+      {children}
+    </div>
   );
 };
 
-export const NavBody = ({ children, className, visible }: NavBodyProps) => {
+export const NavBody = ({ children, className }: NavBodyProps) => {
   return (
     <motion.div
-      animate={{
-        width: visible ? "60%" : "100%",
-        y: visible ? 20 : 0,
-        borderRadius: visible ? "9999px" : "0px",
-        backgroundColor: visible ? "rgba(35, 35, 35, 0.8)" : "transparent",
-        borderColor: visible ? "rgba(255, 255, 255, 0.1)" : "transparent",
-      }}
       initial={{
-        width: "100%",
-        y: 0,
-        borderRadius: "0px",
-        backgroundColor: "transparent",
-        borderColor: "transparent",
+        width: "60%",
+        y: 20,
+        borderRadius: "9999px",
+        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        borderColor: "rgba(255, 255, 255, 0.1)",
+      }}
+      animate={{
+        width: "60%",
+        y: 20,
+        borderRadius: "9999px",
+        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        borderColor: "rgba(255, 255, 255, 0.1)",
       }}
       transition={{
         type: "spring",
@@ -111,9 +83,7 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
         minWidth: "600px", 
       }}
       className={cn(
-        "relative z-[60] mx-auto hidden w-full flex-row items-center justify-between self-start px-4 py-3 lg:flex",
-        // Removed conditional bg/border classes here in favor of animate prop for smoothness
-        visible && "backdrop-blur-md shadow-lg",
+        "relative z-[60] mx-auto hidden w-full flex-row items-center justify-between self-start px-4 py-3 lg:flex backdrop-blur-md shadow-lg",
         className,
       )}
     >
@@ -153,22 +123,22 @@ export const NavItems = ({ items, className }: NavItemsProps) => {
   );
 };
 
-export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
+export const MobileNav = ({ children, className }: MobileNavProps) => {
   return (
     <motion.div
-      animate={{
-        width: visible ? "90%" : "100%",
-        borderRadius: visible ? "2rem" : "0px",
-        y: visible ? 20 : 0,
-        backgroundColor: visible ? "rgba(35, 35, 35, 0.8)" : "transparent",
-        borderColor: visible ? "rgba(255, 255, 255, 0.1)" : "transparent",
-      }}
       initial={{
-        width: "100%",
-        borderRadius: "0px",
-        y: 0,
-        backgroundColor: "transparent",
-        borderColor: "transparent",
+        width: "90%",
+        borderRadius: "2rem",
+        y: 20,
+        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        borderColor: "rgba(255, 255, 255, 0.1)",
+      }}
+      animate={{
+        width: "90%",
+        borderRadius: "2rem",
+        y: 20,
+        backgroundColor: "rgba(35, 35, 35, 0.8)",
+        borderColor: "rgba(255, 255, 255, 0.1)",
       }}
       transition={{
         type: "spring",
@@ -176,8 +146,7 @@ export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
         damping: 50,
       }}
       className={cn(
-        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between px-4 py-3 lg:hidden",
-        visible && "backdrop-blur-md shadow-lg",
+        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between px-4 py-3 lg:hidden backdrop-blur-md shadow-lg",
         className,
       )}
     >

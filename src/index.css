@@ -69,8 +69,8 @@ All colors MUST be HSL.
     font-style: normal;
   }
 
-  .stack-sans-text-default {
-    font-family: "Stack Sans Text", sans-serif;
+  .inter-default {
+    font-family: "Inter", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
@@ -102,7 +102,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Stack Sans Text", "Momo Trust Display", sans-serif;
+    font-family: "Inter", "Momo Trust Display", sans-serif;
     font-feature-settings: "kern", "liga", "calt";
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
