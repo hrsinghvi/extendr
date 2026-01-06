@@ -30,7 +30,7 @@ export function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col overflow-x-hidden">
 
-      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-56 pb-32">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-64 pb-32">
         {/* Main headline */}
         <div className="text-center max-w-5xl mx-auto space-y-6 mb-12">
           <motion.h1
