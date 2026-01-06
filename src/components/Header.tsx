@@ -111,7 +111,7 @@ export function Header() {
                         {userInitial}
                       </div>
                     )}
-                    <span className="text-sm font-medium text-white hidden sm:block">
+                    <span className="text-base font-bold text-white hidden sm:block">
                       {userName}
                     </span>
                   </button>

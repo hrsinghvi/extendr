@@ -99,7 +99,7 @@ export const NavItems = ({ items, className }: NavItemsProps) => {
     <motion.div
       onMouseLeave={() => setHovered(null)}
       className={cn(
-        "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-2 pointer-events-none",
+        "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-12 text-base font-bold text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-12 pointer-events-none",
         className,
       )}
     >
@@ -107,7 +107,7 @@ export const NavItems = ({ items, className }: NavItemsProps) => {
         <button
           onMouseEnter={() => setHovered(idx)}
           onClick={item.onClick}
-          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer bg-transparent border-none pointer-events-auto"
+          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer bg-transparent border-none pointer-events-auto font-bold"
           key={`link-${idx}`}
         >
           {hovered === idx && (
@@ -215,7 +215,7 @@ export const NavbarLogo = ({ children }: { children?: React.ReactNode }) => {
   return (
     <a
       href="/"
-      className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
+      className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-base font-normal text-black"
     >
       <img
         src="/logo.svg"
@@ -224,7 +224,7 @@ export const NavbarLogo = ({ children }: { children?: React.ReactNode }) => {
         height={30}
         className="rounded-lg"
       />
-      <span className="font-medium text-black dark:text-white">extendr</span>
+      <span className="font-bold text-black dark:text-white">extendr</span>
     </a>
   );
 };
@@ -249,7 +249,7 @@ export const NavbarButton = ({
   | React.ComponentPropsWithoutRef<"button">
 )) => {
   const baseStyles =
-    "px-4 py-2 rounded-md text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
+    "px-4 py-2 rounded-md text-base font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
 
   const variantStyles = {
     primary:
