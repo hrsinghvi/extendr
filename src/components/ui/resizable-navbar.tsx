@@ -59,14 +59,14 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
   return (
     <motion.div
       initial={{
-        width: "60%",
+        width: "calc(100% - 2rem)",
         y: 20,
         borderRadius: "9999px",
         backgroundColor: "rgba(35, 35, 35, 0.8)",
         borderColor: "rgba(255, 255, 255, 0.1)",
       }}
       animate={{
-        width: "60%",
+        width: "calc(100% - 2rem)",
         y: 20,
         borderRadius: "9999px",
         backgroundColor: "rgba(35, 35, 35, 0.8)",
@@ -83,7 +83,7 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
         minWidth: "600px", 
       }}
       className={cn(
-        "relative z-[60] mx-auto hidden w-full flex-row items-center justify-between self-start px-4 py-3 lg:flex backdrop-blur-md shadow-lg",
+        "relative z-[60] mx-auto hidden w-full max-w-7xl flex-row items-center justify-between self-start px-4 py-3 lg:flex backdrop-blur-md shadow-lg",
         className,
       )}
     >

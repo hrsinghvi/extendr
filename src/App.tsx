@@ -144,19 +144,23 @@ const SwipeHandler = ({ children }: { children: React.ReactNode }) => {
  */
 const ScrollToTop = () => {
   const { pathname } = useLocation();
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Don't scroll on initial mount
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    // Disable browser's default scroll restoration to ensure we always start at top
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
     }
+    
+    // Immediate scroll on mount (refresh/initial load)
+    window.scrollTo(0, 0);
+  }, []);
 
-    // Delay scroll until exit animation is ~70% done (opacity is low)
+  useEffect(() => {
+    // For navigation changes, delay slightly to allow exit animation
+    // But ensure we do scroll
     const timer = setTimeout(() => {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }, 200);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [pathname]);
