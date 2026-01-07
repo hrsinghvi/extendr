@@ -11,6 +11,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useCredits } from "@/hooks/useCredits";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   Navbar,
   NavBody,
@@ -28,6 +29,7 @@ export function Header() {
   const { toast } = useToast();
   const { user, session, isAuthenticated, isLoading, signOut } = useAuth();
   const { credits, totalAvailable } = useCredits();
+  const { planName } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   /**
@@ -140,8 +142,12 @@ export function Header() {
                     </div>
                   </div>
 
-                  {/* Credits indicator */}
+                  {/* Plan & Credits indicator */}
                   <div className="px-3 py-2 border border-[#3a3a3a] rounded-md bg-[#1a1a1a] my-2">
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-gray-400">Plan</span>
+                      <span className="font-semibold capitalize text-white">{planName}</span>
+                    </div>
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="font-medium">Credits</span>
                       <span className="font-medium">{totalAvailable} left</span>
