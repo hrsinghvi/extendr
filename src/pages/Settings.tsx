@@ -340,14 +340,14 @@ export default function Settings() {
               customVariants={revealVariants}
               className="mb-8"
             >
-              <h2 className="text-lg font-semibold mb-6 text-muted-foreground">Account</h2>
+              <h2 className="text-lg font-semibold mb-6 text-white">Account</h2>
               
               {/* Email - Read only */}
               <div className="border-b border-[#333] pb-6 mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-16">
                   <div className="lg:w-1/3">
-                    <label className="block text-sm font-medium mb-1">Email</label>
-                    <p className="text-xs text-muted-foreground">
+                    <label className="block text-sm font-medium mb-1 text-white">Email</label>
+                    <p className="text-xs text-white/70">
                       Your email address associated with your account.
                     </p>
                   </div>
@@ -356,7 +356,7 @@ export default function Settings() {
                       type="email"
                       value={userEmail}
                       disabled
-                      className="w-full max-w-md bg-[#1a1a1a] border-[#3a3a3a] text-muted-foreground cursor-not-allowed"
+                      className="w-full max-w-md bg-[#1a1a1a] border-[#3a3a3a] text-white/50 cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -366,8 +366,8 @@ export default function Settings() {
               <div className="border-b border-[#333] pb-6 mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-16">
                   <div className="lg:w-1/3">
-                    <label className="block text-sm font-medium mb-1">Name</label>
-                    <p className="text-xs text-muted-foreground">
+                    <label className="block text-sm font-medium mb-1 text-white">Name</label>
+                    <p className="text-xs text-white/70">
                       Your full name, as visible to others.
                     </p>
                   </div>
@@ -376,7 +376,7 @@ export default function Settings() {
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="flex-1 bg-[#1a1a1a] border-[#3a3a3a]"
+                      className="flex-1 bg-[#1a1a1a] border-[#3a3a3a] text-white"
                       placeholder="Your name"
                     />
                     <Button 
@@ -395,8 +395,8 @@ export default function Settings() {
               <div className="border-b border-[#333] pb-6">
                 <div className="flex flex-col lg:flex-row gap-4 lg:gap-16">
                   <div className="lg:w-1/3">
-                    <label className="block text-sm font-medium mb-1">Change Password</label>
-                    <p className="text-xs text-muted-foreground">
+                    <label className="block text-sm font-medium mb-1 text-white">Change Password</label>
+                    <p className="text-xs text-white/70">
                       Update your password to keep your account secure.
                     </p>
                   </div>
@@ -405,14 +405,14 @@ export default function Settings() {
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="bg-[#1a1a1a] border-[#3a3a3a]"
+                      className="bg-[#1a1a1a] border-[#3a3a3a] text-white"
                       placeholder="New password"
                     />
                     <Input 
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="bg-[#1a1a1a] border-[#3a3a3a]"
+                      className="bg-[#1a1a1a] border-[#3a3a3a] text-white"
                       placeholder="Confirm new password"
                     />
                     <Button 
@@ -439,27 +439,27 @@ export default function Settings() {
               customVariants={revealVariants}
               className="mb-8"
             >
-              <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Plan & Credits</h2>
+              <h2 className="text-lg font-semibold mb-4 text-white">Plan & Credits</h2>
               
               <div className="grid sm:grid-cols-2 gap-4">
                 {/* Current Plan Card */}
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 flex items-center justify-center">
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 flex items-center justify-center">
                       {planName === 'premium' ? (
-                        <Sparkles className="w-5 h-5 text-white" />
+                        <Sparkles className="w-6 h-6 text-white" />
                       ) : planName === 'pro' ? (
-                        <Crown className="w-5 h-5 text-white" />
+                        <Crown className="w-6 h-6 text-white" />
                       ) : (
-                        <span className="text-white text-lg font-bold">F</span>
+                        <span className="text-white text-xl font-bold">F</span>
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold">
+                      <p className="font-semibold text-white">
                         You're on {planInfo.name} Plan
                       </p>
                       {subscription?.currentPeriodEnd && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-white/70">
                           {subscription.cancelAtPeriodEnd ? 'Ends' : 'Renews'}{' '}
                           {subscription.currentPeriodEnd.toLocaleDateString('en-US', {
                             month: 'short',
@@ -474,10 +474,10 @@ export default function Settings() {
                   {planName !== 'free' ? (
                     <Button 
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={handleManageSubscription}
                       disabled={isManagingSubscription}
-                      className="border-[#3a3a3a] hover:bg-[#2a2a2a]"
+                      className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white px-6"
                     >
                       {isManagingSubscription ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -486,9 +486,9 @@ export default function Settings() {
                     </Button>
                   ) : (
                     <Button 
-                      size="sm"
+                      size="lg"
                       onClick={() => navigate('/pricing')}
-                      className="bg-primary hover:bg-primary/90"
+                      className="bg-primary hover:bg-primary/90 px-8 text-base"
                     >
                       Upgrade
                     </Button>
@@ -498,8 +498,8 @@ export default function Settings() {
                 {/* Credits Card */}
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-semibold">Credits remaining</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="font-semibold text-white">Credits remaining</span>
+                    <span className="text-sm text-white">
                       {isLoadingCredits ? (
                         <Loader2 className="w-4 h-4 animate-spin inline" />
                       ) : (
@@ -524,13 +524,13 @@ export default function Settings() {
                   {/* Credit details */}
                   <div className="space-y-2 text-sm">
                     {credits?.monthlyTotal > 0 && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="flex items-center gap-2 text-white/70">
                         <Check className="w-4 h-4 text-primary" />
                         <span>Up to {credits.monthlyTotal} credits rollover</span>
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-white/70">
                       <Clock className="w-4 h-4 text-primary" />
                       <span>
                         {credits?.dailyTotal ?? 100} credits reset on {formatResetDate(nextReset)}
@@ -538,7 +538,7 @@ export default function Settings() {
                     </div>
 
                     {credits?.monthlyRemaining !== undefined && credits.monthlyRemaining > 0 && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="flex items-center gap-2 text-white/70">
                         <div className="w-2 h-2 rounded-full bg-blue-400" />
                         <span>Daily credits used first</span>
                       </div>
@@ -560,8 +560,8 @@ export default function Settings() {
               <div className="border border-destructive/30 rounded-xl p-5 bg-destructive/5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <p className="font-medium">Delete account</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="font-medium text-white">Delete account</p>
+                    <p className="text-sm text-white/70">
                       Permanently delete your extendr account. This cannot be undone.
                     </p>
                   </div>
