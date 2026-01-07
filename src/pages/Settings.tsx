@@ -8,7 +8,7 @@
  * - Credits display with reset timing
  * - Account deletion
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -21,6 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { redirectToPortal, getPlanInfo } from "@/lib/stripe";
 import { Check, Loader2, Crown, Sparkles, Clock } from "lucide-react";
+import { VerticalCutReveal } from "@/components/ui/vertical-cut-reveal";
+import { TimelineContent } from "@/components/ui/timeline-animation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,6 +97,9 @@ export default function Settings() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  
+  // Ref for timeline animations
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -270,18 +275,69 @@ export default function Settings() {
     );
   }
 
+  const revealVariants = {
+    visible: (i: number) => ({
+      y: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+      transition: {
+        delay: i * 0.4,
+        duration: 0.5,
+      },
+    }),
+    hidden: {
+      filter: "blur(10px)",
+      y: -20,
+      opacity: 0,
+    },
+  };
+
   return (
     <div className="min-h-screen bg-[#050609] relative">
       <GradientBackground />
       <div className="relative z-10">
         <Header />
         
-        <main className="pt-24 pb-16">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl">
-            <h1 className="text-3xl font-bold mb-8">Settings</h1>
+        <main className="px-4 pt-20 min-h-screen max-w-3xl mx-auto relative" ref={settingsRef}>
+          {/* Header - matches Pricing page style */}
+          <div className="text-left mb-8">
+            <h1 className="text-4xl font-bold leading-[130%] text-foreground mb-4 pt-8">
+              <VerticalCutReveal
+                splitBy="words"
+                staggerDuration={0.15}
+                staggerFrom="first"
+                reverse={true}
+                containerClassName="justify-start"
+                transition={{
+                  type: "spring",
+                  stiffness: 250,
+                  damping: 40,
+                  delay: 0,
+                }}
+              >
+                Settings
+              </VerticalCutReveal>
+            </h1>
+
+            <TimelineContent
+              as="p"
+              animationNum={0}
+              timelineRef={settingsRef}
+              customVariants={revealVariants}
+              className="text-muted-foreground"
+            >
+              Manage your account, subscription, and preferences.
+            </TimelineContent>
+          </div>
 
             {/* Account Section */}
-            <section className="mb-8">
+            <TimelineContent
+              as="section"
+              animationNum={1}
+              timelineRef={settingsRef}
+              customVariants={revealVariants}
+              className="mb-8"
+            >
               <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Account</h2>
               
               {/* Email - Read only */}
@@ -367,10 +423,16 @@ export default function Settings() {
                   </Button>
                 </div>
               </div>
-            </section>
+            </TimelineContent>
 
             {/* Plan & Credits Section */}
-            <section className="mb-8">
+            <TimelineContent
+              as="section"
+              animationNum={2}
+              timelineRef={settingsRef}
+              customVariants={revealVariants}
+              className="mb-8"
+            >
               <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Plan & Credits</h2>
               
               <div className="grid sm:grid-cols-2 gap-4">
@@ -478,10 +540,15 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
-            </section>
+            </TimelineContent>
 
             {/* Danger Zone */}
-            <section>
+            <TimelineContent
+              as="section"
+              animationNum={3}
+              timelineRef={settingsRef}
+              customVariants={revealVariants}
+            >
               <h2 className="text-lg font-semibold mb-4 text-destructive">Danger Zone</h2>
               
               <div className="border border-destructive/30 rounded-xl p-5 bg-destructive/5">
@@ -530,8 +597,7 @@ export default function Settings() {
                   </AlertDialog>
                 </div>
               </div>
-            </section>
-          </div>
+            </TimelineContent>
         </main>
 
         <Footer />
