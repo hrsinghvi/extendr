@@ -298,7 +298,7 @@ export default function Settings() {
       <div className="relative z-10">
         <Header />
         
-        <main className="px-4 pt-20 min-h-screen max-w-3xl mx-auto relative" ref={settingsRef}>
+        <main className="px-4 pt-20 min-h-screen max-w-7xl mx-auto relative" ref={settingsRef}>
           {/* Header - matches Pricing page style */}
           <div className="text-left mb-8">
             <h1 className="text-4xl font-bold leading-[130%] text-foreground mb-4 pt-8">
@@ -330,6 +330,8 @@ export default function Settings() {
             </TimelineContent>
           </div>
 
+          {/* Settings content box - matches RecentProjects style */}
+          <div className="rounded-3xl bg-[#232323] p-6 sm:p-8">
             {/* Account Section */}
             <TimelineContent
               as="section"
@@ -338,36 +340,38 @@ export default function Settings() {
               customVariants={revealVariants}
               className="mb-8"
             >
-              <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Account</h2>
+              <h2 className="text-lg font-semibold mb-6 text-muted-foreground">Account</h2>
               
               {/* Email - Read only */}
-              <div className="border-b border-[#232323] pb-6 mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex-1">
+              <div className="border-b border-[#333] pb-6 mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-16">
+                  <div className="lg:w-1/3">
                     <label className="block text-sm font-medium mb-1">Email</label>
                     <p className="text-xs text-muted-foreground">
                       Your email address associated with your account.
                     </p>
                   </div>
-                  <Input 
-                    type="email"
-                    value={userEmail}
-                    disabled
-                    className="sm:w-80 bg-[#1a1a1a] border-[#3a3a3a] text-muted-foreground cursor-not-allowed"
-                  />
+                  <div className="lg:flex-1">
+                    <Input 
+                      type="email"
+                      value={userEmail}
+                      disabled
+                      className="w-full max-w-md bg-[#1a1a1a] border-[#3a3a3a] text-muted-foreground cursor-not-allowed"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Name */}
-              <div className="border-b border-[#232323] pb-6 mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex-1">
+              <div className="border-b border-[#333] pb-6 mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-16">
+                  <div className="lg:w-1/3">
                     <label className="block text-sm font-medium mb-1">Name</label>
                     <p className="text-xs text-muted-foreground">
                       Your full name, as visible to others.
                     </p>
                   </div>
-                  <div className="flex gap-2 sm:w-80">
+                  <div className="lg:flex-1 flex gap-2 max-w-md">
                     <Input 
                       type="text"
                       value={displayName}
@@ -388,39 +392,41 @@ export default function Settings() {
               </div>
 
               {/* Password Change */}
-              <div className="border-b border-[#232323] pb-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Change Password</label>
-                  <p className="text-xs text-muted-foreground">
-                    Update your password to keep your account secure.
-                  </p>
-                </div>
-                <div className="space-y-3 sm:max-w-80">
-                  <Input 
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="bg-[#1a1a1a] border-[#3a3a3a]"
-                    placeholder="New password"
-                  />
-                  <Input 
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-[#1a1a1a] border-[#3a3a3a]"
-                    placeholder="Confirm new password"
-                  />
-                  <Button 
-                    onClick={handleChangePassword}
-                    disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    {isChangingPassword ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
-                    Change Password
-                  </Button>
+              <div className="border-b border-[#333] pb-6">
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-16">
+                  <div className="lg:w-1/3">
+                    <label className="block text-sm font-medium mb-1">Change Password</label>
+                    <p className="text-xs text-muted-foreground">
+                      Update your password to keep your account secure.
+                    </p>
+                  </div>
+                  <div className="lg:flex-1 space-y-3 max-w-md">
+                    <Input 
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="bg-[#1a1a1a] border-[#3a3a3a]"
+                      placeholder="New password"
+                    />
+                    <Input 
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="bg-[#1a1a1a] border-[#3a3a3a]"
+                      placeholder="Confirm new password"
+                    />
+                    <Button 
+                      onClick={handleChangePassword}
+                      disabled={isChangingPassword || !newPassword || !confirmPassword}
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      {isChangingPassword ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : null}
+                      Change Password
+                    </Button>
+                  </div>
                 </div>
               </div>
             </TimelineContent>
@@ -598,6 +604,7 @@ export default function Settings() {
                 </div>
               </div>
             </TimelineContent>
+          </div>
         </main>
 
         <Footer />

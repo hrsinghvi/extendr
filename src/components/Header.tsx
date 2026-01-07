@@ -143,30 +143,30 @@ export function Header() {
                   </div>
 
                   {/* Plan & Credits indicators */}
-                  <div className="grid grid-cols-2 gap-2 my-2">
+                  <div className="flex flex-col gap-2 my-2">
                     {/* Plan box */}
-                    <div className="px-3 py-2.5 border border-[#3a3a3a] rounded-md bg-[#1a1a1a]">
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wide">Plan</span>
-                      <p className="text-sm font-semibold capitalize text-white mt-0.5">{planName}</p>
+                    <div className="px-3 py-2 border border-[#3a3a3a] rounded-md bg-[#1a1a1a] flex items-center justify-between">
+                      <span className="text-xs text-gray-400">Plan</span>
+                      <span className="text-xs font-semibold capitalize text-white">{planName}</span>
                     </div>
                     
                     {/* Credits box */}
-                    <div className="px-3 py-2.5 border border-[#3a3a3a] rounded-md bg-[#1a1a1a]">
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wide">Credits</span>
-                      <p className="text-sm font-semibold text-white mt-0.5">{totalAvailable} left</p>
+                    <div className="px-3 py-2 border border-[#3a3a3a] rounded-md bg-[#1a1a1a]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-gray-400">Credits</span>
+                        <span className="text-xs font-semibold text-white">{totalAvailable} left</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#3a3a3a] rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-[#5A9665] transition-all duration-300" 
+                          style={{ 
+                            width: credits 
+                              ? `${Math.min(100, (totalAvailable / (credits.dailyTotal + credits.monthlyTotal || 1)) * 100)}%` 
+                              : '0%' 
+                          }} 
+                        />
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Credits progress bar */}
-                  <div className="h-1.5 w-full bg-[#3a3a3a] rounded-full overflow-hidden mb-2">
-                    <div 
-                      className="h-full bg-[#5A9665] transition-all duration-300" 
-                      style={{ 
-                        width: credits 
-                          ? `${Math.min(100, (totalAvailable / (credits.dailyTotal + credits.monthlyTotal || 1)) * 100)}%` 
-                          : '0%' 
-                      }} 
-                    />
                   </div>
 
                   {/* Menu items */}
