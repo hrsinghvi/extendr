@@ -99,7 +99,7 @@ export const NavItems = ({ items, className }: NavItemsProps) => {
     <motion.div
       onMouseLeave={() => setHovered(null)}
       className={cn(
-        "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-12 text-base font-bold text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-12 pointer-events-none",
+        "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-12 text-base font-bold text-white transition duration-200 hover:text-white/80 lg:flex lg:space-x-12 pointer-events-none",
         className,
       )}
     >
@@ -107,13 +107,13 @@ export const NavItems = ({ items, className }: NavItemsProps) => {
         <button
           onMouseEnter={() => setHovered(idx)}
           onClick={item.onClick}
-          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer bg-transparent border-none pointer-events-auto font-bold"
+          className="relative px-4 py-2 text-white/90 hover:text-white transition-colors cursor-pointer bg-transparent border-none pointer-events-auto font-bold"
           key={`link-${idx}`}
         >
           {hovered === idx && (
             <motion.div
               layoutId="hovered"
-              className="absolute inset-0 h-full w-full rounded-full bg-gray-100 dark:bg-neutral-800"
+              className="absolute inset-0 h-full w-full rounded-full bg-white/10"
             />
           )}
           <span className="relative z-20">{item.name}</span>
@@ -224,7 +224,7 @@ export const NavbarLogo = ({ children }: { children?: React.ReactNode }) => {
         height={30}
         className="rounded-lg"
       />
-      <span className="font-bold text-black dark:text-white">extendr</span>
+      <span className="font-bold text-white">extendr</span>
     </a>
   );
 };
@@ -254,11 +254,11 @@ export const NavbarButton = ({
   const variantStyles = {
     primary:
       "bg-primary text-primary-foreground shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
-    secondary: "bg-transparent shadow-none text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white",
+    secondary: "bg-transparent shadow-none text-white hover:text-white/80",
     dark: "bg-black text-white shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
     gradient:
       "bg-gradient-to-b from-blue-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]",
-    ghost: "bg-transparent text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800",
+    ghost: "bg-transparent text-white hover:bg-white/10",
   };
 
   return (
