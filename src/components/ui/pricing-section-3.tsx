@@ -290,7 +290,7 @@ export default function PricingSection3() {
     >
       <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-center items-start justify-between">
         <div className="text-left mb-6">
-          <h2 className="text-4xl font-medium leading-[130%] text-foreground mb-4 pt-8">
+          <h2 className="text-4xl font-bold leading-[130%] text-foreground mb-4 pt-8">
             <VerticalCutReveal
               splitBy="words"
               staggerDuration={0.15}
