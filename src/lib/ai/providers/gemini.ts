@@ -87,6 +87,7 @@ export class GeminiProvider extends BaseAIProvider {
    */
   getAvailableModels(): string[] {
     return [
+      'gemini-2.5-pro',
       'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-2.0-flash-exp',
@@ -97,7 +98,7 @@ export class GeminiProvider extends BaseAIProvider {
   }
   
   protected getDefaultModel(): string {
-    return 'gemini-2.5-flash';
+    return 'gemini-2.5-pro';
   }
   
   /**
