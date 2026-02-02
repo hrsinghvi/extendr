@@ -257,12 +257,13 @@ export function createAIServiceFromEnv(callbacks?: {
   });
   
   // Try Gemini
-  if (geminiKey && geminiKey.length > 10) {
-    console.log('[AIService] Using Gemini API');
+  // We can use Gemini if we have an API key OR if we have a Supabase URL (for proxy)
+  if ((geminiKey && geminiKey.length > 10) || import.meta.env.VITE_SUPABASE_URL) {
+    console.log('[AIService] Using Gemini API', geminiKey ? '(Direct)' : '(Proxy via Supabase)');
     return new AIService({
       provider: {
         type: 'gemini',
-        apiKey: geminiKey
+        apiKey: geminiKey || '' // Empty string triggers proxy mode in GeminiProvider
       },
       ...callbacks
     });

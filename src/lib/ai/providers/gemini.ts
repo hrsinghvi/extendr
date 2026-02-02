@@ -102,6 +102,17 @@ export class GeminiProvider extends BaseAIProvider {
   }
   
   /**
+   * Check if the provider is configured
+   */
+  isConfigured(): boolean {
+    // If we have an API key, we're configured
+    if (this.config.apiKey) return true;
+    
+    // If we have a Supabase URL, we can use the proxy
+    return Boolean(import.meta.env.VITE_SUPABASE_URL);
+  }
+
+  /**
    * Send chat request to Gemini API
    */
   async chat(
@@ -109,12 +120,21 @@ export class GeminiProvider extends BaseAIProvider {
     tools?: ToolDefinition[],
     systemPrompt?: string
   ): Promise<AIResponse> {
-    if (!this.isConfigured()) {
-      return this.errorResponse('Gemini API key not configured');
-    }
+    // If no API key is configured, we'll try to use the Supabase Edge Function proxy
+    const useProxy = !this.config.apiKey;
     
     const model = this.getModel();
-    const url = `${this.baseUrl}/models/${model}:generateContent?key=${this.config.apiKey}`;
+    let url: string;
+
+    if (useProxy) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        return this.errorResponse('Supabase URL not configured');
+      }
+      url = `${supabaseUrl}/functions/v1/gemini-generate?model=${model}`;
+    } else {
+      url = `${this.baseUrl}/models/${model}:generateContent?key=${this.config.apiKey}`;
+    }
     
     try {
       // Convert messages to Gemini format
@@ -141,11 +161,19 @@ export class GeminiProvider extends BaseAIProvider {
         requestBody.tools = [this.convertTools(tools)];
       }
       
-      this.log('Sending request to', model);
+      this.log('Sending request to', model, useProxy ? '(via proxy)' : '(direct)');
       
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          // Add Authorization header if using proxy (optional, but good practice if RLS/Auth is needed)
+          // For now, we'll assume the function is public or handles anon key if needed, 
+          // but usually Edge Functions need the Authorization header with the anon key.
+          ...(useProxy ? {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+          } : {})
+        },
         body: JSON.stringify(requestBody)
       });
       
