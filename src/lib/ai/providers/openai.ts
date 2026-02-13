@@ -66,17 +66,17 @@ interface OpenAIResponse {
 
 export class OpenAIProvider extends BaseAIProvider {
   readonly name: AIProviderType = 'openai';
-  readonly displayName = 'OpenAI';
-  
+  readonly displayName: string = 'OpenAI';
+
   private baseUrl = 'https://api.openai.com/v1';
-  
+
   constructor(config: ProviderConfig) {
     super(config);
     if (config.baseUrl) {
       this.baseUrl = config.baseUrl;
     }
   }
-  
+
   /**
    * Get available OpenAI models
    */
@@ -89,11 +89,11 @@ export class OpenAIProvider extends BaseAIProvider {
       'gpt-3.5-turbo'
     ];
   }
-  
+
   protected getDefaultModel(): string {
     return 'gpt-4o-mini';
   }
-  
+
   /**
    * Send chat request to OpenAI API
    */
@@ -105,13 +105,13 @@ export class OpenAIProvider extends BaseAIProvider {
     if (!this.isConfigured()) {
       return this.errorResponse('OpenAI API key not configured');
     }
-    
+
     const url = `${this.baseUrl}/chat/completions`;
-    
+
     try {
       // Convert messages to OpenAI format
       const openaiMessages = this.convertMessages(messages, systemPrompt);
-      
+
       // Build request body
       const requestBody: Record<string, unknown> = {
         model: this.getModel(),
@@ -119,15 +119,15 @@ export class OpenAIProvider extends BaseAIProvider {
         temperature: this.getTemperature(),
         max_tokens: this.getMaxTokens()
       };
-      
+
       // Add tools if provided
       if (tools && tools.length > 0) {
         requestBody.tools = this.convertTools(tools);
         requestBody.tool_choice = 'auto';
       }
-      
+
       this.log('Sending request to', this.getModel());
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -136,29 +136,29 @@ export class OpenAIProvider extends BaseAIProvider {
         },
         body: JSON.stringify(requestBody)
       });
-      
+
       const data: OpenAIResponse = await response.json();
-      
+
       if (!response.ok || data.error) {
         const errorMsg = data.error?.message || `HTTP ${response.status}`;
         this.logError('API error', errorMsg);
         return this.errorResponse(errorMsg, data);
       }
-      
+
       return this.parseResponse(data);
-      
+
     } catch (error: any) {
       this.logError('Request failed', error);
       return this.errorResponse(error.message);
     }
   }
-  
+
   /**
    * Convert our Message format to OpenAI format
    */
   private convertMessages(messages: Message[], systemPrompt?: string): OpenAIMessage[] {
     const openaiMessages: OpenAIMessage[] = [];
-    
+
     // Add system prompt first if provided
     if (systemPrompt) {
       openaiMessages.push({
@@ -166,7 +166,7 @@ export class OpenAIProvider extends BaseAIProvider {
         content: systemPrompt
       });
     }
-    
+
     for (const msg of messages) {
       if (msg.role === 'system') {
         openaiMessages.push({
@@ -183,7 +183,7 @@ export class OpenAIProvider extends BaseAIProvider {
           role: 'assistant',
           content: msg.content || null
         };
-        
+
         // Add tool calls if present
         if (msg.toolCalls && msg.toolCalls.length > 0) {
           message.tool_calls = msg.toolCalls.map(tc => ({
@@ -195,7 +195,7 @@ export class OpenAIProvider extends BaseAIProvider {
             }
           }));
         }
-        
+
         openaiMessages.push(message);
       } else if (msg.role === 'tool' && msg.toolResult) {
         openaiMessages.push({
@@ -205,10 +205,10 @@ export class OpenAIProvider extends BaseAIProvider {
         });
       }
     }
-    
+
     return openaiMessages;
   }
-  
+
   /**
    * Convert our tool definitions to OpenAI format
    */
@@ -218,23 +218,23 @@ export class OpenAIProvider extends BaseAIProvider {
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: tool.parameters
+        parameters: tool.parameters as unknown as Record<string, unknown>
       }
     }));
   }
-  
+
   /**
    * Parse OpenAI response into our format
    */
   private parseResponse(data: OpenAIResponse): AIResponse {
     const choice = data.choices?.[0];
-    
+
     if (!choice) {
       return this.errorResponse('No response choice');
     }
-    
+
     const message = choice.message;
-    
+
     // Check for tool calls
     if (message.tool_calls && message.tool_calls.length > 0) {
       const toolCalls: ToolCall[] = message.tool_calls.map(tc => ({
@@ -242,17 +242,17 @@ export class OpenAIProvider extends BaseAIProvider {
         name: tc.function.name,
         arguments: this.parseToolArguments(tc.function.arguments)
       }));
-      
+
       this.log('Received tool calls', toolCalls.map(tc => tc.name));
       return this.toolCallsResponse(toolCalls, data);
     }
-    
+
     // Return text content
     const content = message.content || '';
     this.log('Received text response', content.substring(0, 100) + '...');
     return this.textResponse(content, data);
   }
-  
+
   /**
    * Parse tool arguments from JSON string
    */

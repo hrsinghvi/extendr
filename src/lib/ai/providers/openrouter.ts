@@ -22,7 +22,7 @@ import { OpenAIProvider } from './openai';
 export class OpenRouterProvider extends OpenAIProvider {
   readonly name: AIProviderType = 'openrouter';
   readonly displayName = 'OpenRouter';
-  
+
   constructor(config: ProviderConfig) {
     // Set OpenRouter's base URL
     super({
@@ -30,7 +30,7 @@ export class OpenRouterProvider extends OpenAIProvider {
       baseUrl: config.baseUrl || 'https://openrouter.ai/api/v1'
     });
   }
-  
+
   /**
    * Get available OpenRouter models
    * OpenRouter supports many models - these are popular ones
@@ -51,12 +51,12 @@ export class OpenRouterProvider extends OpenAIProvider {
       'qwen/qwen-2.5-72b-instruct'
     ];
   }
-  
+
   protected getDefaultModel(): string {
-    // Default to Devstral - free and good for coding tasks
-    return 'mistralai/devstral-2512:free';
+    // Default to Qwen 2.5 72B as requested
+    return 'qwen/qwen-2.5-72b-instruct';
   }
-  
+
   /**
    * Override chat to add OpenRouter-specific headers
    */
@@ -68,15 +68,15 @@ export class OpenRouterProvider extends OpenAIProvider {
     if (!this.isConfigured()) {
       return this.errorResponse('OpenRouter API key not configured');
     }
-    
+
     // OpenRouter uses the same endpoint structure as OpenAI
     // but requires additional headers for attribution
     const url = `https://openrouter.ai/api/v1/chat/completions`;
-    
+
     try {
       // Convert messages to OpenAI format (inherited method)
       const openaiMessages = this.convertMessagesPublic(messages, systemPrompt);
-      
+
       // Build request body
       const requestBody: Record<string, unknown> = {
         model: this.getModel(),
@@ -84,15 +84,15 @@ export class OpenRouterProvider extends OpenAIProvider {
         temperature: this.getTemperature(),
         max_tokens: this.getMaxTokens()
       };
-      
+
       // Add tools if provided
       if (tools && tools.length > 0) {
         requestBody.tools = this.convertToolsPublic(tools);
         requestBody.tool_choice = 'auto';
       }
-      
+
       this.log('Sending request to', this.getModel());
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -103,23 +103,23 @@ export class OpenRouterProvider extends OpenAIProvider {
         },
         body: JSON.stringify(requestBody)
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok || data.error) {
         const errorMsg = data.error?.message || `HTTP ${response.status}`;
         this.logError('API error', errorMsg);
         return this.errorResponse(errorMsg, data);
       }
-      
+
       return this.parseResponsePublic(data);
-      
+
     } catch (error: any) {
       this.logError('Request failed', error);
       return this.errorResponse(error.message);
     }
   }
-  
+
   /**
    * Public wrapper for convertMessages (since parent method is private)
    */
@@ -134,11 +134,11 @@ export class OpenRouterProvider extends OpenAIProvider {
       }>;
       tool_call_id?: string;
     }> = [];
-    
+
     if (systemPrompt) {
       openaiMessages.push({ role: 'system', content: systemPrompt });
     }
-    
+
     for (const msg of messages) {
       if (msg.role === 'system') {
         openaiMessages.push({ role: 'system', content: msg.content });
@@ -165,10 +165,10 @@ export class OpenRouterProvider extends OpenAIProvider {
         });
       }
     }
-    
+
     return openaiMessages;
   }
-  
+
   /**
    * Public wrapper for convertTools
    */
@@ -182,35 +182,35 @@ export class OpenRouterProvider extends OpenAIProvider {
       }
     }));
   }
-  
+
   /**
    * Public wrapper for parseResponse
    */
   private parseResponsePublic(data: any): AIResponse {
     const choice = data.choices?.[0];
-    
+
     if (!choice) {
       return this.errorResponse('No response choice');
     }
-    
+
     const message = choice.message;
-    
+
     if (message.tool_calls && message.tool_calls.length > 0) {
       const toolCalls = message.tool_calls.map((tc: any) => ({
         id: tc.id,
         name: tc.function.name,
         arguments: this.parseToolArgumentsPublic(tc.function.arguments)
       }));
-      
+
       this.log('Received tool calls', toolCalls.map((tc: any) => tc.name));
       return this.toolCallsResponse(toolCalls, data, message.content || undefined);
     }
-    
+
     const content = message.content || '';
     this.log('Received text response', content.substring(0, 100) + '...');
     return this.textResponse(content, data);
   }
-  
+
   /**
    * Parse tool arguments from JSON string
    */
