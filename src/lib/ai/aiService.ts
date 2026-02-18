@@ -325,7 +325,7 @@ export function createToolContext(
   wcHooks: {
     writeFile: (path: string, content: string) => Promise<void>;
     readFile: (path: string) => Promise<string>;
-    runCommand: (cmd: string, args?: string[]) => Promise<number>;
+    runCommand: (cmd: string, args?: string[]) => Promise<{ exitCode: number; output: string }>;
     build: (files: Record<string, string>, installDeps?: boolean) => Promise<void>;
     stop: () => void;
     isRunning: () => boolean;
@@ -373,12 +373,7 @@ export function createToolContext(
     isRunning: wcHooks.isRunning,
 
     // Command execution
-    runCommand: async (command: string, args: string[] = []) => {
-      let output = '';
-      const exitCode = await wcHooks.runCommand(command, args);
-      // Note: Actual output capture would need enhancement in webcontainerBridge
-      return { exitCode, output };
-    },
+    runCommand: (command: string, args: string[] = []) => wcHooks.runCommand(command, args),
 
     // Logs
     getLogs: wcHooks.getLogs,

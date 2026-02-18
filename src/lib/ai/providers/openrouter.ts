@@ -128,7 +128,13 @@ export class OpenRouterProvider extends OpenAIProvider {
       const data: OpenRouterResponse = await response.json();
 
       if (!response.ok || data.error) {
-        const errorMsg = data.error?.message || `HTTP ${response.status}`;
+        const rawErrorMsg = data.error?.message || `HTTP ${response.status}`;
+        const isInvalidKey =
+          response.status === 401 &&
+          /user not found/i.test(rawErrorMsg);
+        const errorMsg = isInvalidKey
+          ? 'OpenRouter authentication failed: API key is invalid or revoked (User not found). Generate a new key at openrouter.ai/keys and update VITE_OPENROUTER_API_KEY, then redeploy.'
+          : rawErrorMsg;
         this.logError('API error', errorMsg);
         return this.errorResponse(errorMsg, data);
       }

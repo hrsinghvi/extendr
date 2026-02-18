@@ -384,7 +384,12 @@ const handleAddDependency: ToolHandler = async (args, context) => {
     const result = await context.runCommand('npm', ['install', packageName]);
     
     if (result.exitCode === 0) {
-      return successResult(id, TOOL_NAMES.ADD_DEPENDENCY, `Successfully installed ${packageName}`);
+      const output = result.output?.trim();
+      return successResult(
+        id,
+        TOOL_NAMES.ADD_DEPENDENCY,
+        `Successfully installed ${packageName}${output ? `\n${output}` : ''}`
+      );
     } else {
       return errorResult(id, TOOL_NAMES.ADD_DEPENDENCY, `npm install failed: ${result.output}`);
     }
@@ -406,7 +411,12 @@ const handleRemoveDependency: ToolHandler = async (args, context) => {
     const result = await context.runCommand('npm', ['uninstall', packageName]);
     
     if (result.exitCode === 0) {
-      return successResult(id, TOOL_NAMES.REMOVE_DEPENDENCY, `Successfully removed ${packageName}`);
+      const output = result.output?.trim();
+      return successResult(
+        id,
+        TOOL_NAMES.REMOVE_DEPENDENCY,
+        `Successfully removed ${packageName}${output ? `\n${output}` : ''}`
+      );
     } else {
       return errorResult(id, TOOL_NAMES.REMOVE_DEPENDENCY, `npm uninstall failed: ${result.output}`);
     }
@@ -461,12 +471,8 @@ const handleRunCommand: ToolHandler = async (args, context) => {
   const id = generateToolCallId();
   
   try {
-    // Parse command into command and args
-    const parts = command.split(' ');
-    const cmd = parts[0];
-    const cmdArgs = parts.slice(1);
-    
-    const result = await context.runCommand(cmd, cmdArgs);
+    // Execute through shell so quoted args, redirects and chained commands work.
+    const result = await context.runCommand('sh', ['-c', command]);
     
     return successResult(
       id, 
@@ -651,4 +657,3 @@ export function wasBuildTriggered(results: ToolResult[]): boolean {
     r => r.success && r.name === TOOL_NAMES.BUILD_PREVIEW
   );
 }
-

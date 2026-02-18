@@ -34,7 +34,7 @@ import {
   BuildStatus,
   writeFile as wcWriteFile,
   readFile as wcReadFile,
-  runCommand as wcRunCommand,
+  runCommandWithOutput as wcRunCommandWithOutput,
   type FileMap
 } from "@/preview";
 // AI Service imports
@@ -347,9 +347,9 @@ export default function Build() {
         },
         runCommand: async (cmd: string, args: string[] = []) => {
           try {
-            return await wcRunCommand(cmd, args);
+            return await wcRunCommandWithOutput(cmd, args);
           } catch (e) {
-            return 1; // Error exit code
+            return { exitCode: 1, output: e instanceof Error ? e.message : String(e) };
           }
         },
         build: async (files: FileMap, installDeps?: boolean) => {

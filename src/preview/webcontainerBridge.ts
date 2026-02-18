@@ -26,6 +26,11 @@ export interface WebContainerStatus {
   progress?: number;
 }
 
+export interface CommandResult {
+  exitCode: number;
+  output: string;
+}
+
 // ============================================================================
 // State (stored on window to persist across HMR)
 // ============================================================================
@@ -414,7 +419,19 @@ export async function runCommand(
   command: string,
   args: string[] = []
 ): Promise<number> {
+  const result = await runCommandWithOutput(command, args);
+  return result.exitCode;
+}
+
+/**
+ * Run a command in WebContainer and capture output
+ */
+export async function runCommandWithOutput(
+  command: string,
+  args: string[] = []
+): Promise<CommandResult> {
   const wc = await bootWebContainer();
+  const decoder = new TextDecoder();
   
   const fullCommand = `${command} ${args.join(' ')}`.trim();
   writeToTerminal(`\x1b[1;33m$\x1b[0m ${fullCommand}\r\n`);
@@ -424,15 +441,18 @@ export async function runCommand(
     const process = await wc.spawn(command, args);
     currentProcess = process;
 
-    // Pipe output to terminal
+    // Pipe output to terminal and capture for callers (AI tools)
     const outputReader = process.output.getReader();
+    let output = '';
     
-    (async () => {
+    const outputPump = (async () => {
       try {
         while (true) {
           const { done, value } = await outputReader.read();
           if (done) break;
-          writeToTerminal(value);
+          const chunk = typeof value === 'string' ? value : decoder.decode(value);
+          output += chunk;
+          writeToTerminal(chunk);
         }
       } catch (e) {
         // Stream closed, ignore
@@ -440,6 +460,7 @@ export async function runCommand(
     })();
 
     const exitCode = await process.exit;
+    await outputPump;
     currentProcess = null;
     
     console.log(`[WebContainer] Command exited with code: ${exitCode}`);
@@ -448,7 +469,7 @@ export async function runCommand(
       writeToTerminal(`\x1b[33m[WebContainer]\x1b[0m Command exited with code ${exitCode}\r\n`);
     }
     
-    return exitCode;
+    return { exitCode, output };
   } catch (error: any) {
     currentProcess = null;
     reportError(`Command failed: ${fullCommand}`, error.message);

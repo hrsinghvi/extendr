@@ -38,6 +38,7 @@ export {
   writeFile,
   readFile,
   runCommand,
+  runCommandWithOutput,
   killProcess,
   installDependencies,
   startDevServer,
@@ -59,7 +60,8 @@ export type {
   StatusCallback,
   ErrorCallback,
   UrlCallback,
-  WebContainerStatus
+  WebContainerStatus,
+  CommandResult
 } from './webcontainerBridge';
 
 // Components
