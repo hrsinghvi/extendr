@@ -591,26 +591,50 @@ export async function installDependencies(packageJsonContent?: string): Promise<
   writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Installing dependencies...\r\n');
 
   try {
-    const primary = await runCommandWithOutput('npm', ['install', '--prefer-offline', '--no-audit', '--no-fund']);
-    if (primary.exitCode !== 0) {
-      const output = primary.output || '';
+    const attempts: Array<{ label: string; args: string[] }> = [
+      { label: 'npm install (offline preferred)', args: ['install', '--prefer-offline', '--no-audit', '--no-fund'] },
+      { label: 'npm install', args: ['install', '--no-audit', '--no-fund'] },
+      { label: 'npm install --legacy-peer-deps', args: ['install', '--legacy-peer-deps', '--no-audit', '--no-fund'] }
+    ];
 
-      // Retry for peer dependency conflicts.
-      if (/ERESOLVE|unable to resolve dependency tree/i.test(output)) {
-        writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Retrying npm install with --legacy-peer-deps...\r\n');
-        const legacy = await runCommandWithOutput('npm', ['install', '--legacy-peer-deps', '--no-audit', '--no-fund']);
-        if (legacy.exitCode !== 0) {
-          reportError('npm install failed', trimInstallOutput(legacy.output));
-          return false;
+    let success = false;
+    let lastOutput = '';
+
+    for (const attempt of attempts) {
+      writeToTerminal(`\x1b[1;33m[WebContainer]\x1b[0m ${attempt.label}...\r\n`);
+      const res = await runCommandWithOutput('npm', attempt.args);
+      lastOutput = res.output || '';
+
+      if (res.exitCode === 0) {
+        success = true;
+        break;
+      }
+
+      // If package.json lock issue is the root cause, retry after generating lock/package metadata.
+      if (/package\.json|ENOENT|Could not read package\.json/i.test(lastOutput)) {
+        writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Attempting npm init -y repair...\r\n');
+        const initRes = await runCommandWithOutput('npm', ['init', '-y']);
+        if (initRes.exitCode === 0) {
+          const retryRes = await runCommandWithOutput('npm', attempt.args);
+          lastOutput = retryRes.output || '';
+          if (retryRes.exitCode === 0) {
+            success = true;
+            break;
+          }
+        } else {
+          lastOutput = initRes.output || lastOutput;
         }
+      }
+    }
+
+    if (!success) {
+      // Last resort: if dependencies are already present, continue.
+      const hasModules = await hasNodeModules();
+      if (hasModules) {
+        writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m npm install failed, but node_modules exists; continuing with cached deps.\r\n');
       } else {
-        // One fallback retry without prefer-offline for registry/network edge cases.
-        writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Retrying npm install...\r\n');
-        const retry = await runCommandWithOutput('npm', ['install', '--no-audit', '--no-fund']);
-        if (retry.exitCode !== 0) {
-          reportError('npm install failed', trimInstallOutput(retry.output));
-          return false;
-        }
+        reportError('npm install failed', trimInstallOutput(lastOutput));
+        return false;
       }
     }
     
@@ -998,7 +1022,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       const packageJsonContent = allFiles['package.json'];
       const success = await installDependencies(packageJsonContent);
       if (!success) {
-        return;
+        throw new Error('Dependency installation failed');
       }
     }
 
@@ -1007,6 +1031,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
   } catch (error: any) {
     reportError('Build failed', error.message);
+    throw error;
   }
 }
 

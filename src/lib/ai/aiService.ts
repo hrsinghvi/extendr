@@ -91,6 +91,7 @@ export class AIService {
     // Track intro text from first response (before tools execute)
     let introText = '';
     const seenCallSignatures = new Set<string>();
+    const lastReadFileHashes = new Map<string, string>();
 
     // Iteration loop - AI may make multiple tool calls
     let iterations = 0;
@@ -129,7 +130,7 @@ export class AIService {
         if (response.type === 'tool_calls' && response.toolCalls) {
           // Execute tool calls
           const toolCalls = response.toolCalls;
-          const optimized = this.optimizeToolCalls(toolCalls, context, seenCallSignatures);
+          const optimized = this.optimizeToolCalls(toolCalls, context, seenCallSignatures, lastReadFileHashes);
           const executableToolCalls = optimized.executable;
           const skippedResults = optimized.skippedResults;
 
@@ -230,7 +231,8 @@ export class AIService {
   private optimizeToolCalls(
     toolCalls: ToolCall[],
     context: ToolContext,
-    seenSignatures: Set<string>
+    seenSignatures: Set<string>,
+    lastReadFileHashes: Map<string, string>
   ): { executable: ToolCall[]; skippedResults: ToolResult[] } {
     const executable: ToolCall[] = [];
     const skippedResults: ToolResult[] = [];
@@ -238,6 +240,28 @@ export class AIService {
 
     for (const tc of toolCalls) {
       const signature = `${tc.name}:${stableStringify(tc.arguments)}`;
+
+      if (tc.name === 'ext_read_file') {
+        const filePath = typeof tc.arguments?.file_path === 'string' ? tc.arguments.file_path : '';
+        if (filePath) {
+          const currentContent = files[filePath] ?? '';
+          const currentHash = hashString(currentContent);
+          const previousHash = lastReadFileHashes.get(filePath);
+
+          if (previousHash === currentHash) {
+            skippedResults.push({
+              toolCallId: tc.id,
+              name: tc.name,
+              success: true,
+              content: `Skipped repeated read for ${filePath}; file unchanged since last read.`
+            });
+            continue;
+          }
+
+          lastReadFileHashes.set(filePath, currentHash);
+        }
+      }
+
       if (seenSignatures.has(signature)) {
         skippedResults.push({
           toolCallId: tc.id,
@@ -284,6 +308,16 @@ function stableStringify(value: unknown): string {
   }
 
   return JSON.stringify(value);
+}
+
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return hash.toString(16);
 }
 
 // ============================================================================
@@ -334,7 +368,7 @@ export function createAIServiceFromEnv(callbacks?: {
         apiKey: openrouterKey,
         model: OPENROUTER_DEFAULT_MODEL,
         temperature: 0.15,
-        maxTokens: 4096
+        maxTokens: 8192
       },
       ...callbacks
     });

@@ -449,7 +449,7 @@ export default function Build() {
         type: providerType,
         apiKey: apiKey,
         ...(providerType === 'openrouter'
-          ? { model: OPENROUTER_DEFAULT_MODEL, temperature: 0.15, maxTokens: 4096 }
+          ? { model: OPENROUTER_DEFAULT_MODEL, temperature: 0.15, maxTokens: 8192 }
           : {})
       },
       onToolCall: (tc) => {
