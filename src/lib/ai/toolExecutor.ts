@@ -44,6 +44,21 @@ function errorResult(toolCallId: string, name: string, error: string): ToolResul
   };
 }
 
+function trimCommandOutput(output: string, maxChars = 8000): string {
+  if (!output) return '';
+  if (output.length <= maxChars) return output;
+  return `${output.slice(0, maxChars)}\n\n[output truncated]`;
+}
+
+function isBinaryAssetPath(path: string): boolean {
+  return /\.(png|jpe?g|ico|webp)$/i.test(path);
+}
+
+function looksLikeRawBase64(content: string): boolean {
+  const compact = content.replace(/\s+/g, '');
+  return compact.length > 512 && /^[A-Za-z0-9+/=]+$/.test(compact);
+}
+
 // ============================================================================
 // Tool Handler Implementations
 // ============================================================================
@@ -56,6 +71,15 @@ const handleWriteFile: ToolHandler = async (args, context) => {
   const id = generateToolCallId();
   
   try {
+    // Guardrail: writing raw base64 into binary file paths causes broken assets.
+    if (isBinaryAssetPath(file_path) && looksLikeRawBase64(content)) {
+      return errorResult(
+        id,
+        TOOL_NAMES.WRITE_FILE,
+        `Refusing raw base64 write to ${file_path}. Use ext_download_file for binary assets or write an SVG/text asset instead.`
+      );
+    }
+
     // Write to WebContainer
     await context.writeFile(file_path, content);
     
@@ -381,18 +405,61 @@ const handleAddDependency: ToolHandler = async (args, context) => {
   try {
     context.writeToTerminal(`\x1b[36m📦\x1b[0m Installing ${packageName}...\r\n`);
     
-    const result = await context.runCommand('npm', ['install', packageName]);
-    
+    const tryInstall = async (extraArgs: string[] = []) =>
+      context.runCommand('npm', ['install', packageName, ...extraArgs]);
+
+    const result = await tryInstall();
     if (result.exitCode === 0) {
       const output = result.output?.trim();
       return successResult(
         id,
         TOOL_NAMES.ADD_DEPENDENCY,
-        `Successfully installed ${packageName}${output ? `\n${output}` : ''}`
+        `Successfully installed ${packageName}${output ? `\n${trimCommandOutput(output)}` : ''}`
       );
-    } else {
-      return errorResult(id, TOOL_NAMES.ADD_DEPENDENCY, `npm install failed: ${result.output}`);
     }
+
+    const installOutput = trimCommandOutput(result.output || '');
+    const needsInit = /ENOENT|package\.json|Could not read package\.json|idealTree/i.test(installOutput);
+    if (needsInit) {
+      context.writeToTerminal(`\x1b[33m⚠\x1b[0m package.json missing/invalid, running npm init -y then retrying install...\r\n`);
+      const initResult = await context.runCommand('npm', ['init', '-y']);
+      if (initResult.exitCode !== 0) {
+        return errorResult(
+          id,
+          TOOL_NAMES.ADD_DEPENDENCY,
+          `npm init -y failed:\n${trimCommandOutput(initResult.output || '')}`
+        );
+      }
+
+      const retryAfterInit = await tryInstall();
+      if (retryAfterInit.exitCode === 0) {
+        return successResult(
+          id,
+          TOOL_NAMES.ADD_DEPENDENCY,
+          `Successfully installed ${packageName} after npm init -y\n${trimCommandOutput(retryAfterInit.output || '')}`
+        );
+      }
+    }
+
+    const isPeerConflict = /ERESOLVE|unable to resolve dependency tree/i.test(installOutput);
+    if (isPeerConflict) {
+      context.writeToTerminal(`\x1b[33m⚠\x1b[0m Peer dependency conflict detected, retrying with --legacy-peer-deps...\r\n`);
+      const retryLegacy = await tryInstall(['--legacy-peer-deps']);
+      if (retryLegacy.exitCode === 0) {
+        return successResult(
+          id,
+          TOOL_NAMES.ADD_DEPENDENCY,
+          `Successfully installed ${packageName} using --legacy-peer-deps\n${trimCommandOutput(retryLegacy.output || '')}`
+        );
+      }
+      return errorResult(
+        id,
+        TOOL_NAMES.ADD_DEPENDENCY,
+        `npm install failed (peer dependency conflict persisted):\n${trimCommandOutput(retryLegacy.output || '')}`
+      );
+    }
+
+    return errorResult(id, TOOL_NAMES.ADD_DEPENDENCY, `npm install failed:\n${installOutput}`);
   } catch (error: any) {
     return errorResult(id, TOOL_NAMES.ADD_DEPENDENCY, error.message);
   }
@@ -477,7 +544,7 @@ const handleRunCommand: ToolHandler = async (args, context) => {
     return successResult(
       id, 
       TOOL_NAMES.RUN_COMMAND, 
-      `Exit code: ${result.exitCode}\n${result.output}`
+      `Exit code: ${result.exitCode}\n${trimCommandOutput(result.output || '')}`
     );
   } catch (error: any) {
     return errorResult(id, TOOL_NAMES.RUN_COMMAND, error.message);

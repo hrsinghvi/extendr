@@ -264,7 +264,9 @@ export function createAIServiceFromEnv(callbacks?: {
       provider: {
         type: 'openrouter',
         apiKey: openrouterKey,
-        model: OPENROUTER_DEFAULT_MODEL
+        model: OPENROUTER_DEFAULT_MODEL,
+        temperature: 0.15,
+        maxTokens: 4096
       },
       ...callbacks
     });

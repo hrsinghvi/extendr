@@ -36,6 +36,9 @@ interface OpenRouterResponse {
 }
 
 export const OPENROUTER_DEFAULT_MODEL = 'qwen/qwen3-coder';
+const TOOL_CALL_BLOCK_REGEX = /<tool_call>([\s\S]*?)<\/tool_call>/gi;
+const TOOL_FUNCTION_REGEX = /<function=([a-zA-Z0-9_:-]+)>/i;
+const TOOL_PARAMETER_REGEX = /<parameter=([a-zA-Z0-9_:-]+)>([\s\S]*?)<\/parameter>/gi;
 
 // ============================================================================
 // OpenRouter Provider Implementation
@@ -76,6 +79,13 @@ export class OpenRouterProvider extends OpenAIProvider {
 
   protected getDefaultModel(): string {
     return OPENROUTER_DEFAULT_MODEL;
+  }
+
+  /**
+   * Lower temperature for more deterministic tool behavior with Qwen.
+   */
+  protected getTemperature(): number {
+    return this.config.temperature ?? 0.15;
   }
 
   /**
@@ -172,6 +182,14 @@ export class OpenRouterProvider extends OpenAIProvider {
       return this.toolCallsResponse(toolCalls, data, normalizedContent || undefined);
     }
 
+    // Fallback for models that emit pseudo XML-style tool tags in plain text.
+    const pseudoToolCalls = this.parsePseudoToolCalls(normalizedContent);
+    if (pseudoToolCalls.length > 0) {
+      const cleanedContent = normalizedContent.replace(TOOL_CALL_BLOCK_REGEX, '').trim();
+      this.log('Parsed pseudo tool calls', pseudoToolCalls.map(tc => tc.name));
+      return this.toolCallsResponse(pseudoToolCalls, data, cleanedContent || undefined);
+    }
+
     this.log('Received text response', normalizedContent.substring(0, 100) + '...');
     return this.textResponse(normalizedContent, data);
   }
@@ -189,6 +207,43 @@ export class OpenRouterProvider extends OpenAIProvider {
     }
 
     return '';
+  }
+
+  private parsePseudoToolCalls(content: string) {
+    const calls: Array<{ id: string; name: string; arguments: Record<string, unknown> }> = [];
+    if (!content || !content.includes('<tool_call>')) return calls;
+
+    const blocks = [...content.matchAll(TOOL_CALL_BLOCK_REGEX)];
+    for (const match of blocks) {
+      const block = match[1] || '';
+      const fnMatch = block.match(TOOL_FUNCTION_REGEX);
+      const name = fnMatch?.[1]?.trim();
+      if (!name) continue;
+
+      const args: Record<string, unknown> = {};
+      TOOL_PARAMETER_REGEX.lastIndex = 0;
+      for (const pMatch of block.matchAll(TOOL_PARAMETER_REGEX)) {
+        const key = pMatch[1]?.trim();
+        if (!key) continue;
+        args[key] = this.parseScalar(pMatch[2] || '');
+      }
+
+      calls.push({
+        id: this.generateId(),
+        name,
+        arguments: args
+      });
+    }
+
+    return calls;
+  }
+
+  private parseScalar(raw: string): unknown {
+    const value = raw.trim();
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    if (/^-?\d+(\.\d+)?$/.test(value)) return Number(value);
+    return value;
   }
 }
 

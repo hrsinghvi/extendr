@@ -448,7 +448,9 @@ export default function Build() {
       provider: {
         type: providerType,
         apiKey: apiKey,
-        ...(providerType === 'openrouter' ? { model: OPENROUTER_DEFAULT_MODEL } : {})
+        ...(providerType === 'openrouter'
+          ? { model: OPENROUTER_DEFAULT_MODEL, temperature: 0.15, maxTokens: 4096 }
+          : {})
       },
       onToolCall: (tc) => {
         console.log('[Build] Tool call:', tc.name);
