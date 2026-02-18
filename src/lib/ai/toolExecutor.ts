@@ -50,6 +50,24 @@ function trimCommandOutput(output: string, maxChars = 8000): string {
   return `${output.slice(0, maxChars)}\n\n[output truncated]`;
 }
 
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    const keys = Object.keys(obj).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function toolCallSignature(tc: ToolCall): string {
+  return `${tc.name}:${stableStringify(tc.arguments)}`;
+}
+
 function isBinaryAssetPath(path: string): boolean {
   return /\.(png|jpe?g|ico|webp)$/i.test(path);
 }
@@ -71,6 +89,11 @@ const handleWriteFile: ToolHandler = async (args, context) => {
   const id = generateToolCallId();
   
   try {
+    const current = context.getFiles()[file_path];
+    if (current === content) {
+      return successResult(id, TOOL_NAMES.WRITE_FILE, `No-op: ${file_path} already has identical content`);
+    }
+
     // Guardrail: writing raw base64 into binary file paths causes broken assets.
     if (isBinaryAssetPath(file_path) && looksLikeRawBase64(content)) {
       return errorResult(
@@ -689,12 +712,70 @@ export async function executeToolCalls(
   toolCalls: ToolCall[],
   context: ToolContext
 ): Promise<ToolResult[]> {
-  // Execute tools in parallel for better performance
-  const results = await Promise.all(
-    toolCalls.map(tc => executeTool(tc, context))
+  const syntheticResults = new Map<string, ToolResult>();
+  const exactSeen = new Set<string>();
+
+  // Keep only the latest write per file within a single assistant response.
+  const lastWriteIndexByPath = new Map<string, number>();
+  for (let i = 0; i < toolCalls.length; i++) {
+    const tc = toolCalls[i];
+    if (tc.name === TOOL_NAMES.WRITE_FILE) {
+      const filePath = typeof tc.arguments?.file_path === 'string' ? tc.arguments.file_path : '';
+      if (filePath) lastWriteIndexByPath.set(filePath, i);
+    }
+  }
+
+  const toExecute: ToolCall[] = [];
+  for (let i = 0; i < toolCalls.length; i++) {
+    const tc = toolCalls[i];
+
+    const sig = toolCallSignature(tc);
+    if (exactSeen.has(sig)) {
+      syntheticResults.set(tc.id, {
+        toolCallId: tc.id,
+        name: tc.name,
+        success: true,
+        content: 'Skipped duplicate tool call in same response.'
+      });
+      continue;
+    }
+    exactSeen.add(sig);
+
+    if (tc.name === TOOL_NAMES.WRITE_FILE) {
+      const filePath = typeof tc.arguments?.file_path === 'string' ? tc.arguments.file_path : '';
+      const lastIdx = filePath ? lastWriteIndexByPath.get(filePath) : undefined;
+      if (lastIdx !== undefined && lastIdx !== i) {
+        syntheticResults.set(tc.id, {
+          toolCallId: tc.id,
+          name: tc.name,
+          success: true,
+          content: `Skipped superseded write to ${filePath}; executed latest write for this file.`
+        });
+        continue;
+      }
+    }
+
+    toExecute.push(tc);
+  }
+
+  // Execute serially to preserve deterministic file mutation order.
+  const executed = new Map<string, ToolResult>();
+  for (const tc of toExecute) {
+    const res = await executeTool(tc, context);
+    executed.set(tc.id, res);
+  }
+
+  // Return one result per original tool call ID, in original order.
+  return toolCalls.map((tc) =>
+    syntheticResults.get(tc.id) ||
+    executed.get(tc.id) || {
+      toolCallId: tc.id,
+      name: tc.name,
+      success: false,
+      content: 'Tool result missing due to internal optimizer error.',
+      error: 'Tool result missing due to internal optimizer error.'
+    }
   );
-  
-  return results;
 }
 
 /**
