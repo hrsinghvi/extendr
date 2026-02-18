@@ -15,6 +15,28 @@ import type {
 } from '../types';
 import { OpenAIProvider } from './openai';
 
+interface OpenRouterResponse {
+  choices?: Array<{
+    message?: {
+      content?: string | Array<{ type?: string; text?: string }>;
+      tool_calls?: Array<{
+        id: string;
+        type: 'function';
+        function: {
+          name: string;
+          arguments: string;
+        };
+      }>;
+    };
+  }>;
+  error?: {
+    message?: string;
+    code?: number;
+  };
+}
+
+export const OPENROUTER_DEFAULT_MODEL = 'qwen/qwen3-coder';
+
 // ============================================================================
 // OpenRouter Provider Implementation
 // ============================================================================
@@ -37,7 +59,8 @@ export class OpenRouterProvider extends OpenAIProvider {
    */
   getAvailableModels(): string[] {
     return [
-      'mistralai/devstral-2512:free',
+      'qwen/qwen3-coder',
+      'qwen/qwen3-coder:free',
       'anthropic/claude-sonnet-4',
       'anthropic/claude-3.5-sonnet',
       'anthropic/claude-3-haiku',
@@ -47,14 +70,12 @@ export class OpenRouterProvider extends OpenAIProvider {
       'google/gemini-flash-1.5',
       'meta-llama/llama-3.1-70b-instruct',
       'mistralai/mistral-large',
-      'deepseek/deepseek-chat',
-      'qwen/qwen-2.5-72b-instruct'
+      'deepseek/deepseek-chat'
     ];
   }
 
   protected getDefaultModel(): string {
-    // Default to Qwen 2.5 72B as requested
-    return 'qwen/qwen-2.5-72b-instruct';
+    return OPENROUTER_DEFAULT_MODEL;
   }
 
   /**
@@ -75,7 +96,7 @@ export class OpenRouterProvider extends OpenAIProvider {
 
     try {
       // Convert messages to OpenAI format (inherited method)
-      const openaiMessages = this.convertMessagesPublic(messages, systemPrompt);
+      const openaiMessages = this.convertMessages(messages, systemPrompt);
 
       // Build request body
       const requestBody: Record<string, unknown> = {
@@ -87,7 +108,7 @@ export class OpenRouterProvider extends OpenAIProvider {
 
       // Add tools if provided
       if (tools && tools.length > 0) {
-        requestBody.tools = this.convertToolsPublic(tools);
+        requestBody.tools = this.convertTools(tools);
         requestBody.tool_choice = 'auto';
       }
 
@@ -98,13 +119,13 @@ export class OpenRouterProvider extends OpenAIProvider {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.config.apiKey}`,
-          'HTTP-Referer': window.location.origin, // Required by OpenRouter
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://localhost', // Required by OpenRouter
           'X-Title': 'Extendr' // App name for OpenRouter dashboard
         },
         body: JSON.stringify(requestBody)
       });
 
-      const data = await response.json();
+      const data: OpenRouterResponse = await response.json();
 
       if (!response.ok || data.error) {
         const errorMsg = data.error?.message || `HTTP ${response.status}`;
@@ -112,7 +133,7 @@ export class OpenRouterProvider extends OpenAIProvider {
         return this.errorResponse(errorMsg, data);
       }
 
-      return this.parseResponsePublic(data);
+      return this.parseResponse(data);
 
     } catch (error: any) {
       this.logError('Request failed', error);
@@ -121,106 +142,47 @@ export class OpenRouterProvider extends OpenAIProvider {
   }
 
   /**
-   * Public wrapper for convertMessages (since parent method is private)
+   * Parse OpenRouter responses, normalizing content that may arrive
+   * as structured blocks instead of plain strings.
    */
-  private convertMessagesPublic(messages: Message[], systemPrompt?: string) {
-    const openaiMessages: Array<{
-      role: 'system' | 'user' | 'assistant' | 'tool';
-      content: string | null;
-      tool_calls?: Array<{
-        id: string;
-        type: 'function';
-        function: { name: string; arguments: string };
-      }>;
-      tool_call_id?: string;
-    }> = [];
-
-    if (systemPrompt) {
-      openaiMessages.push({ role: 'system', content: systemPrompt });
-    }
-
-    for (const msg of messages) {
-      if (msg.role === 'system') {
-        openaiMessages.push({ role: 'system', content: msg.content });
-      } else if (msg.role === 'user') {
-        openaiMessages.push({ role: 'user', content: msg.content });
-      } else if (msg.role === 'assistant') {
-        const message: any = { role: 'assistant', content: msg.content || null };
-        if (msg.toolCalls && msg.toolCalls.length > 0) {
-          message.tool_calls = msg.toolCalls.map(tc => ({
-            id: tc.id,
-            type: 'function' as const,
-            function: {
-              name: tc.name,
-              arguments: JSON.stringify(tc.arguments)
-            }
-          }));
-        }
-        openaiMessages.push(message);
-      } else if (msg.role === 'tool' && msg.toolResult) {
-        openaiMessages.push({
-          role: 'tool',
-          content: msg.toolResult.content,
-          tool_call_id: msg.toolResult.toolCallId
-        });
-      }
-    }
-
-    return openaiMessages;
-  }
-
-  /**
-   * Public wrapper for convertTools
-   */
-  private convertToolsPublic(tools: ToolDefinition[]) {
-    return tools.map(tool => ({
-      type: 'function' as const,
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters
-      }
-    }));
-  }
-
-  /**
-   * Public wrapper for parseResponse
-   */
-  private parseResponsePublic(data: any): AIResponse {
+  protected parseResponse(data: OpenRouterResponse): AIResponse {
     const choice = data.choices?.[0];
+    const message = choice?.message;
 
-    if (!choice) {
+    if (!message) {
       return this.errorResponse('No response choice');
     }
 
-    const message = choice.message;
+    const normalizedContent = this.normalizeContent(message.content);
 
     if (message.tool_calls && message.tool_calls.length > 0) {
-      const toolCalls = message.tool_calls.map((tc: any) => ({
+      const toolCalls = message.tool_calls.map((tc) => ({
         id: tc.id,
         name: tc.function.name,
-        arguments: this.parseToolArgumentsPublic(tc.function.arguments)
+        arguments: this.parseToolArguments(tc.function.arguments)
       }));
 
-      this.log('Received tool calls', toolCalls.map((tc: any) => tc.name));
-      return this.toolCallsResponse(toolCalls, data, message.content || undefined);
+      this.log('Received tool calls', toolCalls.map(tc => tc.name));
+      return this.toolCallsResponse(toolCalls, data, normalizedContent || undefined);
     }
 
-    const content = message.content || '';
-    this.log('Received text response', content.substring(0, 100) + '...');
-    return this.textResponse(content, data);
+    this.log('Received text response', normalizedContent.substring(0, 100) + '...');
+    return this.textResponse(normalizedContent, data);
   }
 
-  /**
-   * Parse tool arguments from JSON string
-   */
-  private parseToolArgumentsPublic(argsString: string): Record<string, unknown> {
-    try {
-      return JSON.parse(argsString);
-    } catch {
-      this.logError('Failed to parse tool arguments', argsString);
-      return {};
+  private normalizeContent(content: OpenRouterResponse['choices'][number]['message']['content']): string {
+    if (typeof content === 'string') {
+      return content;
     }
+
+    if (Array.isArray(content)) {
+      return content
+        .map((part) => part.text || '')
+        .join('')
+        .trim();
+    }
+
+    return '';
   }
 }
 
@@ -231,7 +193,6 @@ export function createOpenRouterProvider(apiKey: string, model?: string): OpenRo
   return new OpenRouterProvider({
     type: 'openrouter',
     apiKey,
-    model
+    model: model || OPENROUTER_DEFAULT_MODEL
   });
 }
-

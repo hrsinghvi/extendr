@@ -8,7 +8,7 @@ import type { AIProvider, AIProviderType, ProviderConfig } from '../types';
 import { GeminiProvider, createGeminiProvider } from './gemini';
 import { OpenAIProvider, createOpenAIProvider } from './openai';
 import { ClaudeProvider, createClaudeProvider } from './claude';
-import { OpenRouterProvider, createOpenRouterProvider } from './openrouter';
+import { OpenRouterProvider, createOpenRouterProvider, OPENROUTER_DEFAULT_MODEL } from './openrouter';
 
 // ============================================================================
 // Provider Factory
@@ -142,9 +142,10 @@ export function getProviderInfoList(): ProviderInfo[] {
       displayName: 'OpenRouter',
       keyPrefix: 'sk-or-',
       keyPlaceholder: 'sk-or-...',
-      defaultModel: 'mistralai/devstral-2512:free',
+      defaultModel: OPENROUTER_DEFAULT_MODEL,
       models: [
-        'mistralai/devstral-2512:free',
+        OPENROUTER_DEFAULT_MODEL,
+        'qwen/qwen3-coder:free',
         'anthropic/claude-sonnet-4',
         'anthropic/claude-3.5-sonnet',
         'anthropic/claude-3-haiku',
@@ -153,8 +154,7 @@ export function getProviderInfoList(): ProviderInfo[] {
         'google/gemini-2.0-flash-exp:free',
         'google/gemini-flash-1.5',
         'meta-llama/llama-3.1-70b-instruct',
-        'deepseek/deepseek-chat',
-        'qwen/qwen-2.5-72b-instruct'
+        'deepseek/deepseek-chat'
       ]
     }
   ];
@@ -206,6 +206,6 @@ export {
 export {
   // OpenRouter
   OpenRouterProvider,
-  createOpenRouterProvider
+  createOpenRouterProvider,
+  OPENROUTER_DEFAULT_MODEL
 } from './openrouter';
-

@@ -22,6 +22,7 @@ import { ALL_TOOLS } from './tools';
 import { executeToolCalls, getModifiedFiles, wasBuildTriggered } from './toolExecutor';
 import { getSystemPrompt } from './systemPrompt';
 import { createProvider } from './providers';
+import { OPENROUTER_DEFAULT_MODEL } from './providers/openrouter';
 
 // ============================================================================
 // AI Service Class
@@ -262,7 +263,8 @@ export function createAIServiceFromEnv(callbacks?: {
     return new AIService({
       provider: {
         type: 'openrouter',
-        apiKey: openrouterKey
+        apiKey: openrouterKey,
+        model: OPENROUTER_DEFAULT_MODEL
       },
       ...callbacks
     });
@@ -394,4 +396,3 @@ export function createToolContext(
 // AIService class is already exported at definition
 // Re-export types for convenience
 export type { AIServiceOptions, AIServiceResult } from './types';
-

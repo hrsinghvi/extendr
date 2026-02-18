@@ -101,8 +101,10 @@ export {
   createOpenAIProvider,
   ClaudeProvider,
   createClaudeProvider,
+  OpenRouterProvider,
+  createOpenRouterProvider,
+  OPENROUTER_DEFAULT_MODEL,
   // Utilities
   BaseAIProvider,
   validateApiKey
 } from './providers';
-

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { CATEGORIES, determineCategoryFromText, type ProjectCategory } from "@/lib/categories";
 import { GradientIcon } from "./GradientIcon";
-import { createOpenRouterProvider } from "@/lib/ai/providers";
+import { createOpenRouterProvider, OPENROUTER_DEFAULT_MODEL } from "@/lib/ai/providers";
 import {
   Select,
   SelectContent,
@@ -157,8 +157,7 @@ export function RecentProjects() {
     if (!apiKey) return generateDescription(title, category);
 
     try {
-      // Use free model as requested
-      const provider = createOpenRouterProvider(apiKey, 'mistralai/mistral-7b-instruct:free');
+      const provider = createOpenRouterProvider(apiKey, OPENROUTER_DEFAULT_MODEL);
       
       const response = await provider.chat([
         { role: 'system', content: 'You are a helpful assistant that writes concise, engaging 1-sentence descriptions for Chrome extensions based on their title and category.' },

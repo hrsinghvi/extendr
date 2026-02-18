@@ -46,6 +46,7 @@ import {
   type Message as AIMessage_Type,
   type ToolContext
 } from "@/lib/ai";
+import { OPENROUTER_DEFAULT_MODEL } from "@/lib/ai/providers";
 import { determineCategoryFromText } from "@/lib/categories";
 import { buildAndDownloadExtension, type PopupDimensions } from "@/lib/export";
 
@@ -446,7 +447,8 @@ export default function Build() {
     return new AIService({
       provider: {
         type: providerType,
-        apiKey: apiKey
+        apiKey: apiKey,
+        ...(providerType === 'openrouter' ? { model: OPENROUTER_DEFAULT_MODEL } : {})
       },
       onToolCall: (tc) => {
         console.log('[Build] Tool call:', tc.name);

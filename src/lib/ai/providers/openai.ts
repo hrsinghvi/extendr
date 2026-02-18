@@ -156,7 +156,7 @@ export class OpenAIProvider extends BaseAIProvider {
   /**
    * Convert our Message format to OpenAI format
    */
-  private convertMessages(messages: Message[], systemPrompt?: string): OpenAIMessage[] {
+  protected convertMessages(messages: Message[], systemPrompt?: string): OpenAIMessage[] {
     const openaiMessages: OpenAIMessage[] = [];
 
     // Add system prompt first if provided
@@ -212,7 +212,7 @@ export class OpenAIProvider extends BaseAIProvider {
   /**
    * Convert our tool definitions to OpenAI format
    */
-  private convertTools(tools: ToolDefinition[]): OpenAITool[] {
+  protected convertTools(tools: ToolDefinition[]): OpenAITool[] {
     return tools.map(tool => ({
       type: 'function' as const,
       function: {
@@ -226,7 +226,7 @@ export class OpenAIProvider extends BaseAIProvider {
   /**
    * Parse OpenAI response into our format
    */
-  private parseResponse(data: OpenAIResponse): AIResponse {
+  protected parseResponse(data: OpenAIResponse): AIResponse {
     const choice = data.choices?.[0];
 
     if (!choice) {
@@ -256,7 +256,7 @@ export class OpenAIProvider extends BaseAIProvider {
   /**
    * Parse tool arguments from JSON string
    */
-  private parseToolArguments(argsString: string): Record<string, unknown> {
+  protected parseToolArguments(argsString: string): Record<string, unknown> {
     try {
       return JSON.parse(argsString);
     } catch {
@@ -276,4 +276,3 @@ export function createOpenAIProvider(apiKey: string, model?: string): OpenAIProv
     model
   });
 }
-
