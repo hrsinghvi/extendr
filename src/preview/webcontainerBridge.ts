@@ -591,12 +591,27 @@ export async function installDependencies(packageJsonContent?: string): Promise<
   writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Installing dependencies...\r\n');
 
   try {
-    // Use npm ci if package-lock exists (faster), otherwise npm install
-    const exitCode = await runCommand('npm', ['install', '--prefer-offline']);
-    
-    if (exitCode !== 0) {
-      reportError('npm install failed', `Exit code: ${exitCode}`);
-      return false;
+    const primary = await runCommandWithOutput('npm', ['install', '--prefer-offline', '--no-audit', '--no-fund']);
+    if (primary.exitCode !== 0) {
+      const output = primary.output || '';
+
+      // Retry for peer dependency conflicts.
+      if (/ERESOLVE|unable to resolve dependency tree/i.test(output)) {
+        writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Retrying npm install with --legacy-peer-deps...\r\n');
+        const legacy = await runCommandWithOutput('npm', ['install', '--legacy-peer-deps', '--no-audit', '--no-fund']);
+        if (legacy.exitCode !== 0) {
+          reportError('npm install failed', trimInstallOutput(legacy.output));
+          return false;
+        }
+      } else {
+        // One fallback retry without prefer-offline for registry/network edge cases.
+        writeToTerminal('\x1b[1;33m[WebContainer]\x1b[0m Retrying npm install...\r\n');
+        const retry = await runCommandWithOutput('npm', ['install', '--no-audit', '--no-fund']);
+        if (retry.exitCode !== 0) {
+          reportError('npm install failed', trimInstallOutput(retry.output));
+          return false;
+        }
+      }
     }
     
     // Cache the hash for future checks
@@ -610,6 +625,12 @@ export async function installDependencies(packageJsonContent?: string): Promise<
     reportError('Failed to install dependencies', error.message);
     return false;
   }
+}
+
+function trimInstallOutput(output: string, maxChars = 3000): string {
+  if (!output) return 'No stderr/stdout captured from npm.';
+  if (output.length <= maxChars) return output;
+  return `${output.slice(0, maxChars)}\n\n[install output truncated]`;
 }
 
 /**
@@ -681,9 +702,7 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
     // Start with all provided files
     const allFiles: FileMap = { ...files };
     
-    // Only create default package.json if not provided
-    if (!hasPackageJson) {
-      const defaultPackageJson = {
+    const defaultPackageJson = {
         name: 'extension-preview',
         private: true,
         version: '1.0.0',
@@ -709,10 +728,32 @@ export async function buildExtension(files: FileMap, installDeps = true): Promis
           'vite': '^6.0.3'
         }
       };
+
+    // Only create default package.json if not provided
+    if (!hasPackageJson) {
       allFiles['package.json'] = JSON.stringify(defaultPackageJson, null, 2);
       console.log('[WebContainer] Using default package.json with React/Tailwind');
     } else {
-      console.log('[WebContainer] Using AI-provided package.json');
+      try {
+        const parsed = JSON.parse(files['package.json']);
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('package.json is not an object');
+        }
+        const pkg = parsed as Record<string, any>;
+        pkg.name = typeof pkg.name === 'string' && pkg.name.trim() ? pkg.name : 'extension-preview';
+        pkg.private = true;
+        pkg.version = typeof pkg.version === 'string' && pkg.version.trim() ? pkg.version : '1.0.0';
+        pkg.type = typeof pkg.type === 'string' && pkg.type.trim() ? pkg.type : 'module';
+        pkg.scripts = typeof pkg.scripts === 'object' && pkg.scripts ? pkg.scripts : {};
+        if (!pkg.scripts.dev) pkg.scripts.dev = 'vite --host';
+        if (!pkg.scripts.build) pkg.scripts.build = 'vite build';
+        if (!pkg.scripts.preview) pkg.scripts.preview = 'vite preview';
+        allFiles['package.json'] = JSON.stringify(pkg, null, 2);
+        console.log('[WebContainer] Using validated AI-provided package.json');
+      } catch (error) {
+        allFiles['package.json'] = JSON.stringify(defaultPackageJson, null, 2);
+        console.warn('[WebContainer] Invalid AI-provided package.json, falling back to default');
+      }
     }
 
     // Only create default vite.config.ts if not provided

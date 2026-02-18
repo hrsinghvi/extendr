@@ -90,6 +90,7 @@ export class AIService {
 
     // Track intro text from first response (before tools execute)
     let introText = '';
+    const seenCallSignatures = new Set<string>();
 
     // Iteration loop - AI may make multiple tool calls
     let iterations = 0;
@@ -128,6 +129,9 @@ export class AIService {
         if (response.type === 'tool_calls' && response.toolCalls) {
           // Execute tool calls
           const toolCalls = response.toolCalls;
+          const optimized = this.optimizeToolCalls(toolCalls, context, seenCallSignatures);
+          const executableToolCalls = optimized.executable;
+          const skippedResults = optimized.skippedResults;
 
           // Capture intro text from first response with tool calls
           if (iterations === 1 && response.content) {
@@ -136,7 +140,7 @@ export class AIService {
           }
 
           // Notify about tool calls
-          for (const tc of toolCalls) {
+          for (const tc of executableToolCalls) {
             this.onToolCall?.(tc);
             result.toolCalls.push(tc);
           }
@@ -149,7 +153,13 @@ export class AIService {
           });
 
           // Execute tools
-          const toolResults = await executeToolCalls(toolCalls, context);
+          const executedResults = await executeToolCalls(executableToolCalls, context);
+          const byId = new Map<string, ToolResult>();
+          for (const sr of skippedResults) byId.set(sr.toolCallId, sr);
+          for (const er of executedResults) byId.set(er.toolCallId, er);
+          const toolResults = toolCalls
+            .map(tc => byId.get(tc.id))
+            .filter((x): x is ToolResult => Boolean(x));
 
           if (this.abortController?.signal.aborted) {
             throw new Error('Operation cancelled');
@@ -216,6 +226,64 @@ export class AIService {
   getProviderName(): string {
     return this.provider.displayName;
   }
+
+  private optimizeToolCalls(
+    toolCalls: ToolCall[],
+    context: ToolContext,
+    seenSignatures: Set<string>
+  ): { executable: ToolCall[]; skippedResults: ToolResult[] } {
+    const executable: ToolCall[] = [];
+    const skippedResults: ToolResult[] = [];
+    const files = context.getFiles();
+
+    for (const tc of toolCalls) {
+      const signature = `${tc.name}:${stableStringify(tc.arguments)}`;
+      if (seenSignatures.has(signature)) {
+        skippedResults.push({
+          toolCallId: tc.id,
+          name: tc.name,
+          success: true,
+          content: 'Skipped repeated tool call from previous iteration.'
+        });
+        continue;
+      }
+
+      // Skip no-op writes early to avoid wasting tool calls and UI noise.
+      if (tc.name === 'ext_write_file') {
+        const filePath = typeof tc.arguments?.file_path === 'string' ? tc.arguments.file_path : '';
+        const content = typeof tc.arguments?.content === 'string' ? tc.arguments.content : '';
+        if (filePath && files[filePath] === content) {
+          skippedResults.push({
+            toolCallId: tc.id,
+            name: tc.name,
+            success: true,
+            content: `Skipped no-op write for ${filePath} (content unchanged).`
+          });
+          seenSignatures.add(signature);
+          continue;
+        }
+      }
+
+      seenSignatures.add(signature);
+      executable.push(tc);
+    }
+
+    return { executable, skippedResults };
+  }
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    const keys = Object.keys(obj).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`;
+  }
+
+  return JSON.stringify(value);
 }
 
 // ============================================================================
