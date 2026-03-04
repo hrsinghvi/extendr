@@ -1,5 +1,5 @@
 /**
- * AI Tools - Provider-agnostic tool definitions
+ * AI    - Provider-agnostic tool definitions
  * 
  * Defines all tools the AI can use to interact with the sandbox.
  * These definitions can be converted to any provider's format.

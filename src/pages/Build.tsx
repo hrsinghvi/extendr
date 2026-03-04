@@ -46,9 +46,10 @@ import {
   type Message as AIMessage_Type,
   type ToolContext
 } from "@/lib/ai";
-import { OPENROUTER_DEFAULT_MODEL } from "@/lib/ai/providers";
 import { determineCategoryFromText } from "@/lib/categories";
 import { buildAndDownloadExtension, type PopupDimensions } from "@/lib/export";
+import { ModelSelector } from "@/components/ModelSelector";
+import { useModelConfig } from "@/hooks/useModelConfig";
 
 // Types for chat and messages (from Supabase)
 interface DBMessage {
@@ -126,6 +127,11 @@ export default function Build() {
   
   // Subscription/credits context
   const { useCredit, hasCredits, isUsingCredit } = useSubscriptionContext();
+
+  // Model hotswapping
+  const { getNextEntry, getApiKeyForProvider, currentEntry, config: modelConfig } = useModelConfig();
+  // Ref holds the currently-running AIService so cancel() works
+  const aiServiceRef = useRef<AIService | null>(null);
   
   // Ref to track files for tool context
   const extensionFilesRef = useRef<FileMap>(extensionFiles);
@@ -391,66 +397,21 @@ export default function Build() {
   }, [build, stop, status, logs, clearLogs, queueSave, saveFilesToSupabase]);
 
   /**
-   * Create AI service instance
-   * Priority: OpenRouter > Gemini > OpenAI > Claude
+   * Create an AIService for the given model entry.
+   * Returns null if the provider's API key is not configured.
    */
-  const aiService = useMemo(() => {
-    // Clean and extract API keys - handle various formats (quotes, whitespace, undefined)
-    const cleanKey = (key: string | undefined): string => {
-      if (!key) return "";
-      return key.replace(/^["'](.*)["']$/, "$1").trim();
-    };
-    
-    const openrouterKey = cleanKey(import.meta.env.VITE_OPENROUTER_API_KEY);
-    const geminiKey = cleanKey(import.meta.env.VITE_GEMINI_API_KEY);
-    const openaiKey = cleanKey(import.meta.env.VITE_OPENAI_API_KEY);
-    const claudeKey = cleanKey(import.meta.env.VITE_CLAUDE_API_KEY);
-    
-    // Debug logging - shows which keys are available (masked for security)
-    console.log('[Build] API Keys available:', {
-      openrouter: openrouterKey ? `${openrouterKey.substring(0, 10)}...` : 'NOT SET',
-      gemini: geminiKey ? `${geminiKey.substring(0, 10)}...` : 'NOT SET',
-      openai: openaiKey ? `${openaiKey.substring(0, 10)}...` : 'NOT SET',
-      claude: claudeKey ? `${claudeKey.substring(0, 10)}...` : 'NOT SET'
-    });
-    
-    let apiKey = "";
-    let providerType: 'gemini' | 'openai' | 'claude' | 'openrouter' = 'gemini';
-    
-    // Priority: OpenRouter > Gemini > OpenAI > Claude
-    // OpenRouter takes ABSOLUTE priority if available
-    if (openrouterKey && openrouterKey.length > 10) {
-      apiKey = openrouterKey;
-      providerType = 'openrouter';
-      console.log('[Build] ✓ Using OpenRouter API (priority 1)');
-    } else if (geminiKey && geminiKey.length > 10) {
-      apiKey = geminiKey;
-      providerType = 'gemini';
-      console.log('[Build] Using Gemini API (priority 2 - OpenRouter not available)');
-    } else if (openaiKey && openaiKey.length > 10) {
-      apiKey = openaiKey;
-      providerType = 'openai';
-      console.log('[Build] Using OpenAI API (priority 3)');
-    } else if (claudeKey && claudeKey.length > 10) {
-      apiKey = claudeKey;
-      providerType = 'claude';
-      console.log('[Build] Using Claude API (priority 4)');
-    }
-    
-    if (!apiKey) {
-      console.error('[Build] ❌ No valid API key configured! Check your environment variables.');
+  const createServiceForEntry = useCallback((entry: { provider: Parameters<typeof getApiKeyForProvider>[0]; model: string }) => {
+    const apiKey = getApiKeyForProvider(entry.provider);
+    if (!apiKey || apiKey.length <= 10) {
+      console.error(`[Build] ❌ No API key for provider: ${entry.provider}`);
       return null;
     }
-    
-    console.log(`[Build] Final provider: ${providerType.toUpperCase()}`);
-    
+    console.log(`[Build] Creating service: ${entry.provider} / ${entry.model}`);
     return new AIService({
       provider: {
-        type: providerType,
-        apiKey: apiKey,
-        ...(providerType === 'openrouter'
-          ? { model: OPENROUTER_DEFAULT_MODEL, temperature: 0.15, maxTokens: 8192 }
-          : {})
+        type: entry.provider,
+        apiKey,
+        model: entry.model,
       },
       onToolCall: (tc) => {
         console.log('[Build] Tool call:', tc.name);
@@ -459,9 +420,9 @@ export default function Build() {
       },
       onToolResult: (tr) => {
         console.log('[Build] Tool result:', tr.name, tr.success);
-      }
+      },
     });
-  }, []);
+  }, [getApiKeyForProvider]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -889,14 +850,18 @@ export default function Build() {
   async function sendMessage(content: string, chatId: string, userId: string) {
     if (!content.trim() || !chatId || !userId) return;
     
-    if (!aiService) {
+    // Build service for the next model in the rotation (or primary)
+    const modelEntry = getNextEntry();
+    const svc = createServiceForEntry(modelEntry);
+    if (!svc) {
       toast({
         title: "API Key Required",
-        description: "Please configure your AI API key in the .env file.",
+        description: `No API key configured for provider: ${modelEntry.provider}. Check your .env file.`,
         variant: "destructive"
       });
       return;
     }
+    aiServiceRef.current = svc;
     
     // FAST PATH: Check hasCredits immediately (already loaded in context)
     // This shows the modal instantly without waiting for network call
@@ -962,7 +927,7 @@ export default function Build() {
       }));
       
       // Call AI service with tool support
-      const result = await aiService.chat(content.trim(), aiHistory, toolContext);
+      const result = await aiServiceRef.current!.chat(content.trim(), aiHistory, toolContext);
       
       console.log('[Build] AI result:', {
         toolCalls: result.toolCalls.length,
@@ -1326,7 +1291,16 @@ export default function Build() {
           </div>
 
           {/* Chat input */}
-          <div className="p-4 border-t border-gray-800">
+          <div className="p-4 border-t border-gray-800 space-y-2">
+            {/* Model selector */}
+            <div className="flex items-center gap-2">
+              <ModelSelector />
+              {modelConfig.rotationEnabled && modelConfig.rotationModels.length > 0 && (
+                <span className="text-[10px] text-gray-500 truncate">
+                  cycling {modelConfig.rotationModels.length} models
+                </span>
+              )}
+            </div>
             <PromptInputBox
               onSend={handleSendMessage}
               isLoading={isThinking}
