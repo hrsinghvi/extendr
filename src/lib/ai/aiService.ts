@@ -91,6 +91,8 @@ export class AIService {
     // Track intro text from first response (before tools execute)
     let introText = '';
     const lastReadFileHashes = new Map<string, string>();
+    // Per-file write counter — stops runaway rewrites of the same file
+    const fileWriteCounts = new Map<string, number>();
 
     // Iteration loop - AI may make multiple tool calls
     let iterations = 0;
@@ -129,7 +131,7 @@ export class AIService {
         if (response.type === 'tool_calls' && response.toolCalls) {
           // Execute tool calls
           const toolCalls = response.toolCalls;
-          const optimized = this.optimizeToolCalls(toolCalls, context, lastReadFileHashes);
+          const optimized = this.optimizeToolCalls(toolCalls, context, lastReadFileHashes, fileWriteCounts);
           const executableToolCalls = optimized.executable;
           const skippedResults = optimized.skippedResults;
 
@@ -230,7 +232,8 @@ export class AIService {
   private optimizeToolCalls(
     toolCalls: ToolCall[],
     context: ToolContext,
-    lastReadFileHashes: Map<string, string>
+    lastReadFileHashes: Map<string, string>,
+    fileWriteCounts: Map<string, number>
   ): { executable: ToolCall[]; skippedResults: ToolResult[] } {
     const executable: ToolCall[] = [];
     const skippedResults: ToolResult[] = [];
@@ -274,10 +277,11 @@ export class AIService {
         }
       }
 
-      // Skip no-op writes to avoid wasting iterations.
       if (tc.name === 'ext_write_file') {
         const filePath = typeof tc.arguments?.file_path === 'string' ? tc.arguments.file_path : '';
         const content = typeof tc.arguments?.content === 'string' ? tc.arguments.content : '';
+
+        // Skip no-op writes (content already matches what's on disk)
         if (filePath && files[filePath] === content) {
           skippedResults.push({
             toolCallId: tc.id,
@@ -287,6 +291,23 @@ export class AIService {
           });
           seenInThisBatch.add(signature);
           continue;
+        }
+
+        // Enforce per-file write limit to stop runaway rewrites
+        if (filePath) {
+          const count = fileWriteCounts.get(filePath) ?? 0;
+          if (count >= 3) {
+            skippedResults.push({
+              toolCallId: tc.id,
+              name: tc.name,
+              success: false,
+              content: `BLOCKED: ${filePath} has already been written ${count} times this session. DO NOT write it again. Call ext_build_preview to see current errors, then use ext_replace_lines for targeted line-level fixes only.`,
+              error: 'Per-file write limit reached'
+            });
+            seenInThisBatch.add(signature);
+            continue;
+          }
+          fileWriteCounts.set(filePath, count + 1);
         }
       }
 
@@ -370,7 +391,7 @@ export function createAIServiceFromEnv(callbacks?: {
         apiKey: openrouterKey,
         model: OPENROUTER_DEFAULT_MODEL,
         temperature: 0.15,
-        maxTokens: 8192
+        maxTokens: 4096
       },
       ...callbacks
     });

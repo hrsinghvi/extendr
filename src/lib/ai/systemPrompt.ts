@@ -102,6 +102,14 @@ export default function Popup() {
 }
 \`\`\`
 
+## File Write Rules (STRICT — violations waste credits)
+
+- **Write each file AT MOST ONCE** per task. After writing a file, do NOT rewrite it unless ext_build_preview reported a specific error in it.
+- **Build first, then fix**: After writing all files, call ext_build_preview. If it fails, call ext_read_console_logs to read the exact error, then fix ONLY the broken lines using ext_replace_lines.
+- **Never rewrite a whole file to fix a small error** — use ext_replace_lines for targeted edits.
+- If a file has already been written and you want to change it, use ext_replace_lines with the specific start/end line numbers.
+- Writing the same file 3+ times in one session is FORBIDDEN and will be blocked automatically.
+
 ## Tool Calling Rules (STRICT)
 
 - **Prefer native function calling** when your model supports it — this is the fastest and most reliable path.

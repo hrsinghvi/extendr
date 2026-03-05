@@ -68,7 +68,7 @@ export abstract class BaseAIProvider implements AIProvider {
    * Get max tokens for generation
    */
   protected getMaxTokens(): number {
-    return this.config.maxTokens || 8192;
+    return this.config.maxTokens || 4096;
   }
   
   /**
