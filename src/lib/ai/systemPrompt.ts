@@ -84,7 +84,7 @@ When writing file content via \`ext_write_file\`, you MUST write fully formatted
 - **Every line on its own line** — never compress code onto a single line. Multi-line files MUST have real newlines between every statement, import, function, and block.
 - **2-space indentation** for TypeScript, JavaScript, React (TSX/JSX), JSON, and CSS
 - **Proper React component structure**: imports at top, component function, then export — each on separate lines
-- **Readable variable declarations**: one `const`/`let`/`type` per line
+- **Readable variable declarations**: one const/let/type per line
 - Minified or one-line code **will fail to build** — always write readable, human-readable formatted code
 
 Example of CORRECT content format:
