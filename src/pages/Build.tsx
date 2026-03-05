@@ -1293,22 +1293,14 @@ export default function Build() {
           </div>
 
           {/* Chat input */}
-          <div className="p-4 border-t border-gray-800 space-y-2">
-            {/* Model selector */}
-            <div className="flex items-center gap-2">
-              <ModelSelector />
-              {modelConfig.rotationEnabled && modelConfig.rotationModels.length > 0 && (
-                <span className="text-[10px] text-gray-500 truncate">
-                  cycling {modelConfig.rotationModels.length} models
-                </span>
-              )}
-            </div>
+          <div className="p-4 border-t border-gray-800">
             <PromptInputBox
               onSend={handleSendMessage}
               onStop={handleCancelAI}
               isLoading={isThinking}
               placeholder="Describe your extension idea..."
               className="bg-[#1a1a1a] border-[#3C4141] rounded-lg"
+              leftSlot={<ModelSelector />}
             />
           </div>
         </div>

@@ -38,7 +38,7 @@ export class AIService {
 
   constructor(options: AIServiceOptions) {
     this.provider = createProvider(options.provider);
-    this.maxIterations = options.maxToolIterations || 20;
+    this.maxIterations = options.maxToolIterations || 40;
     this.onToolCall = options.onToolCall;
     this.onToolResult = options.onToolResult;
     this.onStreamChunk = options.onStreamChunk;
@@ -90,7 +90,6 @@ export class AIService {
 
     // Track intro text from first response (before tools execute)
     let introText = '';
-    const seenCallSignatures = new Set<string>();
     const lastReadFileHashes = new Map<string, string>();
 
     // Iteration loop - AI may make multiple tool calls
@@ -130,7 +129,7 @@ export class AIService {
         if (response.type === 'tool_calls' && response.toolCalls) {
           // Execute tool calls
           const toolCalls = response.toolCalls;
-          const optimized = this.optimizeToolCalls(toolCalls, context, seenCallSignatures, lastReadFileHashes);
+          const optimized = this.optimizeToolCalls(toolCalls, context, lastReadFileHashes);
           const executableToolCalls = optimized.executable;
           const skippedResults = optimized.skippedResults;
 
@@ -231,15 +230,27 @@ export class AIService {
   private optimizeToolCalls(
     toolCalls: ToolCall[],
     context: ToolContext,
-    seenSignatures: Set<string>,
     lastReadFileHashes: Map<string, string>
   ): { executable: ToolCall[]; skippedResults: ToolResult[] } {
     const executable: ToolCall[] = [];
     const skippedResults: ToolResult[] = [];
     const files = context.getFiles();
+    // Only deduplicate within the same response batch (not across iterations)
+    const seenInThisBatch = new Set<string>();
 
     for (const tc of toolCalls) {
       const signature = `${tc.name}:${stableStringify(tc.arguments)}`;
+
+      // Skip exact duplicates within the same AI response
+      if (seenInThisBatch.has(signature)) {
+        skippedResults.push({
+          toolCallId: tc.id,
+          name: tc.name,
+          success: true,
+          content: 'Skipped duplicate tool call in this response.'
+        });
+        continue;
+      }
 
       if (tc.name === 'ext_read_file') {
         const filePath = typeof tc.arguments?.file_path === 'string' ? tc.arguments.file_path : '';
@@ -255,6 +266,7 @@ export class AIService {
               success: true,
               content: `Skipped repeated read for ${filePath}; file unchanged since last read.`
             });
+            seenInThisBatch.add(signature);
             continue;
           }
 
@@ -262,17 +274,7 @@ export class AIService {
         }
       }
 
-      if (seenSignatures.has(signature)) {
-        skippedResults.push({
-          toolCallId: tc.id,
-          name: tc.name,
-          success: true,
-          content: 'Skipped repeated tool call from previous iteration.'
-        });
-        continue;
-      }
-
-      // Skip no-op writes early to avoid wasting tool calls and UI noise.
+      // Skip no-op writes to avoid wasting iterations.
       if (tc.name === 'ext_write_file') {
         const filePath = typeof tc.arguments?.file_path === 'string' ? tc.arguments.file_path : '';
         const content = typeof tc.arguments?.content === 'string' ? tc.arguments.content : '';
@@ -283,12 +285,12 @@ export class AIService {
             success: true,
             content: `Skipped no-op write for ${filePath} (content unchanged).`
           });
-          seenSignatures.add(signature);
+          seenInThisBatch.add(signature);
           continue;
         }
       }
 
-      seenSignatures.add(signature);
+      seenInThisBatch.add(signature);
       executable.push(tc);
     }
 

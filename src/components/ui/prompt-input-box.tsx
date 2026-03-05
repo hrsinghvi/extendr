@@ -366,9 +366,10 @@ interface PromptInputBoxProps {
   placeholder?: string;
   className?: string;
   textareaClassName?: string;
+  leftSlot?: React.ReactNode;
 }
 export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref: React.Ref<HTMLDivElement>) => {
-  const { onSend = () => { }, onStop, isLoading = false, placeholder = "Type your message here...", className, textareaClassName } = props;
+  const { onSend = () => { }, onStop, isLoading = false, placeholder = "Type your message here...", className, textareaClassName, leftSlot } = props;
   const [input, setInput] = React.useState("");
   const [files, setFiles] = React.useState<File[]>([]);
   const [filePreviews, setFilePreviews] = React.useState<{ [key: string]: string }>({});
@@ -597,6 +598,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               </button>
             </PromptInputAction>
 
+            {leftSlot}
           </div>
 
           <PromptInputAction
