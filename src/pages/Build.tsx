@@ -128,8 +128,8 @@ export default function Build() {
   // Subscription/credits context
   const { useCredit, hasCredits, isUsingCredit } = useSubscriptionContext();
 
-  // Model hotswapping
-  const { getNextEntry, getApiKeyForProvider, currentEntry, config: modelConfig } = useModelConfig();
+  // Model hotswapping — single source of truth; props passed down to ModelSelector
+  const { getNextEntry, getApiKeyForProvider, setPrimary, config: modelConfig } = useModelConfig();
   // Ref holds the currently-running AIService so cancel() works
   const aiServiceRef = useRef<AIService | null>(null);
   
@@ -1300,7 +1300,13 @@ export default function Build() {
               isLoading={isThinking}
               placeholder="Describe your extension idea..."
               className="bg-[#1a1a1a] border-[#3C4141] rounded-lg"
-              leftSlot={<ModelSelector />}
+              leftSlot={
+                <ModelSelector
+                  config={modelConfig}
+                  setPrimary={setPrimary}
+                  getApiKeyForProvider={getApiKeyForProvider}
+                />
+              }
             />
           </div>
         </div>
