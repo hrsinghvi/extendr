@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import type { AIProviderType } from '@/lib/ai/types';
+import { OPENROUTER_DEFAULT_MODEL } from '@/lib/ai';
 
 // ============================================================================
 // Types
@@ -83,7 +84,7 @@ export const PROVIDER_DISPLAY_NAMES: Record<AIProviderType, string> = {
 };
 
 export const DEFAULT_MODELS: Record<AIProviderType, string> = {
-  openrouter: 'qwen/qwen3-coder',
+  openrouter: OPENROUTER_DEFAULT_MODEL,
   gemini: 'gemini-2.0-flash',
   openai: 'gpt-4o-mini',
   claude: 'claude-sonnet-4-20250514',

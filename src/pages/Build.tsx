@@ -49,7 +49,7 @@ import {
 import { determineCategoryFromText } from "@/lib/categories";
 import { buildAndDownloadExtension, type PopupDimensions } from "@/lib/export";
 import { ModelSelector } from "@/components/ModelSelector";
-import { useModelConfig } from "@/hooks/useModelConfig";
+import { useModelConfig, type ModelEntry } from "@/hooks/useModelConfig";
 
 // Types for chat and messages (from Supabase)
 interface DBMessage {
@@ -400,7 +400,7 @@ export default function Build() {
    * Create an AIService for the given model entry.
    * Returns null if the provider's API key is not configured.
    */
-  const createServiceForEntry = useCallback((entry: { provider: Parameters<typeof getApiKeyForProvider>[0]; model: string }) => {
+  const createServiceForEntry = useCallback((entry: ModelEntry) => {
     const apiKey = getApiKeyForProvider(entry.provider);
     if (!apiKey || apiKey.length <= 10) {
       console.error(`[Build] ❌ No API key for provider: ${entry.provider}`);
@@ -992,6 +992,16 @@ export default function Build() {
   }
 
   /**
+   * Cancel an in-flight AI request
+   */
+  const handleCancelAI = useCallback(() => {
+    aiServiceRef.current?.cancel();
+    setIsThinking(false);
+    setCurrentToolCalls([]);
+    setThinkingMessage("Thinking...");
+  }, []);
+
+  /**
    * Handle file changes from the editor
    * Saves to Supabase immediately
    */
@@ -1295,6 +1305,7 @@ export default function Build() {
             </div>
             <PromptInputBox
               onSend={handleSendMessage}
+              onStop={handleCancelAI}
               isLoading={isThinking}
               placeholder="Describe your extension idea..."
               className="bg-[#1a1a1a] border-[#3C4141] rounded-lg"
