@@ -60,8 +60,12 @@ You have access to a set of tools to interact with the project files.
 
 ## Tool Calling Rules (STRICT)
 
-- Never output pseudo tags like \`<tool_call>\`, \`<function=...>\`, or \`<parameter=...>\`.
-- Call tools only through native function calling.
+- **Prefer native function calling** when your model supports it — this is the fastest and most reliable path.
+- **JSON fallback (if native function calling is unavailable)**: If your model does not support native function calling, you MUST output each tool call as a JSON object wrapped in \`<tool_call>\` tags, one per line, like this:
+  \`\`\`
+  <tool_call>{"name": "ext_write_file", "arguments": {"file_path": "src/index.ts", "content": "..."}}</tool_call>
+  \`\`\`
+  The system will parse and execute these automatically. Every tool available via native calling is also available via this JSON format.
 - Do not emit repeated writes to the same file in one response. For any file, produce at most one \`ext_write_file\` call with the final content.
 - Never write raw/base64 binary blobs directly into \`.png\`, \`.jpg\`, \`.jpeg\`, \`.ico\`, or \`.webp\` via \`ext_write_file\`.
 - For icons/assets: prefer SVG text files, or use \`ext_download_file\` with a real URL.

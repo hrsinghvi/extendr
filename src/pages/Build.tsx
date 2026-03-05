@@ -863,35 +863,12 @@ export default function Build() {
     }
     aiServiceRef.current = svc;
     
-    // FAST PATH: Check hasCredits immediately (already loaded in context)
-    // This shows the modal instantly without waiting for network call
+    // FAST PATH: Check hasCredits immediately (no network call, just checks cached state)
     if (!hasCredits) {
       setShowOutOfCreditsModal(true);
       return;
     }
-    
-    // Use credit (deduct from balance) - only called if we have credits
-    try {
-      const creditResult = await useCredit();
-      
-      // Double-check the result (edge case: race condition where credits depleted)
-      if (!creditResult.allowed) {
-        setShowOutOfCreditsModal(true);
-        return;
-      }
-      
-      console.log('[Build] Credit used:', creditResult.message, 
-        `Daily: ${creditResult.dailyRemaining}, Monthly: ${creditResult.monthlyRemaining}`);
-    } catch (creditError) {
-      console.error('[Build] Credit check error:', creditError);
-      toast({
-        title: "Credit Check Failed",
-        description: "Unable to verify credits. Please try again.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+
     setIsThinking(true);
     setCurrentToolCalls([]);
     setThinkingMessage("Thinking...");
@@ -928,7 +905,22 @@ export default function Build() {
       
       // Call AI service with tool support
       const result = await aiServiceRef.current!.chat(content.trim(), aiHistory, toolContext);
-      
+
+      // Deduct credit AFTER the AI call succeeds so failed requests aren't charged.
+      // If useCredit throws or returns !allowed, still show the AI response but
+      // flag that credits are exhausted so the next message is blocked.
+      try {
+        const creditResult = await useCredit();
+        if (!creditResult.allowed) {
+          setShowOutOfCreditsModal(true);
+        } else {
+          console.log('[Build] Credit used:', creditResult.message,
+            `Daily: ${creditResult.dailyRemaining}, Monthly: ${creditResult.monthlyRemaining}`);
+        }
+      } catch (creditError) {
+        console.error('[Build] Credit deduction error (non-fatal):', creditError);
+      }
+
       console.log('[Build] AI result:', {
         toolCalls: result.toolCalls.length,
         modifiedFiles: result.modifiedFiles,

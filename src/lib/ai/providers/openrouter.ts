@@ -215,7 +215,26 @@ export class OpenRouterProvider extends OpenAIProvider {
 
     const blocks = [...content.matchAll(TOOL_CALL_BLOCK_REGEX)];
     for (const match of blocks) {
-      const block = match[1] || '';
+      const block = (match[1] || '').trim();
+
+      // --- JSON format: <tool_call>{"name": "...", "arguments": {...}}</tool_call> ---
+      if (block.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(block) as { name?: string; arguments?: Record<string, unknown> };
+          if (parsed.name) {
+            calls.push({
+              id: this.generateId(),
+              name: parsed.name,
+              arguments: parsed.arguments || {}
+            });
+            continue;
+          }
+        } catch {
+          // fall through to XML parser
+        }
+      }
+
+      // --- XML format: <function=name><parameter=key>value</parameter></function> ---
       const fnMatch = block.match(TOOL_FUNCTION_REGEX);
       const name = fnMatch?.[1]?.trim();
       if (!name) continue;
