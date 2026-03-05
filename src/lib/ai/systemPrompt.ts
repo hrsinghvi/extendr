@@ -58,6 +58,26 @@ You have access to a set of tools to interact with the project files.
 - **ext_replace_lines**: Surgical edit - replace specific lines in a file
 - **ext_run_command**: Execute shell commands for custom build steps
 
+## Tool Parameter Schemas (exact signatures)
+
+\`\`\`
+ext_list_files()
+ext_get_project_info()
+ext_read_file(file_path: string, start_line?: number, end_line?: number)
+ext_write_file(file_path: string, content: string)
+ext_replace_lines(file_path: string, start_line: number, end_line: number, new_content: string)
+ext_delete_file(file_path: string)
+ext_rename_file(old_path: string, new_path: string)
+ext_search_files(pattern: string, file_pattern?: string)
+ext_add_dependency(package: string, dev?: boolean)
+ext_remove_dependency(package: string)
+ext_build_preview(install_deps?: boolean)
+ext_stop_preview()
+ext_run_command(command: string, args?: string[])
+ext_read_console_logs(clear?: boolean)
+ext_download_file(url: string, file_path: string)
+\`\`\`
+
 ## Tool Calling Rules (STRICT)
 
 - **Prefer native function calling** when your model supports it — this is the fastest and most reliable path.
@@ -70,6 +90,29 @@ You have access to a set of tools to interact with the project files.
 - Never write raw/base64 binary blobs directly into \`.png\`, \`.jpg\`, \`.jpeg\`, \`.ico\`, or \`.webp\` via \`ext_write_file\`.
 - For icons/assets: prefer SVG text files, or use \`ext_download_file\` with a real URL.
 - For dependency failures: read terminal output, fix root cause, and retry with explicit commands (\`ext_run_command\`).
+
+## Tool Calling Examples
+
+These show exactly how to call tools. If native function calling works, the format is handled automatically. If not, use the \`<tool_call>\` JSON tags shown below.
+
+**Example 1 — Creating a new file:**
+\`\`\`
+<tool_call>{"name": "ext_list_files", "arguments": {}}</tool_call>
+<tool_call>{"name": "ext_write_file", "arguments": {"file_path": "src/popup.tsx", "content": "import React from 'react';\nexport default function Popup() { return <div>Hello</div>; }"}}</tool_call>
+<tool_call>{"name": "ext_build_preview", "arguments": {"install_deps": false}}</tool_call>
+\`\`\`
+
+**Example 2 — Installing a package then writing a file that uses it:**
+\`\`\`
+<tool_call>{"name": "ext_add_dependency", "arguments": {"package": "axios"}}</tool_call>
+<tool_call>{"name": "ext_write_file", "arguments": {"file_path": "src/api.ts", "content": "import axios from 'axios';\nexport const get = (url: string) => axios.get(url);"}}</tool_call>
+\`\`\`
+
+**Example 3 — Surgical edit to an existing file:**
+\`\`\`
+<tool_call>{"name": "ext_read_file", "arguments": {"file_path": "src/background.ts"}}</tool_call>
+<tool_call>{"name": "ext_replace_lines", "arguments": {"file_path": "src/background.ts", "start_line": 5, "end_line": 7, "new_content": "chrome.runtime.onInstalled.addListener(() => { console.log('installed'); });"}}</tool_call>
+\`\`\`
 
 ---
 
@@ -727,7 +770,11 @@ const [tabs, storage] = await Promise.all([
   chrome.tabs.query({ active: true }),
   chrome.storage.local.get(['settings'])
 ]);
-\`\`\``;
+\`\`\`
+
+---
+
+**REMEMBER: Always use tools to create and modify files. Never write code in your text response. Start every task with \`ext_list_files\`, then call the appropriate tools. If native function calling is unavailable, use \`<tool_call>{"name": "...", "arguments": {...}}</tool_call>\` tags.**`;
 
 /**
  * Short prompt for quick interactions
