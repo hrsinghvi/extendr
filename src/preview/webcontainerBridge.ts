@@ -1026,8 +1026,26 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       }
     }
 
-    // Step 4: Start dev server
+    // Step 4: Start dev server (with timeout watchdog)
     await startDevServer();
+
+    // Watchdog: if server-ready hasn't fired within 90s, surface an error
+    // instead of hanging at "Building your extension..." forever.
+    const watchdog = setTimeout(() => {
+      if (!serverUrl) {
+        reportError(
+          'Dev server timed out',
+          'Vite did not start within 90 seconds. The generated code may have a syntax error. Check the terminal output for details.'
+        );
+      }
+    }, 90_000);
+    // Clear watchdog once server is up (polled cheaply)
+    const pollInterval = setInterval(() => {
+      if (serverUrl) {
+        clearTimeout(watchdog);
+        clearInterval(pollInterval);
+      }
+    }, 500);
 
   } catch (error: any) {
     reportError('Build failed', error.message);

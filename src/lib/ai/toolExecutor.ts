@@ -81,14 +81,42 @@ function looksLikeRawBase64(content: string): boolean {
 // Tool Handler Implementations
 // ============================================================================
 
+const CODE_FILE_RE = /\.(tsx?|jsx?|css|html?|json|md|sh|ya?ml|toml|env)$/i;
+
+/**
+ * Normalize content that models sometimes write with literal \n escape sequences
+ * instead of actual newline characters. This happens when models double-escape
+ * their JSON output (\\n becomes \n after JSON.parse, not an actual newline).
+ */
+function normalizeFileContent(content: string, filePath: string): string {
+  if (!CODE_FILE_RE.test(filePath)) return content;
+
+  const actualNewlines = (content.match(/\n/g) || []).length;
+  const literalEscapes = (content.match(/\\n/g) || []).length;
+
+  // If there are literal \n sequences but NO (or very few) real newlines,
+  // the model double-escaped its output. Convert them to real newlines.
+  if (literalEscapes > 2 && literalEscapes >= actualNewlines * 2) {
+    return content
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\r/g, '');
+  }
+
+  return content;
+}
+
 /**
  * ext_write_file - Write or create a file
  */
 const handleWriteFile: ToolHandler = async (args, context) => {
-  const { file_path, content } = args as { file_path: string; content: string };
+  const { file_path, content: rawContent } = args as { file_path: string; content: string };
   const id = generateToolCallId();
-  
+
   try {
+    // Normalize escape sequences that models sometimes output verbatim
+    const content = normalizeFileContent(rawContent ?? '', file_path ?? '');
+
     const current = context.getFiles()[file_path];
     if (current === content) {
       return successResult(id, TOOL_NAMES.WRITE_FILE, `No-op: ${file_path} already has identical content`);
@@ -105,12 +133,12 @@ const handleWriteFile: ToolHandler = async (args, context) => {
 
     // Write to WebContainer
     await context.writeFile(file_path, content);
-    
+
     // Update React state
     context.updateFile(file_path, content);
-    
+
     context.writeToTerminal(`\x1b[32m✓\x1b[0m Created/updated: ${file_path}\r\n`);
-    
+
     return successResult(id, TOOL_NAMES.WRITE_FILE, `Successfully wrote ${file_path} (${content.length} bytes)`);
   } catch (error: any) {
     return errorResult(id, TOOL_NAMES.WRITE_FILE, error.message);

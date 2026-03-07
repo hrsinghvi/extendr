@@ -195,18 +195,23 @@ export class OpenRouterProvider extends OpenAIProvider {
   }
 
   private normalizeContent(content: OpenRouterResponse['choices'][number]['message']['content']): string {
-    if (typeof content === 'string') {
-      return content;
-    }
+    let text = '';
 
-    if (Array.isArray(content)) {
-      return content
+    if (typeof content === 'string') {
+      text = content;
+    } else if (Array.isArray(content)) {
+      // Skip thinking/reasoning blocks — only concatenate actual text parts
+      text = content
+        .filter((part) => !part.type || part.type === 'text')
         .map((part) => part.text || '')
         .join('')
         .trim();
     }
 
-    return '';
+    // Strip <think>...</think> blocks that qwen3-coder injects into text
+    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+    return text;
   }
 
   private parsePseudoToolCalls(content: string) {
