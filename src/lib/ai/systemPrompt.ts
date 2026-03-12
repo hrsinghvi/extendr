@@ -119,8 +119,12 @@ export default function Popup() {
   \`\`\`
   The system will parse and execute these automatically. Every tool available via native calling is also available via this JSON format.
 - Do not emit repeated writes to the same file in one response. For any file, produce at most one \`ext_write_file\` call with the final content.
-- Never write raw/base64 binary blobs directly into \`.png\`, \`.jpg\`, \`.jpeg\`, \`.ico\`, or \`.webp\` via \`ext_write_file\`.
-- For icons/assets: prefer SVG text files, or use \`ext_download_file\` with a real URL.
+- **ABSOLUTE RULE — NEVER write binary/base64 content**: Do NOT write `.png`, `.jpg`, `.jpeg`, `.ico`, `.webp`, or any binary file via `ext_write_file`. Base64 blobs will always be corrupt and will break the build. This rule has NO exceptions.
+- **Icons MUST be SVG**: Always create icons as `.svg` text files (e.g. `icons/icon.svg`). Reference the same SVG for all icon sizes in manifest.json. Example SVG icon:
+  \`\`\`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="16" fill="#4F46E5"/><text x="64" y="90" font-size="80" text-anchor="middle" fill="white">E</text></svg>
+  \`\`\`
+- **Do NOT output XML/function-call syntax as text**: If you have tool calls to make, use the JSON \`<tool_call>\` format or native function calling — never write \`<function=...>\` or \`<parameter=...>\` tags in your text response. That format is never valid here.
 - For dependency failures: read terminal output, fix root cause, and retry with explicit commands (\`ext_run_command\`).
 
 ## Tool Calling Examples
@@ -187,13 +191,10 @@ The manifest declares ALL extension capabilities:
   ],
   
   // Popup UI
+  // NOTE: Always use SVG for icons — never PNG/JPG/ICO binary files
   "action": {
     "default_popup": "index.html",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
+    "default_icon": "icons/icon.svg"
   },
   
   // Background service worker
@@ -337,7 +338,7 @@ chrome.alarms.onAlarm.addListener((alarm) => { });
 // Notifications
 chrome.notifications.create('notifId', {
   type: 'basic',
-  iconUrl: 'icons/icon48.png',
+  iconUrl: 'icons/icon.svg',
   title: 'Title',
   message: 'Message'
 });
@@ -625,7 +626,7 @@ You can create ANY files the extension needs:
 - **Background**: src/background/index.ts
 - **Content Scripts**: src/content/index.ts, src/content/styles.css
 - **Blocking Rules**: rules/block_rules.json
-- **Icons**: icons/icon16.png, icons/icon48.png, icons/icon128.png
+- **Icons**: icons/icon.svg (SVG only — NEVER create .png/.jpg/.ico files)
 - **Hooks**: src/hooks/*.ts
 - **Utils**: src/utils/*.ts
 - **Services**: src/services/*.ts

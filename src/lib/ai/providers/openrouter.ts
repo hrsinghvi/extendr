@@ -211,6 +211,11 @@ export class OpenRouterProvider extends OpenAIProvider {
     // Strip <think>...</think> blocks that qwen3-coder injects into text
     text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
+    // Strip any unclosed <tool_call> blocks (these occur when the response
+    // was truncated at the token limit before the closing </tool_call> tag).
+    // Without this, raw XML leaks into the chat as the final response text.
+    text = text.replace(/<tool_call>(?:(?!<\/tool_call>)[\s\S])*$/i, '').trim();
+
     return text;
   }
 
