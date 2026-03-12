@@ -47,6 +47,7 @@ import {
   type ToolContext
 } from "@/lib/ai";
 import { determineCategoryFromText } from "@/lib/categories";
+import { getScaffoldFiles } from "@/lib/defaultScaffold";
 import { buildAndDownloadExtension, type PopupDimensions } from "@/lib/export";
 import { ModelSelector } from "@/components/ModelSelector";
 import { useModelConfig, type ModelEntry } from "@/hooks/useModelConfig";
@@ -86,10 +87,10 @@ interface Project {
 
 /**
  * Get default extension files
- * Returns empty to let the AI create everything from scratch
+ * Returns scaffold boilerplate so the AI only needs to write extension-specific files
  */
 function getDefaultExtensionFiles(): FileMap {
-  return {};
+  return getScaffoldFiles();
 }
 
 export default function Build() {
@@ -826,19 +827,23 @@ export default function Build() {
     console.log('[Init] === LOADING PROJECT FILES ===');
     
     // Step 1: Load files from Supabase
-    const files = await loadFilesFromSupabase(projectId);
-    
-    // Step 2: Update React state
+    const savedFiles = await loadFilesFromSupabase(projectId);
+
+    // Step 2: Merge with scaffold defaults (scaffold provides boilerplate; saved files override)
+    const scaffold = getScaffoldFiles();
+    const files = Object.keys(savedFiles).length > 0 ? savedFiles : { ...scaffold };
+
+    // Step 3: Update React state
     setExtensionFiles(files);
     extensionFilesRef.current = files;
-    
-    // Step 3: If we have files, restore them to WebContainer
+
+    // Step 4: If we have files, restore them to WebContainer
     if (Object.keys(files).length > 0) {
       console.log('[Init] Restoring files to WebContainer...');
       await restoreFilesToWebContainer(files);
       // Auto-build will be triggered by the useEffect below
     }
-    
+
     console.log('[Init] === PROJECT FILES READY ===');
     return files;
   }

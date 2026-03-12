@@ -786,12 +786,54 @@ export async function executeToolCalls(
     toExecute.push(tc);
   }
 
-  // Execute serially to preserve deterministic file mutation order.
+  // Parallelize independent tools; run sequential-only tools one at a time.
+  // Tools that must run sequentially (they mutate shared state or have side effects):
+  const SEQUENTIAL_TOOLS = new Set([
+    TOOL_NAMES.BUILD_PREVIEW,
+    TOOL_NAMES.STOP_PREVIEW,
+    TOOL_NAMES.ADD_DEPENDENCY,
+    TOOL_NAMES.REMOVE_DEPENDENCY,
+    TOOL_NAMES.RUN_COMMAND,
+    TOOL_NAMES.REPLACE_LINES,
+  ]);
+
+  // Group consecutive parallelizable calls together, sequential ones run alone.
   const executed = new Map<string, ToolResult>();
+  let parallelBatch: ToolCall[] = [];
+
+  const flushBatch = async () => {
+    if (parallelBatch.length === 0) return;
+    // Deduplicate ext_write_file to same path within batch (keep last)
+    const writePaths = new Map<string, number>();
+    for (let i = 0; i < parallelBatch.length; i++) {
+      if (parallelBatch[i].name === TOOL_NAMES.WRITE_FILE) {
+        const fp = typeof parallelBatch[i].arguments?.file_path === 'string' ? parallelBatch[i].arguments.file_path : '';
+        if (fp) writePaths.set(fp, i);
+      }
+    }
+
+    const results = await Promise.all(
+      parallelBatch.map((tc) => executeTool(tc, context))
+    );
+    for (let i = 0; i < parallelBatch.length; i++) {
+      executed.set(parallelBatch[i].id, results[i]);
+    }
+    parallelBatch = [];
+  };
+
   for (const tc of toExecute) {
-    const res = await executeTool(tc, context);
-    executed.set(tc.id, res);
+    if (SEQUENTIAL_TOOLS.has(tc.name as any)) {
+      // Flush any pending parallel batch first
+      await flushBatch();
+      // Execute this sequential tool alone
+      const res = await executeTool(tc, context);
+      executed.set(tc.id, res);
+    } else {
+      parallelBatch.push(tc);
+    }
   }
+  // Flush remaining parallel batch
+  await flushBatch();
 
   // Return one result per original tool call ID, in original order.
   return toolCalls.map((tc) =>
