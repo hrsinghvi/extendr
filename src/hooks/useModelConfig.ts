@@ -74,6 +74,14 @@ export const PROVIDER_MODELS: Record<AIProviderType, string[]> = {
     'deepseek-chat',
     'deepseek-coder',
   ],
+  huggingface: [
+    'deepseek-ai/DeepSeek-Coder-V2-Instruct',
+    'Qwen/Qwen2.5-Coder-32B-Instruct',
+    'mistralai/Mistral-Small-24B-Instruct-2501',
+    'meta-llama/Llama-3.3-70B-Instruct',
+    'mistralai/Devstral-Small-2505',
+    'Qwen/Qwen3-235B-A22B',
+  ],
 };
 
 export const PROVIDER_DISPLAY_NAMES: Record<AIProviderType, string> = {
@@ -82,6 +90,7 @@ export const PROVIDER_DISPLAY_NAMES: Record<AIProviderType, string> = {
   openai: 'OpenAI',
   claude: 'Anthropic Claude',
   deepseek: 'DeepSeek',
+  huggingface: 'Hugging Face',
 };
 
 export const DEFAULT_MODELS: Record<AIProviderType, string> = {
@@ -90,6 +99,7 @@ export const DEFAULT_MODELS: Record<AIProviderType, string> = {
   openai: 'gpt-5-mini-2025-08-07',
   claude: 'claude-sonnet-4-20250514',
   deepseek: 'deepseek-chat',
+  huggingface: 'deepseek-ai/DeepSeek-Coder-V2-Instruct',
 };
 
 // Ordered list of all supported providers (add new ones here)
@@ -99,6 +109,7 @@ export const ALL_PROVIDERS: AIProviderType[] = [
   'openai',
   'claude',
   'deepseek',
+  'huggingface',
 ];
 
 // ============================================================================
@@ -117,6 +128,7 @@ export function getApiKeyForProvider(provider: AIProviderType): string {
     case 'openai': return cleanKey(import.meta.env.VITE_OPENAI_API_KEY);
     case 'claude': return cleanKey(import.meta.env.VITE_CLAUDE_API_KEY);
     case 'deepseek': return cleanKey(import.meta.env.VITE_DEEPSEEK_API_KEY);
+    case 'huggingface': return cleanKey(import.meta.env.VITE_HUGGINGFACE_API_KEY);
     default: return '';
   }
 }

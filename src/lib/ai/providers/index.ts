@@ -33,6 +33,12 @@ export function createProvider(config: ProviderConfig): AIProvider {
       });
     case 'openrouter':
       return new OpenRouterProvider(config);
+    case 'huggingface':
+      // Hugging Face uses OpenAI-compatible Inference API
+      return new OpenAIProvider({
+        ...config,
+        baseUrl: config.baseUrl || 'https://api-inference.huggingface.co/v1'
+      });
     default:
       throw new Error(`Unknown provider type: ${config.type}`);
   }
@@ -138,6 +144,21 @@ export function getProviderInfoList(): ProviderInfo[] {
       ]
     },
     {
+      type: 'huggingface',
+      displayName: 'Hugging Face',
+      keyPrefix: 'hf_',
+      keyPlaceholder: 'hf_...',
+      defaultModel: 'deepseek-ai/DeepSeek-Coder-V2-Instruct',
+      models: [
+        'deepseek-ai/DeepSeek-Coder-V2-Instruct',
+        'Qwen/Qwen2.5-Coder-32B-Instruct',
+        'mistralai/Mistral-Small-24B-Instruct-2501',
+        'meta-llama/Llama-3.3-70B-Instruct',
+        'mistralai/Devstral-Small-2505',
+        'Qwen/Qwen3-235B-A22B',
+      ]
+    },
+    {
       type: 'openrouter',
       displayName: 'OpenRouter',
       keyPrefix: 'sk-or-',
@@ -171,7 +192,7 @@ export function getProviderInfo(type: AIProviderType): ProviderInfo | undefined 
  * Check if a provider type is supported
  */
 export function isProviderSupported(type: string): type is AIProviderType {
-  return ['gemini', 'openai', 'claude', 'deepseek', 'openrouter'].includes(type);
+  return ['gemini', 'openai', 'claude', 'deepseek', 'openrouter', 'huggingface'].includes(type);
 }
 
 // ============================================================================
