@@ -34,10 +34,10 @@ export function createProvider(config: ProviderConfig): AIProvider {
     case 'openrouter':
       return new OpenRouterProvider(config);
     case 'huggingface':
-      // Hugging Face uses OpenAI-compatible Inference API
+      // Hugging Face Inference Providers — OpenAI-compatible router
       return new OpenAIProvider({
         ...config,
-        baseUrl: config.baseUrl || 'https://api-inference.huggingface.co/v1'
+        baseUrl: config.baseUrl || 'https://router.huggingface.co/v1'
       });
     default:
       throw new Error(`Unknown provider type: ${config.type}`);
@@ -148,14 +148,13 @@ export function getProviderInfoList(): ProviderInfo[] {
       displayName: 'Hugging Face',
       keyPrefix: 'hf_',
       keyPlaceholder: 'hf_...',
-      defaultModel: 'deepseek-ai/DeepSeek-Coder-V2-Instruct',
+      defaultModel: 'Qwen/Qwen2.5-Coder-32B-Instruct',
       models: [
-        'deepseek-ai/DeepSeek-Coder-V2-Instruct',
         'Qwen/Qwen2.5-Coder-32B-Instruct',
-        'mistralai/Mistral-Small-24B-Instruct-2501',
         'meta-llama/Llama-3.3-70B-Instruct',
-        'mistralai/Devstral-Small-2505',
         'Qwen/Qwen3-235B-A22B',
+        'deepseek-ai/DeepSeek-R1',
+        'deepseek-ai/DeepSeek-V3.2',
       ]
     },
     {

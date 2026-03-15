@@ -75,12 +75,11 @@ export const PROVIDER_MODELS: Record<AIProviderType, string[]> = {
     'deepseek-coder',
   ],
   huggingface: [
-    'deepseek-ai/DeepSeek-Coder-V2-Instruct',
     'Qwen/Qwen2.5-Coder-32B-Instruct',
-    'mistralai/Mistral-Small-24B-Instruct-2501',
     'meta-llama/Llama-3.3-70B-Instruct',
-    'mistralai/Devstral-Small-2505',
     'Qwen/Qwen3-235B-A22B',
+    'deepseek-ai/DeepSeek-R1',
+    'deepseek-ai/DeepSeek-V3.2',
   ],
 };
 
@@ -99,7 +98,7 @@ export const DEFAULT_MODELS: Record<AIProviderType, string> = {
   openai: 'gpt-5-mini-2025-08-07',
   claude: 'claude-sonnet-4-20250514',
   deepseek: 'deepseek-chat',
-  huggingface: 'deepseek-ai/DeepSeek-Coder-V2-Instruct',
+  huggingface: 'Qwen/Qwen2.5-Coder-32B-Instruct',
 };
 
 // Ordered list of all supported providers (add new ones here)

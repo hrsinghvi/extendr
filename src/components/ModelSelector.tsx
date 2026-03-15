@@ -101,7 +101,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
         </div>
 
         {/* Provider tabs */}
-        <div className="flex gap-1 px-3 py-2 border-b border-[#2a2a2a] overflow-x-auto">
+        <div className="flex gap-1 px-3 py-2 border-b border-[#2a2a2a] overflow-x-auto scrollbar-none">
           {ALL_PROVIDERS.map(p => {
             const available = getApiKeyForProvider(p).length > 10;
             const isActive = activeProvider === p;
