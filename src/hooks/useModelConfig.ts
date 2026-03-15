@@ -56,6 +56,7 @@ export const PROVIDER_MODELS: Record<AIProviderType, string[]> = {
     'gemini-1.5-flash-8b',
   ],
   openai: [
+    'gpt-5-mini-2025-08-07',
     'gpt-4o',
     'gpt-4o-mini',
     'gpt-4-turbo',
@@ -86,7 +87,7 @@ export const PROVIDER_DISPLAY_NAMES: Record<AIProviderType, string> = {
 export const DEFAULT_MODELS: Record<AIProviderType, string> = {
   openrouter: OPENROUTER_DEFAULT_MODEL,
   gemini: 'gemini-2.0-flash',
-  openai: 'gpt-4o-mini',
+  openai: 'gpt-5-mini-2025-08-07',
   claude: 'claude-sonnet-4-20250514',
   deepseek: 'deepseek-chat',
 };

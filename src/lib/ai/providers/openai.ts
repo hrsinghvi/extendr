@@ -82,6 +82,7 @@ export class OpenAIProvider extends BaseAIProvider {
    */
   getAvailableModels(): string[] {
     return [
+      'gpt-5-mini-2025-08-07',
       'gpt-4o',
       'gpt-4o-mini',
       'gpt-4-turbo',
@@ -91,7 +92,7 @@ export class OpenAIProvider extends BaseAIProvider {
   }
 
   protected getDefaultModel(): string {
-    return 'gpt-4o-mini';
+    return 'gpt-5-mini-2025-08-07';
   }
 
   /**

@@ -6,11 +6,14 @@ import { AuthModal } from "./AuthModal";
 import { useNavigate } from "react-router-dom";
 import { RecentProjects } from "./RecentProjects";
 import { useAuth } from "@/context/AuthContext";
+import { ModelSelector } from "./ModelSelector";
+import { useModelConfig } from "@/hooks/useModelConfig";
 
 export function Hero() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { config: modelConfig, setPrimary, getApiKeyForProvider } = useModelConfig();
 
   /**
    * Handle prompt submission
@@ -70,6 +73,13 @@ export function Hero() {
             onSend={handleSend}
             placeholder="Describe your app idea..."
             textareaClassName="min-h-[110px]"
+            leftSlot={
+              <ModelSelector
+                config={modelConfig}
+                setPrimary={setPrimary}
+                getApiKeyForProvider={getApiKeyForProvider}
+              />
+            }
           />
         </motion.div>
 
