@@ -116,8 +116,9 @@ export default function Build() {
   const [currentToolCalls, setCurrentToolCalls] = useState<ToolCall[]>([]);
   const [thinkingMessage, setThinkingMessage] = useState("Thinking...");
   
-  // Extension files state
-  const [extensionFiles, setExtensionFiles] = useState<FileMap>(getDefaultExtensionFiles());
+  // Extension files state — starts empty; scaffold loaded into ref only until AI succeeds
+  const [extensionFiles, setExtensionFiles] = useState<FileMap>({});
+  const isNewProjectRef = useRef(true); // Track whether scaffold has been surfaced to UI
   
   // Credits modal state
   const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
@@ -134,8 +135,8 @@ export default function Build() {
   // Ref holds the currently-running AIService so cancel() works
   const aiServiceRef = useRef<AIService | null>(null);
   
-  // Ref to track files for tool context
-  const extensionFilesRef = useRef<FileMap>(extensionFiles);
+  // Ref to track files for tool context — always has scaffold so AI tools work
+  const extensionFilesRef = useRef<FileMap>(getDefaultExtensionFiles());
   const projectRef = useRef<Project | null>(null); // Ref to current project for async operations
   const isSavingRef = useRef(false); // Prevent concurrent saves
   const pendingSaveRef = useRef<FileMap | null>(null); // Queue pending save
@@ -831,11 +832,21 @@ export default function Build() {
 
     // Step 2: Merge with scaffold defaults (scaffold provides boilerplate; saved files override)
     const scaffold = getScaffoldFiles();
-    const files = Object.keys(savedFiles).length > 0 ? savedFiles : { ...scaffold };
+    const hasSavedFiles = Object.keys(savedFiles).length > 0;
+    const files = hasSavedFiles ? savedFiles : { ...scaffold };
 
-    // Step 3: Update React state
-    setExtensionFiles(files);
+    // Step 3: Update state
+    // For NEW projects (no saved files), only load scaffold into the ref (for AI tools)
+    // but NOT into UI state — UI stays empty until the AI responds successfully.
+    // For EXISTING projects, show files immediately since they're from a prior session.
     extensionFilesRef.current = files;
+    if (hasSavedFiles) {
+      isNewProjectRef.current = false;
+      setExtensionFiles(files);
+    } else {
+      isNewProjectRef.current = true;
+      // Don't setExtensionFiles — keeps UI empty until AI succeeds
+    }
 
     // Step 4: If we have files, restore them to WebContainer
     if (Object.keys(files).length > 0) {
@@ -910,6 +921,12 @@ export default function Build() {
       
       // Call AI service with tool support
       const result = await aiServiceRef.current!.chat(content.trim(), aiHistory, toolContext);
+
+      // AI succeeded — if this is a new project, surface scaffold + AI files into UI now
+      if (isNewProjectRef.current) {
+        isNewProjectRef.current = false;
+        setExtensionFiles({ ...extensionFilesRef.current });
+      }
 
       // Deduct credit AFTER the AI call succeeds so failed requests aren't charged.
       // If useCredit throws or returns !allowed, still show the AI response but
