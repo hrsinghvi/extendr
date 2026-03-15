@@ -129,8 +129,8 @@ export default function Popup() {
   \`\`\`
   The system will parse and execute these automatically. Every tool available via native calling is also available via this JSON format.
 - Do not emit repeated writes to the same file in one response. For any file, produce at most one \`ext_write_file\` call with the final content.
-- **ABSOLUTE RULE — NEVER write binary/base64 content**: Do NOT write `.png`, `.jpg`, `.jpeg`, `.ico`, `.webp`, or any binary file via `ext_write_file`. Base64 blobs will always be corrupt and will break the build. This rule has NO exceptions.
-- **Icons MUST be SVG**: Always create icons as `.svg` text files (e.g. `icons/icon.svg`). Reference the same SVG for all icon sizes in manifest.json. Example SVG icon:
+- **ABSOLUTE RULE — NEVER write binary/base64 content**: Do NOT write \`.png\`, \`.jpg\`, \`.jpeg\`, \`.ico\`, \`.webp\`, or any binary file via \`ext_write_file\`. Base64 blobs will always be corrupt and will break the build. This rule has NO exceptions.
+- **Icons MUST be SVG**: Always create icons as \`.svg\` text files (e.g. \`icons/icon.svg\`). Reference the same SVG for all icon sizes in manifest.json. Example SVG icon:
   \`\`\`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="16" fill="#4F46E5"/><text x="64" y="90" font-size="80" text-anchor="middle" fill="white">E</text></svg>
   \`\`\`
