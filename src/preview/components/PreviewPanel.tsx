@@ -551,6 +551,7 @@ export function PreviewPanel({
                   onChange={handleCodeChange}
                   fileName={selectedFile}
                   className="flex-1 overflow-hidden"
+                  readOnly
                 />
               )
             ) : (

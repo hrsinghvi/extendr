@@ -103,11 +103,10 @@ export const DEFAULT_MODELS: Record<AIProviderType, string> = {
 
 // Ordered list of all supported providers (add new ones here)
 export const ALL_PROVIDERS: AIProviderType[] = [
-  'openrouter',
-  'gemini',
   'openai',
   'claude',
-  'deepseek',
+  'gemini',
+  'openrouter',
   'huggingface',
 ];
 

@@ -92,8 +92,8 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
         sideOffset={8}
         avoidCollisions
         collisionPadding={12}
-        className="w-[300px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl overflow-hidden"
-        style={{ maxHeight: 'min(340px, calc(100vh - 120px))' }}
+        className="w-[300px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl"
+        style={{ maxHeight: 'min(400px, calc(100vh - 120px))' }}
       >
         {/* Header */}
         <div className="px-3 pt-3 pb-2 border-b border-[#2a2a2a]">
@@ -121,7 +121,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
         </div>
 
         {/* Model list */}
-        <div className="px-3 py-2 overflow-y-auto" style={{ maxHeight: '200px' }}>
+        <div className="px-3 py-2 overflow-y-auto scrollbar-none" style={{ maxHeight: '200px' }}>
           {!activeProviderAvailable && (
             <div className="flex items-center gap-1.5 text-xs text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5 mb-2">
               <Lock className="w-3 h-3 flex-shrink-0" />
@@ -137,7 +137,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
                   onClick={() => handleSelect({ provider: activeProvider, model })}
                   disabled={!activeProviderAvailable}
                   className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors flex items-center justify-between gap-2 group
-                    ${activeProviderAvailable ? 'hover:bg-white/8 cursor-pointer' : 'opacity-40 cursor-not-allowed'}
+                    ${activeProviderAvailable ? 'hover:bg-white/[0.12] cursor-pointer' : 'opacity-40 cursor-not-allowed'}
                     ${isSelected ? 'bg-[#5A9665]/20 text-[#5A9665]' : 'text-gray-300'}`}
                 >
                   <span className="font-mono truncate">{model}</span>
@@ -184,12 +184,12 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
         </div>
 
         {/* Active model footer */}
-        <div className="px-3 py-2 border-t border-[#2a2a2a] flex items-center gap-2">
-          <span className="text-[10px] text-gray-500">Active:</span>
-          <Badge variant="outline" className="text-[10px] font-mono border-[#3a3a3a] text-gray-300 py-0">
+        <div className="px-3 py-2 border-t border-[#2a2a2a] flex items-center gap-2 min-h-[32px]">
+          <span className="text-[10px] text-gray-500 flex-shrink-0">Active:</span>
+          <Badge variant="outline" className="text-[10px] font-mono border-[#3a3a3a] text-gray-300 py-0 flex-shrink-0">
             {PROVIDER_DISPLAY_NAMES[config.primary.provider]}
           </Badge>
-          <span className="text-[10px] font-mono text-[#5A9665] truncate">
+          <span className="text-[10px] font-mono text-[#5A9665] truncate min-w-0">
             {shortModelName(config.primary.model)}
           </span>
         </div>
