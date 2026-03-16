@@ -557,9 +557,9 @@ const handleBuildPreview: ToolHandler = async (args, context) => {
     await context.build(files, install_deps !== false);
     
     return successResult(
-      id, 
-      TOOL_NAMES.BUILD_PREVIEW, 
-      'Build started. Preview will be available shortly.'
+      id,
+      TOOL_NAMES.BUILD_PREVIEW,
+      'Build started successfully. Preview will be available shortly. YOUR TASK IS COMPLETE — respond with a brief summary of what you built. Do NOT call any more tools unless the user reports an error.'
     );
   } catch (error: any) {
     return errorResult(id, TOOL_NAMES.BUILD_PREVIEW, error.message);

@@ -986,7 +986,7 @@ export default function Build() {
             console.log('[Build] Starting auto-build with', Object.keys(currentFiles).length, 'files');
             await build(currentFiles, true);
           }
-        }, 1500); // Increased from 500ms to give time for all async ops
+        }, 300); // Files already in extensionFilesRef synchronously
       }
       
     } catch (err: any) {

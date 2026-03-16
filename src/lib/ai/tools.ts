@@ -347,7 +347,8 @@ IMPORTANT:
 - You can call this after modifying just 1 file
 - Make sure vite.config.ts has all entry points before building
 - Background and content scripts will be compiled to assets/ folder
-- The preview shows the popup UI; actual extension behavior requires loading in Chrome`,
+- The preview shows the popup UI; actual extension behavior requires loading in Chrome
+- After calling this tool successfully, your task is DONE. Return a text summary immediately. Do NOT call ext_read_console_logs, ext_run_command, ext_list_files, or ext_get_project_info after a successful build.`,
   parameters: {
     type: 'object',
     properties: {
