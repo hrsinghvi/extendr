@@ -227,9 +227,24 @@ export function FeaturesSectionWithBentoGrid() {
         {/* ─── NUMBERED FEATURES STRIP ─── */}
         <TimelineContent
           as="div"
-          animationNum={2}
+          animationNum={0}
           timelineRef={featuresRef}
-          customVariants={revealVariants}
+          customVariants={{
+            visible: (i: number) => ({
+              y: 0,
+              opacity: 1,
+              filter: "blur(0px)",
+              transition: {
+                delay: i * 0.1,
+                duration: 0.3,
+              },
+            }),
+            hidden: {
+              filter: "blur(10px)",
+              y: -20,
+              opacity: 0,
+            },
+          }}
           className="mt-32 mb-8"
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0 rounded-2xl bg-[#0a0e13]/70 backdrop-blur-sm border border-border/30">
@@ -265,7 +280,7 @@ export function FeaturesSectionWithBentoGrid() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-primary font-semibold text-sm tracking-widest uppercase">
+          <span className="text-foreground font-semibold text-sm tracking-widest uppercase">
             Capabilities
           </span>
           <h3 className="text-3xl sm:text-4xl font-bold text-foreground mt-3">
@@ -549,21 +564,9 @@ export function FeaturesSectionWithBentoGrid() {
       </div>
 
       {/* ─── SPOTLIGHT SECTION ─── */}
-      <div className="px-4 max-w-7xl mx-auto mt-32" ref={spotlightRef}>
+      <div className="px-4 max-w-7xl mx-auto mt-16" ref={spotlightRef}>
         <div className="rounded-3xl border border-border/30 bg-gradient-to-r from-card/60 via-[#080c10] to-card/60 p-8 sm:p-12 relative overflow-hidden">
-          {/* Decorative dots */}
-          <div className="absolute top-8 left-8 flex gap-1">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full ${
-                  i < 8 ? "bg-primary/40" : "bg-primary/20"
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="flex flex-col lg:flex-row gap-12 items-start mt-8">
+          <div className="flex flex-col lg:flex-row gap-12 items-start">
             {/* Left content */}
             <div className="flex-1 max-w-lg">
               <motion.h3
@@ -621,15 +624,6 @@ export function FeaturesSectionWithBentoGrid() {
                 </div>
               </motion.div>
 
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={spotlightInView ? { opacity: 1 } : {}}
-                transition={{ delay: 0.4 }}
-                onClick={() => navigate("/build")}
-                className="mt-8 px-5 py-2.5 rounded-lg border border-border/60 text-sm font-medium text-foreground hover:bg-surface/60 transition-colors"
-              >
-                Learn More
-              </motion.button>
             </div>
 
             {/* Right: Tool grid */}
@@ -698,7 +692,7 @@ export function FeaturesSectionWithBentoGrid() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="text-primary font-semibold text-sm tracking-widest uppercase">
+          <span className="text-foreground font-semibold text-sm tracking-widest uppercase">
             Why Extendr
           </span>
           <h3 className="text-3xl sm:text-4xl font-bold text-foreground mt-3">
@@ -770,10 +764,10 @@ export function FeaturesSectionWithBentoGrid() {
             Ready to build your first Chrome extension?
           </p>
           <button
-            onClick={() => navigate("/build")}
+            onClick={() => navigate("/pricing")}
             className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary text-primary-foreground font-semibold text-sm tracking-wide uppercase transition-all hover:bg-primary/90 hover:shadow-glow"
           >
-            Start Building Free
+            Start Building
             <svg
               className="w-4 h-4"
               fill="none"
