@@ -165,22 +165,73 @@ function injectPopupDimensions(html: string, dimensions: PopupDimensions): strin
     const height = Math.max(200, Math.min(600, dimensions.height || DEFAULT_POPUP_DIMENSIONS.height));
     
     // Create the sizing style tag
-    // Using !important to ensure these override any framework defaults (Tailwind, etc.)
-    // that might be loaded later in the document.
+    // This must aggressively override the preview scaffold CSS which sets
+    // dark backgrounds, min-height: 100vh, and rigid flex layouts that
+    // don't work in a Chrome extension popup context.
     const POPUP_STYLE = `<style data-extendr-popup-sizing>
   /* Extendr: Popup dimensions for Chrome extension */
-  html, body {
-    min-width: ${width}px !important;
-    min-height: ${height}px !important;
+  html {
     width: ${width}px !important;
     height: ${height}px !important;
-    overflow: auto !important; /* Ensure content is scrollable if it exceeds fixed height */
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: ${width}px !important;
+    max-height: ${height}px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
   }
-  
-  /* Reset potentially conflicting styles */
+
   body {
-    max-width: none !important;
-    max-height: none !important;
+    width: ${width}px !important;
+    height: ${height}px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: ${width}px !important;
+    max-height: ${height}px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: auto !important;
+    background: #ffffff !important;
+    /* Override the dark preview background */
+    background-color: #ffffff !important;
+  }
+
+  /* Force #root to fill popup exactly, not viewport */
+  #root {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: ${height}px !important;
+    overflow: auto !important;
+  }
+
+  /* Make app content fit within the popup, not overflow */
+  #root > * {
+    width: 100% !important;
+    min-height: 0 !important;
+    max-width: ${width}px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Scale down content that was designed for a larger viewport */
+  /* Uses container query approach: if content overflows, shrink to fit */
+  @media (max-width: ${width}px) {
+    body {
+      font-size: clamp(12px, 2.5vw, 16px) !important;
+    }
+  }
+
+  /* Fix common Tailwind dark mode backgrounds leaking into popup */
+  .dark, [data-theme="dark"] {
+    background-color: transparent !important;
+    color-scheme: light !important;
+  }
+
+  /* Prevent fixed/absolute positioned elements from breaking out of the popup */
+  [style*="position: fixed"], [style*="position:fixed"],
+  .fixed, .absolute {
+    max-width: ${width}px !important;
+    max-height: ${height}px !important;
   }
 </style>`;
     
