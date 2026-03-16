@@ -1325,6 +1325,7 @@ export default function Build() {
                   config={modelConfig}
                   setPrimary={setPrimary}
                   getApiKeyForProvider={getApiKeyForProvider}
+                  side="top"
                 />
               }
             />

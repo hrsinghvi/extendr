@@ -43,13 +43,16 @@ interface ModelSelectorProps {
   config: StoredModelConfig;
   setPrimary: (entry: ModelEntry) => void;
   getApiKeyForProvider: (provider: AIProviderType) => string;
+  /** Which side the popover opens on. Default "bottom". Use "top" when the
+   *  trigger is near the bottom of the viewport (e.g. chat input). */
+  side?: 'top' | 'bottom';
 }
 
 // ============================================================================
 // Main Component
 // ============================================================================
 
-export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: ModelSelectorProps) {
+export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side = 'bottom' }: ModelSelectorProps) {
   const [open, setOpen] = useState(false);
   const [activeProvider, setActiveProvider] = useState<AIProviderType>(
     config.primary.provider
@@ -87,9 +90,8 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
 
       <PopoverContent
         align="start"
-        side="bottom"
-        sideOffset={20}
-        avoidCollisions={false}
+        side={side}
+        sideOffset={8}
         className="w-[420px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl rounded-lg"
       >
         {/* Two-column layout: providers left, models right */}
