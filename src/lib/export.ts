@@ -170,47 +170,60 @@ function injectPopupDimensions(html: string, dimensions: PopupDimensions): strin
     // The AI is instructed to build responsive layouts, so this should
     // only need to set the outer dimensions — content should adapt naturally.
     const POPUP_STYLE = `<style data-extendr-popup-sizing>
-  /* Extendr: Chrome extension popup sizing */
+  /* Extendr: Chrome extension popup sizing
+   *
+   * Chrome sizes the popup window from the rendered html/body dimensions.
+   * We set a fixed size on body and make it the ONLY scroll container.
+   * Everything inside must flow top-to-bottom and scroll — never clip.
+   */
 
-  /* html sets the popup dimensions Chrome uses to size the window.
-     overflow is visible so body can scroll within it. */
+  /* html just sets the outer frame — no scrolling here */
   html {
     width: ${width}px !important;
-    min-width: ${width}px !important;
     height: ${height}px !important;
-    min-height: ${height}px !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: auto !important;
-    background: inherit !important;
+    overflow: hidden !important;
+    background-color: #ffffff !important;
   }
 
-  /* body fills the popup and scrolls when content overflows */
+  /* body is the scroll container */
   body {
     width: ${width}px !important;
-    min-width: ${width}px !important;
     height: ${height}px !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden !important;
-    overflow-y: auto !important;
-    min-height: 0 !important;
+    overflow-y: scroll !important;
+    background-color: #ffffff !important;
   }
 
-  /* #root fills body, uses flex column so children can stretch */
+  /* Kill ALL viewport-based heights — they break popup scrolling.
+   * 100vh in a popup = popup height, so min-h-screen creates a
+   * container exactly the popup size. If content is taller, it
+   * overflows and gets clipped instead of scrolling. */
+  *, *::before, *::after {
+    min-height: revert !important;
+  }
+  html { min-height: 0 !important; height: ${height}px !important; }
+  body { min-height: 0 !important; height: ${height}px !important; }
+
+  /* #root flows naturally — no fixed height, no overflow clipping */
   #root {
     width: 100% !important;
-    min-height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  /* Direct children of #root fill available space */
+  /* App content flows from top, never centered vertically
+   * (centering clips both top and bottom when content overflows) */
   #root > * {
     width: 100% !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
+    min-height: auto !important;
+    height: auto !important;
     box-sizing: border-box !important;
+    justify-content: flex-start !important;
   }
 </style>`;
     

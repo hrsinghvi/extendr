@@ -180,7 +180,12 @@ export class GeminiProvider extends BaseAIProvider {
       const data: GeminiResponse = await response.json();
       
       if (!response.ok) {
-        const errorMsg = data.error?.message || `HTTP ${response.status}`;
+        let errorMsg = data.error?.message || `HTTP ${response.status}`;
+        if (response.status === 402) {
+          errorMsg = 'Insufficient credits or payment required on your Gemini API account. Please check your billing at console.cloud.google.com and try again.';
+        } else if (response.status === 429) {
+          errorMsg = 'Rate limit exceeded. Please wait a moment and try again.';
+        }
         this.logError('API error', errorMsg);
         return this.errorResponse(errorMsg, data);
       }

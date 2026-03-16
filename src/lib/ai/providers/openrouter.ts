@@ -139,12 +139,14 @@ export class OpenRouterProvider extends OpenAIProvider {
 
       if (!response.ok || data.error) {
         const rawErrorMsg = data.error?.message || `HTTP ${response.status}`;
-        const isInvalidKey =
-          response.status === 401 &&
-          /user not found/i.test(rawErrorMsg);
-        const errorMsg = isInvalidKey
-          ? 'OpenRouter authentication failed: API key is invalid or revoked (User not found). Generate a new key at openrouter.ai/keys and update VITE_OPENROUTER_API_KEY, then redeploy.'
-          : rawErrorMsg;
+        let errorMsg = rawErrorMsg;
+        if (response.status === 402) {
+          errorMsg = 'Insufficient credits or payment required on your OpenRouter account. Please add credits at openrouter.ai/credits and try again.';
+        } else if (response.status === 401 && /user not found/i.test(rawErrorMsg)) {
+          errorMsg = 'OpenRouter authentication failed: API key is invalid or revoked (User not found). Generate a new key at openrouter.ai/keys and update VITE_OPENROUTER_API_KEY, then redeploy.';
+        } else if (response.status === 429) {
+          errorMsg = 'Rate limit exceeded. Please wait a moment and try again.';
+        }
         this.logError('API error', errorMsg);
         return this.errorResponse(errorMsg, data);
       }

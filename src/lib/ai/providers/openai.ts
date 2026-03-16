@@ -141,7 +141,12 @@ export class OpenAIProvider extends BaseAIProvider {
       const data: OpenAIResponse = await response.json();
 
       if (!response.ok || data.error) {
-        const errorMsg = data.error?.message || `HTTP ${response.status}`;
+        let errorMsg = data.error?.message || `HTTP ${response.status}`;
+        if (response.status === 402) {
+          errorMsg = 'Insufficient credits or payment required on your OpenAI account. Please check your billing at platform.openai.com/account/billing and try again.';
+        } else if (response.status === 429) {
+          errorMsg = 'Rate limit exceeded. Please wait a moment and try again.';
+        }
         this.logError('API error', errorMsg);
         return this.errorResponse(errorMsg, data);
       }
