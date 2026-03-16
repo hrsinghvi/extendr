@@ -760,7 +760,7 @@ export function FeaturesSectionWithBentoGrid() {
           transition={{ delay: 0.5, duration: 0.5 }}
           className="text-center mt-20"
         >
-          <p className="text-muted-foreground mb-6">
+          <p className="text-foreground mb-6">
             Ready to build your first Chrome extension?
           </p>
           <button
