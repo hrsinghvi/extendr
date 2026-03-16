@@ -442,6 +442,11 @@ export default function Build() {
   useEffect(() => {
     // Reset auto-build tracking when project changes
     if (project?.id && project.id !== lastProjectIdRef.current) {
+      // Stop the old preview so the previous project's content doesn't persist
+      if (lastProjectIdRef.current !== null) {
+        console.log('[Project Change] Stopping old preview for project switch');
+        stop();
+      }
       hasAutoBuiltRef.current = false;
       lastProjectIdRef.current = project.id;
     }
@@ -475,7 +480,7 @@ export default function Build() {
 
       return () => clearTimeout(timer);
     }
-  }, [extensionFiles, project?.id, isLoading, previewUrl, status, isThinking, build]);
+  }, [extensionFiles, project?.id, isLoading, previewUrl, status, isThinking, build, stop]);
 
   /**
    * Handle terminal ready - connect it to WebContainer

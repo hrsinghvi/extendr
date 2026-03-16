@@ -94,14 +94,12 @@ export function getProviderInfoList(): ProviderInfo[] {
       displayName: 'Google Gemini',
       keyPrefix: 'AIza',
       keyPlaceholder: 'AIza...',
-      defaultModel: 'gemini-2.0-flash',
+      defaultModel: 'gemini-2.5-flash',
       models: [
         'gemini-2.5-flash',
+        'gemini-2.5-pro',
         'gemini-2.0-flash',
-        'gemini-2.0-flash-exp',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro',
-        'gemini-1.5-flash-8b'
+        'gemini-2.0-flash-lite'
       ]
     },
     {
@@ -111,11 +109,12 @@ export function getProviderInfoList(): ProviderInfo[] {
       keyPlaceholder: 'sk-...',
       defaultModel: 'gpt-4o-mini',
       models: [
+        'gpt-4.1',
+        'gpt-4.1-mini',
+        'gpt-4.1-nano',
         'gpt-4o',
         'gpt-4o-mini',
-        'gpt-4-turbo',
-        'gpt-4',
-        'gpt-3.5-turbo'
+        'o3-mini'
       ]
     },
     {
@@ -125,11 +124,11 @@ export function getProviderInfoList(): ProviderInfo[] {
       keyPlaceholder: 'sk-ant-...',
       defaultModel: 'claude-sonnet-4-20250514',
       models: [
+        'claude-opus-4-20250514',
         'claude-sonnet-4-20250514',
+        'claude-haiku-4-20250414',
         'claude-3-5-sonnet-20241022',
-        'claude-3-5-haiku-20241022',
-        'claude-3-opus-20240229',
-        'claude-3-haiku-20240307'
+        'claude-3-5-haiku-20241022'
       ]
     },
     {
@@ -140,7 +139,7 @@ export function getProviderInfoList(): ProviderInfo[] {
       defaultModel: 'deepseek-chat',
       models: [
         'deepseek-chat',
-        'deepseek-coder'
+        'deepseek-reasoner'
       ]
     },
     {
@@ -151,10 +150,10 @@ export function getProviderInfoList(): ProviderInfo[] {
       defaultModel: 'Qwen/Qwen2.5-Coder-32B-Instruct',
       models: [
         'Qwen/Qwen2.5-Coder-32B-Instruct',
-        'meta-llama/Llama-3.3-70B-Instruct',
         'Qwen/Qwen3-235B-A22B',
+        'meta-llama/Llama-3.3-70B-Instruct',
         'deepseek-ai/DeepSeek-R1',
-        'deepseek-ai/DeepSeek-V3.2',
+        'mistralai/Mistral-Small-24B-Instruct-2501'
       ]
     },
     {
@@ -168,13 +167,12 @@ export function getProviderInfoList(): ProviderInfo[] {
         'qwen/qwen3-coder:free',
         'anthropic/claude-sonnet-4',
         'anthropic/claude-3.5-sonnet',
-        'anthropic/claude-3-haiku',
         'openai/gpt-4o',
         'openai/gpt-4o-mini',
+        'google/gemini-2.5-flash',
         'google/gemini-2.0-flash-exp:free',
-        'google/gemini-flash-1.5',
-        'meta-llama/llama-3.1-70b-instruct',
-        'deepseek/deepseek-chat'
+        'deepseek/deepseek-chat-v3-0324:free',
+        'meta-llama/llama-4-maverick:free'
       ]
     }
   ];
