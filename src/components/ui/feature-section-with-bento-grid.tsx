@@ -232,24 +232,24 @@ export function FeaturesSectionWithBentoGrid() {
           customVariants={revealVariants}
           className="mt-32 mb-8"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 rounded-2xl bg-[#0a0e13]/70 backdrop-blur-sm border border-border/30">
             {numberedFeatures.map((feat, i) => (
               <div
                 key={feat.num}
-                className={`py-6 px-4 ${
+                className={`py-6 px-6 ${
                   i < numberedFeatures.length - 1
-                    ? "border-r border-border/40"
+                    ? "border-r border-border/30"
                     : ""
                 }`}
               >
-                <div className="border-t border-border/60 pt-4">
-                  <span className="text-xs font-mono text-muted-foreground/60 tracking-wider">
+                <div className="border-t border-border/50 pt-4">
+                  <span className="text-xs font-mono text-foreground/50 tracking-wider">
                     {feat.num}.
                   </span>
                   <h4 className="text-base font-semibold text-foreground mt-1">
                     {feat.title}
                   </h4>
-                  <p className="text-sm text-muted-foreground mt-1">{feat.desc}</p>
+                  <p className="text-sm text-foreground/60 mt-1">{feat.desc}</p>
                 </div>
               </div>
             ))}
@@ -467,7 +467,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 30 }}
             animate={bentoInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="group rounded-2xl border border-border/50 bg-gradient-to-tl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-tl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col items-center justify-center text-center"
           >
             <div className="absolute bottom-0 right-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -480,7 +480,7 @@ export function FeaturesSectionWithBentoGrid() {
             </p>
 
             {/* Illustration: Export flow */}
-            <div className="mt-auto relative z-10">
+            <div className="relative z-10">
               <div className="flex items-center justify-center gap-4">
                 {/* Source */}
                 <div className="flex flex-col items-center gap-2">
