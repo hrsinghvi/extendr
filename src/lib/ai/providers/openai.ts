@@ -65,13 +65,23 @@ interface OpenAIResponse {
 // ============================================================================
 
 export class OpenAIProvider extends BaseAIProvider {
-  readonly name: AIProviderType = 'openai';
-  readonly displayName: string = 'OpenAI';
+  readonly name: AIProviderType;
+  readonly displayName: string;
 
   private baseUrl = 'https://api.openai.com/v1';
 
+  // Maps provider types that route through OpenAI-compatible API
+  private static readonly PROVIDER_LABELS: Partial<Record<AIProviderType, { display: string; billing: string }>> = {
+    openai: { display: 'OpenAI', billing: 'platform.openai.com/account/billing' },
+    deepseek: { display: 'DeepSeek', billing: 'platform.deepseek.com' },
+    huggingface: { display: 'Hugging Face', billing: 'huggingface.co/settings/billing' },
+  };
+
   constructor(config: ProviderConfig) {
     super(config);
+    this.name = config.type;
+    const label = OpenAIProvider.PROVIDER_LABELS[config.type];
+    this.displayName = label?.display || 'OpenAI';
     if (config.baseUrl) {
       this.baseUrl = config.baseUrl;
     }
@@ -142,8 +152,11 @@ export class OpenAIProvider extends BaseAIProvider {
 
       if (!response.ok || data.error) {
         let errorMsg = data.error?.message || `HTTP ${response.status}`;
+        const label = OpenAIProvider.PROVIDER_LABELS[this.name];
+        const providerName = label?.display || this.displayName;
+        const billingUrl = label?.billing || '';
         if (response.status === 402) {
-          errorMsg = 'Insufficient credits or payment required on your OpenAI account. Please check your billing at platform.openai.com/account/billing and try again.';
+          errorMsg = `Insufficient credits or payment required on your ${providerName} account.${billingUrl ? ` Please check your billing at ${billingUrl} and try again.` : ' Please check your account billing and try again.'}`;
         } else if (response.status === 429) {
           errorMsg = 'Rate limit exceeded. Please wait a moment and try again.';
         }
