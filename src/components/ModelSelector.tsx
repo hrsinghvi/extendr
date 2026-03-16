@@ -14,7 +14,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   PROVIDER_MODELS,
   PROVIDER_DISPLAY_NAMES,
@@ -90,105 +89,107 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
         align="start"
         side="top"
         sideOffset={8}
-        avoidCollisions
-        collisionPadding={12}
-        className="w-[300px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl"
-        style={{ maxHeight: 'min(400px, calc(100vh - 120px))' }}
+        avoidCollisions={false}
+        className="w-[420px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl rounded-lg"
       >
-        {/* Header */}
-        <div className="px-3 pt-3 pb-2 border-b border-[#2a2a2a]">
-          <span className="text-sm font-semibold text-white">Model</span>
-        </div>
-
-        {/* Provider tabs */}
-        <div className="flex gap-1 px-3 py-2 border-b border-[#2a2a2a] overflow-x-auto scrollbar-none">
-          {ALL_PROVIDERS.map(p => {
-            const available = getApiKeyForProvider(p).length > 10;
-            const isActive = activeProvider === p;
-            return (
-              <button
-                key={p}
-                onClick={() => setActiveProvider(p)}
-                className={`flex-shrink-0 px-2.5 py-1 rounded text-xs transition-colors font-medium
-                  ${isActive ? 'bg-[#3a3a3a] text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}
-                  ${!available ? 'opacity-50' : ''}`}
-              >
-                {PROVIDER_DISPLAY_NAMES[p]}
-                {!available && <Lock className="w-2.5 h-2.5 inline ml-1 opacity-60" />}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Model list */}
-        <div className="px-3 py-2 overflow-y-auto scrollbar-none" style={{ maxHeight: '200px' }}>
-          {!activeProviderAvailable && (
-            <div className="flex items-center gap-1.5 text-xs text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5 mb-2">
-              <Lock className="w-3 h-3 flex-shrink-0" />
-              <span>No API key set for this provider</span>
-            </div>
-          )}
-          <div className="space-y-0.5">
-            {models.map((model) => {
-              const isSelected = config.primary.provider === activeProvider && config.primary.model === model;
+        {/* Two-column layout: providers left, models right */}
+        <div className="flex" style={{ height: '220px' }}>
+          {/* Provider sidebar */}
+          <div className="w-[130px] border-r border-[#2a2a2a] py-2 flex flex-col gap-0.5 overflow-y-auto scrollbar-none">
+            {ALL_PROVIDERS.map(p => {
+              const available = getApiKeyForProvider(p).length > 10;
+              const isActive = activeProvider === p;
               return (
                 <button
-                  key={model}
-                  onClick={() => handleSelect({ provider: activeProvider, model })}
-                  disabled={!activeProviderAvailable}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors flex items-center justify-between gap-2 group
-                    ${activeProviderAvailable ? 'hover:bg-white/[0.12] cursor-pointer' : 'opacity-40 cursor-not-allowed'}
-                    ${isSelected ? 'bg-[#5A9665]/20 text-[#5A9665]' : 'text-gray-300'}`}
+                  key={p}
+                  onClick={() => setActiveProvider(p)}
+                  className={`mx-1.5 px-2.5 py-1.5 rounded text-xs text-left transition-colors font-medium
+                    ${isActive ? 'bg-[#3a3a3a] text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}
+                    ${!available ? 'opacity-50' : ''}`}
                 >
-                  <span className="font-mono truncate">{model}</span>
-                  {isSelected
-                    ? <Check className="w-3 h-3 flex-shrink-0 text-[#5A9665]" />
-                    : <span className="text-[10px] flex-shrink-0 opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity">Use</span>
-                  }
+                  <span className="flex items-center gap-1.5">
+                    {PROVIDER_DISPLAY_NAMES[p]}
+                    {!available && <Lock className="w-2.5 h-2.5 opacity-60" />}
+                  </span>
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {/* Custom model input */}
-        <div className="px-3 py-2 border-t border-[#2a2a2a]">
-          {showCustom ? (
-            <div className="flex gap-1.5">
-              <Input
-                value={customModel}
-                onChange={e => setCustomModel(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleCustomAdd()}
-                placeholder={activeProvider === 'openrouter' ? 'org/model-name' : 'model-id'}
-                className="h-7 text-xs bg-[#1a1a1a] border-[#3a3a3a] text-white flex-1"
-                autoFocus
-                disabled={!activeProviderAvailable}
-              />
-              <Button size="sm" className="h-7 px-2 text-xs" onClick={handleCustomAdd} disabled={!customModel.trim() || !activeProviderAvailable}>
-                Use
-              </Button>
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-gray-400" onClick={() => { setShowCustom(false); setCustomModel(''); }}>
-                <X className="w-3 h-3" />
-              </Button>
+          {/* Model list */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Models */}
+            <div className="flex-1 px-2 py-2 overflow-y-auto scrollbar-none">
+              {!activeProviderAvailable && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5 mb-2">
+                  <Lock className="w-3 h-3 flex-shrink-0" />
+                  <span>No API key set</span>
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {models.map((model) => {
+                  const isSelected = config.primary.provider === activeProvider && config.primary.model === model;
+                  return (
+                    <button
+                      key={model}
+                      onClick={() => handleSelect({ provider: activeProvider, model })}
+                      disabled={!activeProviderAvailable}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors flex items-center justify-between gap-2 group
+                        ${activeProviderAvailable ? 'hover:bg-white/[0.12] cursor-pointer' : 'opacity-40 cursor-not-allowed'}
+                        ${isSelected ? 'bg-[#5A9665]/20 text-[#5A9665]' : 'text-gray-300'}`}
+                    >
+                      <span className="font-mono truncate">{model}</span>
+                      {isSelected
+                        ? <Check className="w-3 h-3 flex-shrink-0 text-[#5A9665]" />
+                        : <span className="text-[10px] flex-shrink-0 opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity">Use</span>
+                      }
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            <button
-              onClick={() => setShowCustom(true)}
-              disabled={!activeProviderAvailable}
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Plus className="w-3 h-3" />
-              Custom model ID
-            </button>
-          )}
+
+            {/* Custom model input */}
+            <div className="px-2 py-1.5 border-t border-[#2a2a2a]">
+              {showCustom ? (
+                <div className="flex gap-1.5">
+                  <Input
+                    value={customModel}
+                    onChange={e => setCustomModel(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleCustomAdd()}
+                    placeholder={activeProvider === 'openrouter' ? 'org/model-name' : 'model-id'}
+                    className="h-7 text-xs bg-[#1a1a1a] border-[#3a3a3a] text-white flex-1"
+                    autoFocus
+                    disabled={!activeProviderAvailable}
+                  />
+                  <Button size="sm" className="h-7 px-2 text-xs" onClick={handleCustomAdd} disabled={!customModel.trim() || !activeProviderAvailable}>
+                    Use
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-gray-400" onClick={() => { setShowCustom(false); setCustomModel(''); }}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCustom(true)}
+                  disabled={!activeProviderAvailable}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-3 h-3" />
+                  Custom model ID
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Active model footer */}
-        <div className="px-3 py-2 border-t border-[#2a2a2a] flex items-center gap-2 min-h-[32px]">
+        <div className="px-3 py-1.5 border-t border-[#2a2a2a] flex items-center gap-2">
           <span className="text-[10px] text-gray-500 flex-shrink-0">Active:</span>
-          <Badge variant="outline" className="text-[10px] font-mono border-[#3a3a3a] text-gray-300 py-0 flex-shrink-0">
+          <span className="text-[10px] font-mono text-gray-400 flex-shrink-0">
             {PROVIDER_DISPLAY_NAMES[config.primary.provider]}
-          </Badge>
+          </span>
+          <span className="text-[10px] text-gray-600 flex-shrink-0">/</span>
           <span className="text-[10px] font-mono text-[#5A9665] truncate min-w-0">
             {shortModelName(config.primary.model)}
           </span>
