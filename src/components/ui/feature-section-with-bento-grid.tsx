@@ -1,10 +1,33 @@
-import React from "react";
+"use client";
 import { VerticalCutReveal } from "@/components/ui/vertical-cut-reveal";
 import { TimelineContent } from "@/components/ui/timeline-animation";
 import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import {
+  Sparkles,
+  Eye,
+  Puzzle,
+  Download,
+  Shield,
+  Cpu,
+  Layers,
+  Wand2,
+  Code2,
+  Zap,
+  MessageSquare,
+  FileCode,
+} from "lucide-react";
 
 export function FeaturesSectionWithBentoGrid() {
   const featuresRef = useRef<HTMLDivElement>(null);
+  const bentoRef = useRef<HTMLDivElement>(null);
+  const spotlightRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const bentoInView = useInView(bentoRef, { once: true, margin: "-100px" });
+  const spotlightInView = useInView(spotlightRef, { once: true, margin: "-100px" });
+  const bottomInView = useInView(bottomRef, { once: true, margin: "-100px" });
+  const navigate = useNavigate();
 
   const revealVariants = {
     visible: (i: number) => ({
@@ -23,111 +46,746 @@ export function FeaturesSectionWithBentoGrid() {
     },
   };
 
-  return (
-    <div
-      className="px-4 pt-20 min-h-screen max-w-7xl mx-auto relative"
-      ref={featuresRef}
-    >
-      <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-center items-start justify-between">
-        <div className="text-left mb-6">
-          <h2 className="text-4xl font-medium leading-[130%] text-foreground mb-4 pt-8">
-            <VerticalCutReveal
-              splitBy="words"
-              staggerDuration={0.15}
-              staggerFrom="first"
-              reverse={true}
-              containerClassName="justify-start"
-              transition={{
-                type: "spring",
-                stiffness: 250,
-                damping: 40,
-                delay: 0,
-              }}
-            >
-              Features
-            </VerticalCutReveal>
-          </h2>
+  const numberedFeatures = [
+    { num: "01", title: "AI Generation", desc: "Describe it, build it" },
+    { num: "02", title: "Live Preview", desc: "See changes instantly" },
+    { num: "03", title: "Multi-Model", desc: "Choose any AI provider" },
+    { num: "04", title: "One-Click Export", desc: "Download & install" },
+  ];
 
+  return (
+    <div className="relative">
+      {/* ─── HERO SECTION ─── */}
+      <div
+        className="px-4 pt-20 max-w-7xl mx-auto relative"
+        ref={featuresRef}
+      >
+        <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-start items-start justify-between gap-12">
+          {/* Left: Title & CTA */}
+          <div className="text-left mb-6 max-w-xl">
+            <div className="mb-4 pt-8">
+              <span className="text-primary font-semibold text-sm tracking-widest uppercase">
+                Features
+              </span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold leading-[120%] text-foreground mb-6">
+              <VerticalCutReveal
+                splitBy="words"
+                staggerDuration={0.15}
+                staggerFrom="first"
+                reverse={true}
+                containerClassName="justify-start"
+                transition={{
+                  type: "spring",
+                  stiffness: 250,
+                  damping: 40,
+                  delay: 0,
+                }}
+              >
+                Build Chrome extensions with the power of AI
+              </VerticalCutReveal>
+            </h2>
+
+            <TimelineContent
+              as="p"
+              animationNum={0}
+              timelineRef={featuresRef}
+              customVariants={revealVariants}
+              className="text-muted-foreground text-lg leading-relaxed mb-8"
+            >
+              From idea to installable extension in minutes. Extendr combines
+              15+ specialized AI tools with a live development environment so
+              you can create, preview, and ship — all from a single chat.
+            </TimelineContent>
+
+            <TimelineContent
+              as="div"
+              animationNum={1}
+              timelineRef={featuresRef}
+              customVariants={revealVariants}
+            >
+              <button
+                onClick={() => navigate("/build")}
+                className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm tracking-wide uppercase transition-all hover:bg-primary/90 hover:shadow-glow"
+              >
+                Get Started
+                <svg
+                  className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </TimelineContent>
+          </div>
+
+          {/* Right: Floating mockup cards */}
           <TimelineContent
-            as="p"
-            animationNum={0}
+            as="div"
+            animationNum={1}
             timelineRef={featuresRef}
             customVariants={revealVariants}
-            className="text-muted-foreground w-[80%]"
+            className="flex-1 max-w-lg w-full hidden md:block"
           >
-            Discover the powerful capabilities that make our platform the perfect choice for your projects.
+            <div className="relative mt-8">
+              {/* Chat message mockup */}
+              <motion.div
+                className="relative z-10 rounded-2xl border border-border/60 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-md p-5 shadow-lg"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">You</p>
+                    <p className="text-sm text-foreground font-medium">
+                      "Build a dark mode toggle extension"
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/30 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-muted-foreground">Extendr AI</p>
+                    <div className="mt-1 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <span className="text-xs text-muted-foreground">
+                          Creating manifest.json...
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.2s" }} />
+                        <span className="text-xs text-muted-foreground">
+                          Writing popup.html...
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.4s" }} />
+                        <span className="text-xs text-muted-foreground">
+                          Generating content script...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* File tree floating card */}
+              <motion.div
+                className="absolute -bottom-12 -right-6 z-20 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-4 shadow-lg"
+                initial={{ y: 30, opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                transition={{ delay: 0.9, duration: 0.5 }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <FileCode className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-medium text-foreground">Extension Files</span>
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-primary/60">|--</span> manifest.json
+                    <span className="ml-auto text-[10px] text-primary">ready</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-primary/60">|--</span> popup.html
+                    <span className="ml-auto text-[10px] text-primary">ready</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-primary/60">|--</span> content.js
+                    <span className="ml-auto text-[10px] text-yellow-500">building</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-primary/60">|--</span> styles.css
+                    <span className="ml-auto text-[10px] text-muted-foreground/50">queued</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Status badge */}
+              <motion.div
+                className="absolute -top-4 -left-4 z-20 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm px-3 py-1.5 flex items-center gap-2"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.1, duration: 0.4, type: "spring" }}
+              >
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-xs font-medium text-primary">Manifest V3</span>
+              </motion.div>
+            </div>
           </TimelineContent>
-        </div>
-      </article>
+        </article>
 
-      {/* Bento-style feature grid */}
-      {/* Top row – three equal cards */}
-      <section className="grid gap-6 md:grid-cols-3 auto-rows-[240px]">
-        <div className="rounded-3xl border border-border/80 bg-card/60 shadow-sm backdrop-blur-sm p-6 flex flex-col justify-between">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Lightning-fast setup
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Go from idea to live experience in minutes with opinionated defaults
-            and zero-config integrations.
-          </p>
-        </div>
+        {/* ─── NUMBERED FEATURES STRIP ─── */}
+        <TimelineContent
+          as="div"
+          animationNum={2}
+          timelineRef={featuresRef}
+          customVariants={revealVariants}
+          className="mt-32 mb-8"
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
+            {numberedFeatures.map((feat, i) => (
+              <div
+                key={feat.num}
+                className={`py-6 px-4 ${
+                  i < numberedFeatures.length - 1
+                    ? "border-r border-border/40"
+                    : ""
+                }`}
+              >
+                <div className="border-t border-border/60 pt-4">
+                  <span className="text-xs font-mono text-muted-foreground/60 tracking-wider">
+                    {feat.num}.
+                  </span>
+                  <h4 className="text-base font-semibold text-foreground mt-1">
+                    {feat.title}
+                  </h4>
+                  <p className="text-sm text-muted-foreground mt-1">{feat.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </TimelineContent>
+      </div>
 
-        <div className="rounded-3xl border border-border/80 bg-card/60 shadow-sm backdrop-blur-sm p-6 flex flex-col justify-between">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            AI-native workflows
+      {/* ─── BENTO GRID SECTION ─── */}
+      <div className="px-4 max-w-7xl mx-auto mt-24" ref={bentoRef}>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={bentoInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <span className="text-primary font-semibold text-sm tracking-widest uppercase">
+            Capabilities
+          </span>
+          <h3 className="text-3xl sm:text-4xl font-bold text-foreground mt-3">
+            Everything you need to build extensions
           </h3>
-          <p className="text-sm text-muted-foreground">
-            Orchestrate complex AI flows, prompts, and tools in a way your team
-            can actually understand and iterate on.
-          </p>
-        </div>
+        </motion.div>
 
-        <div className="rounded-3xl border border-border/80 bg-card/60 shadow-sm backdrop-blur-sm p-6 flex flex-col justify-between">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Production-ready by default
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Built-in analytics, auth-ready patterns, and sensible error
-            handling so you can ship with confidence.
-          </p>
-        </div>
-      </section>
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Card 1: AI-Powered Generation */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={bentoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+          >
+            {/* Glow effect */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Bottom row – two equal cards */}
-      <section className="mt-6 grid gap-6 md:grid-cols-2 auto-rows-[260px]">
-        <div className="rounded-3xl border border-border/80 bg-card/60 shadow-sm backdrop-blur-sm p-6 flex flex-col justify-between">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Collaborative by design
-          </h3>
-          <p className="text-sm text-muted-foreground mb-3">
-            Give product, design, and engineering a shared canvas. Edit copy,
-            prompts, and flows without touching the core infrastructure.
-          </p>
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground/80">
-            <span className="px-3 py-1 rounded-full border border-border/70">
-              Comment threads
-            </span>
-            <span className="px-3 py-1 rounded-full border border-border/70">
-              Version history
-            </span>
-            <span className="px-3 py-1 rounded-full border border-border/70">
-              Review workflows
-            </span>
+            <h4 className="text-xl font-semibold text-foreground mb-2 relative z-10">
+              AI-Powered Generation
+            </h4>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs relative z-10">
+              Describe your extension in plain English. Our AI understands
+              context, writes clean code, and handles the entire build pipeline.
+            </p>
+
+            {/* Illustration: AI flow diagram */}
+            <div className="mt-auto relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 space-y-2">
+                  {["manifest.json", "popup.html", "background.js", "content.js", "styles.css"].map((file, i) => (
+                    <motion.div
+                      key={file}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={bentoInView ? { x: 0, opacity: 1 } : {}}
+                      transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface/60 border border-border/30"
+                    >
+                      <FileCode className="w-3 h-3 text-primary/70" />
+                      <span className="text-xs font-mono text-muted-foreground">{file}</span>
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  {/* Connecting lines */}
+                  <svg width="60" height="140" className="text-primary/30">
+                    <path d="M0 14 Q30 14 30 35" stroke="currentColor" fill="none" strokeWidth="1" strokeDasharray="3 3" />
+                    <path d="M0 42 Q30 42 30 55" stroke="currentColor" fill="none" strokeWidth="1" strokeDasharray="3 3" />
+                    <path d="M0 70 Q30 70 30 70" stroke="currentColor" fill="none" strokeWidth="1" strokeDasharray="3 3" />
+                    <path d="M0 98 Q30 98 30 85" stroke="currentColor" fill="none" strokeWidth="1" strokeDasharray="3 3" />
+                    <path d="M0 126 Q30 126 30 105" stroke="currentColor" fill="none" strokeWidth="1" strokeDasharray="3 3" />
+                    <circle cx="30" cy="70" r="18" fill="none" stroke="currentColor" strokeWidth="1" className="text-primary/40" />
+                    <circle cx="30" cy="70" r="10" fill="currentColor" className="text-primary/20" />
+                  </svg>
+                  <Cpu className="w-5 h-5 text-primary absolute right-[70px] top-[calc(50%+30px)]" />
+                </div>
+                <div className="w-20 h-32 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-center">
+                  <Puzzle className="w-8 h-8 text-primary/60" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 2: Live Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={bentoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="group rounded-2xl border border-border/50 bg-gradient-to-bl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+          >
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-blue/5 rounded-full blur-3xl pointer-events-none" />
+
+            <h4 className="text-xl font-semibold text-foreground mb-2 relative z-10">
+              Real-Time Live Preview
+            </h4>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs relative z-10">
+              See your extension come to life as the AI builds it. WebContainer
+              technology gives you instant feedback without any setup.
+            </p>
+
+            {/* Illustration: Browser mockup */}
+            <div className="mt-auto relative z-10">
+              <div className="rounded-xl border border-border/40 bg-[#0d1117] overflow-hidden">
+                {/* Browser bar */}
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-surface/40">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                  </div>
+                  <div className="flex-1 mx-2 px-3 py-1 rounded-md bg-surface/60 text-[10px] font-mono text-muted-foreground/60">
+                    chrome-extension://preview
+                  </div>
+                </div>
+                {/* Content area */}
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center">
+                        <Eye className="w-3 h-3 text-primary" />
+                      </div>
+                      <span className="text-xs font-medium text-foreground">Dark Mode Toggle</span>
+                    </div>
+                    {/* Toggle */}
+                    <div className="w-10 h-5 rounded-full bg-primary/30 relative">
+                      <motion.div
+                        className="absolute top-0.5 w-4 h-4 rounded-full bg-primary"
+                        animate={{ left: ["2px", "22px", "2px"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-2 bg-muted/30 rounded w-full" />
+                    <div className="h-2 bg-muted/20 rounded w-3/4" />
+                    <div className="h-2 bg-muted/10 rounded w-1/2" />
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <div className="px-2 py-1 rounded text-[10px] bg-primary/10 text-primary border border-primary/20">
+                      Active
+                    </div>
+                    <div className="px-2 py-1 rounded text-[10px] bg-muted/20 text-muted-foreground border border-border/30">
+                      All Sites
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 3: Multi-Model Support */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={bentoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="group rounded-2xl border border-border/50 bg-gradient-to-tr from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+          >
+            <div className="absolute top-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+
+            <h4 className="text-xl font-semibold text-foreground mb-2 relative z-10">
+              Multi-Model AI Support
+            </h4>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs relative z-10">
+              Switch between AI providers on-the-fly. Use GPT-4o, Gemini,
+              Claude, DeepSeek, or any OpenRouter model — even rotate between
+              them automatically.
+            </p>
+
+            {/* Illustration: Model cards */}
+            <div className="mt-auto relative z-10 space-y-2">
+              {[
+                { name: "GPT-4o", provider: "OpenAI", active: true },
+                { name: "Gemini 2.5 Pro", provider: "Google", active: false },
+                { name: "Claude Sonnet", provider: "Anthropic", active: false },
+                { name: "DeepSeek V3", provider: "DeepSeek", active: false },
+              ].map((model, i) => (
+                <motion.div
+                  key={model.name}
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={bentoInView ? { x: 0, opacity: 1 } : {}}
+                  transition={{ delay: 0.4 + i * 0.1, duration: 0.4 }}
+                  className={`flex items-center justify-between px-4 py-2.5 rounded-xl border ${
+                    model.active
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-border/30 bg-surface/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                        model.active
+                          ? "bg-primary/20"
+                          : "bg-muted/30"
+                      }`}
+                    >
+                      <Cpu className={`w-3.5 h-3.5 ${model.active ? "text-primary" : "text-muted-foreground"}`} />
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium ${model.active ? "text-foreground" : "text-muted-foreground"}`}>
+                        {model.name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/60">{model.provider}</p>
+                    </div>
+                  </div>
+                  {model.active && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      <span className="text-[10px] text-primary font-medium">Active</span>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Card 4: One-Click Export */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={bentoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="group rounded-2xl border border-border/50 bg-gradient-to-tl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+          >
+            <div className="absolute bottom-0 right-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+
+            <h4 className="text-xl font-semibold text-foreground mb-2 relative z-10">
+              One-Click Export & Install
+            </h4>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs relative z-10">
+              Download your extension as a ready-to-install ZIP. Load it
+              directly into Chrome — no build tools, no terminal, no hassle.
+            </p>
+
+            {/* Illustration: Export flow */}
+            <div className="mt-auto relative z-10">
+              <div className="flex items-center justify-center gap-4">
+                {/* Source */}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-16 h-16 rounded-2xl border border-border/40 bg-surface/40 flex items-center justify-center">
+                    <Code2 className="w-7 h-7 text-muted-foreground" />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">Source</span>
+                </div>
+
+                {/* Arrow with animation */}
+                <div className="flex flex-col items-center gap-1">
+                  <svg width="80" height="24" className="text-primary/50">
+                    <motion.line
+                      x1="0" y1="12" x2="60" y2="12"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      strokeDasharray="4 4"
+                      initial={{ pathLength: 0 }}
+                      animate={bentoInView ? { pathLength: 1 } : {}}
+                      transition={{ delay: 0.8, duration: 0.6 }}
+                    />
+                    <polygon points="60,6 72,12 60,18" fill="currentColor" />
+                  </svg>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={bentoInView ? { opacity: 1 } : {}}
+                    transition={{ delay: 1.2 }}
+                    className="text-[9px] text-primary/60 font-mono"
+                  >
+                    .zip
+                  </motion.div>
+                </div>
+
+                {/* Chrome icon */}
+                <div className="flex flex-col items-center gap-2">
+                  <motion.div
+                    className="w-16 h-16 rounded-2xl border border-primary/30 bg-primary/10 flex items-center justify-center"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={bentoInView ? { scale: 1, opacity: 1 } : {}}
+                    transition={{ delay: 1.0, type: "spring" }}
+                  >
+                    <Download className="w-7 h-7 text-primary" />
+                  </motion.div>
+                  <span className="text-[10px] text-primary font-medium">Install</span>
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-6 mx-auto max-w-xs">
+                <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                  <span>Extension ready</span>
+                  <span className="text-primary">100%</span>
+                </div>
+                <div className="h-1 bg-surface-elevated rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-full"
+                    initial={{ width: 0 }}
+                    animate={bentoInView ? { width: "100%" } : {}}
+                    transition={{ delay: 0.6, duration: 1.2, ease: "easeOut" }}
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ─── SPOTLIGHT SECTION ─── */}
+      <div className="px-4 max-w-7xl mx-auto mt-32" ref={spotlightRef}>
+        <div className="rounded-3xl border border-border/30 bg-gradient-to-r from-card/60 via-[#080c10] to-card/60 p-8 sm:p-12 relative overflow-hidden">
+          {/* Decorative dots */}
+          <div className="absolute top-8 left-8 flex gap-1">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full ${
+                  i < 8 ? "bg-primary/40" : "bg-primary/20"
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-12 items-start mt-8">
+            {/* Left content */}
+            <div className="flex-1 max-w-lg">
+              <motion.h3
+                initial={{ opacity: 0, y: 20 }}
+                animate={spotlightInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5 }}
+                className="text-3xl sm:text-4xl font-bold text-foreground leading-tight mb-6"
+              >
+                15+ AI tools working
+                <br />
+                together to build your
+                <br />
+                extension
+              </motion.h3>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={spotlightInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.1, duration: 0.5 }}
+                className="text-muted-foreground leading-relaxed mb-8"
+              >
+                From creating files and writing code to managing dependencies and
+                configuring permissions — every aspect of Chrome extension
+                development is handled by specialized AI tools that work in
+                concert.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={spotlightInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="grid grid-cols-2 gap-6"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Layers className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-semibold text-foreground">File Management</h5>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Create, edit, and organize all extension files automatically
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Wand2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-semibold text-foreground">Smart Scaffolding</h5>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Manifest V3 structure generated from your description
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={spotlightInView ? { opacity: 1 } : {}}
+                transition={{ delay: 0.4 }}
+                onClick={() => navigate("/build")}
+                className="mt-8 px-5 py-2.5 rounded-lg border border-border/60 text-sm font-medium text-foreground hover:bg-surface/60 transition-colors"
+              >
+                Learn More
+              </motion.button>
+            </div>
+
+            {/* Right: Tool grid */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={spotlightInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="flex-1 w-full"
+            >
+              <div className="rounded-2xl border border-border/30 bg-[#0a0e13] p-6 relative overflow-hidden">
+                {/* Subtle grid pattern */}
+                <div
+                  className="absolute inset-0 opacity-[0.03]"
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                    backgroundSize: "24px 24px",
+                  }}
+                />
+
+                <div className="relative z-10 grid grid-cols-3 gap-3">
+                  {[
+                    { icon: FileCode, label: "Create File", color: "text-primary" },
+                    { icon: Code2, label: "Write Code", color: "text-primary" },
+                    { icon: Eye, label: "Preview", color: "text-brand-blue-light" },
+                    { icon: Shield, label: "Permissions", color: "text-primary" },
+                    { icon: Puzzle, label: "Manifest", color: "text-brand-blue-light" },
+                    { icon: Download, label: "Export", color: "text-primary" },
+                    { icon: Zap, label: "Hot Reload", color: "text-brand-blue-light" },
+                    { icon: Layers, label: "Dependencies", color: "text-primary" },
+                    { icon: Wand2, label: "Refactor", color: "text-brand-blue-light" },
+                  ].map((tool, i) => (
+                    <motion.div
+                      key={tool.label}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={spotlightInView ? { opacity: 1, scale: 1 } : {}}
+                      transition={{ delay: 0.3 + i * 0.06, type: "spring" }}
+                      className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border/20 bg-surface/20 hover:bg-surface/40 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-surface-elevated/60 border border-border/30 flex items-center justify-center">
+                        <tool.icon className={`w-5 h-5 ${tool.color}`} />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium text-center">
+                        {tool.label}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Connection lines overlay */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20" preserveAspectRatio="none">
+                  <line x1="33%" y1="33%" x2="66%" y2="33%" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" className="text-primary" />
+                  <line x1="33%" y1="66%" x2="66%" y2="66%" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" className="text-primary" />
+                  <line x1="50%" y1="20%" x2="50%" y2="80%" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" className="text-primary" />
+                </svg>
+              </div>
+            </motion.div>
           </div>
         </div>
+      </div>
 
-        <div className="rounded-3xl border border-border/80 bg-card/60 shadow-sm backdrop-blur-sm p-6 flex flex-col justify-between">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Scale without friction
+      {/* ─── BOTTOM FEATURES GRID ─── */}
+      <div className="px-4 max-w-7xl mx-auto mt-32 mb-16" ref={bottomRef}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={bottomInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
+        >
+          <span className="text-primary font-semibold text-sm tracking-widest uppercase">
+            Why Extendr
+          </span>
+          <h3 className="text-3xl sm:text-4xl font-bold text-foreground mt-3">
+            Built for speed. Designed for everyone.
           </h3>
-          <p className="text-sm text-muted-foreground">
-            Horizontally scale requests, cache smartly, and plug into your
-            existing observability stack without lock-in.
-          </p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            {
+              icon: Sparkles,
+              title: "Natural Language Input",
+              desc: "Just describe what you want. No coding knowledge required — the AI handles everything from architecture to implementation.",
+            },
+            {
+              icon: Shield,
+              title: "Manifest V3 Ready",
+              desc: "Every extension is built with Chrome's latest Manifest V3 standard. Future-proof and compliant out of the box.",
+            },
+            {
+              icon: Zap,
+              title: "Instant WebContainer",
+              desc: "No local setup needed. Your extension runs in a sandboxed WebContainer for immediate, zero-config previewing.",
+            },
+            {
+              icon: Layers,
+              title: "Version History",
+              desc: "Every iteration is saved. Roll back to any previous version of your extension with a single click.",
+            },
+            {
+              icon: Download,
+              title: "Export to ZIP",
+              desc: "Download your finished extension and load it directly into Chrome. Ready for the Web Store or personal use.",
+            },
+            {
+              icon: Cpu,
+              title: "Model Rotation",
+              desc: "Automatically cycle between AI models for varied perspectives and optimal results on complex extensions.",
+            },
+          ].map((feature, i) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={bottomInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: i * 0.08, duration: 0.4 }}
+              className="group rounded-2xl border border-border/30 bg-card/40 p-6 hover:bg-card/60 hover:border-border/50 transition-all duration-300"
+            >
+              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
+                <feature.icon className="w-6 h-6 text-primary" />
+              </div>
+              <h4 className="text-base font-semibold text-foreground mb-2">
+                {feature.title}
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {feature.desc}
+              </p>
+            </motion.div>
+          ))}
         </div>
-      </section>
+
+        {/* Bottom CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={bottomInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="text-center mt-20"
+        >
+          <p className="text-muted-foreground mb-6">
+            Ready to build your first Chrome extension?
+          </p>
+          <button
+            onClick={() => navigate("/build")}
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary text-primary-foreground font-semibold text-sm tracking-wide uppercase transition-all hover:bg-primary/90 hover:shadow-glow"
+          >
+            Start Building Free
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </motion.div>
+      </div>
     </div>
   );
 }
-
