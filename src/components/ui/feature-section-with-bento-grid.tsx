@@ -57,10 +57,10 @@ export function FeaturesSectionWithBentoGrid() {
     <div className="relative overflow-x-hidden">
       {/* ─── HERO SECTION ─── */}
       <div
-        className="px-4 pt-32 max-w-7xl mx-auto relative"
+        className="px-4 pt-44 max-w-7xl mx-auto relative"
         ref={featuresRef}
       >
-        <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-start items-start justify-between gap-12">
+        <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-center items-start justify-between gap-12">
           {/* Left: Title & CTA */}
           <div className="text-left mb-6 max-w-xl">
             <div className="mb-4 pt-8">
