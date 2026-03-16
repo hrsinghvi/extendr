@@ -54,10 +54,10 @@ export function FeaturesSectionWithBentoGrid() {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative overflow-x-hidden">
       {/* ─── HERO SECTION ─── */}
       <div
-        className="px-4 pt-20 max-w-7xl mx-auto relative"
+        className="px-4 pt-32 max-w-7xl mx-auto relative"
         ref={featuresRef}
       >
         <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-start items-start justify-between gap-12">
@@ -130,7 +130,7 @@ export function FeaturesSectionWithBentoGrid() {
             customVariants={revealVariants}
             className="flex-1 max-w-lg w-full hidden md:block"
           >
-            <div className="relative mt-8">
+            <div className="relative mt-8 pr-4">
               {/* Chat message mockup */}
               <motion.div
                 className="relative z-10 rounded-2xl border border-border/60 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-md p-5 shadow-lg"
@@ -181,7 +181,7 @@ export function FeaturesSectionWithBentoGrid() {
 
               {/* File tree floating card */}
               <motion.div
-                className="absolute -bottom-12 -right-6 z-20 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-4 shadow-lg"
+                className="absolute -bottom-12 right-0 z-20 rounded-xl border border-border/50 bg-card/90 backdrop-blur-sm p-4 shadow-lg"
                 initial={{ y: 30, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 transition={{ delay: 0.9, duration: 0.5 }}
@@ -212,7 +212,7 @@ export function FeaturesSectionWithBentoGrid() {
 
               {/* Status badge */}
               <motion.div
-                className="absolute -top-4 -left-4 z-20 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm px-3 py-1.5 flex items-center gap-2"
+                className="absolute -top-4 left-0 z-20 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm px-3 py-1.5 flex items-center gap-2"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 1.1, duration: 0.4, type: "spring" }}
