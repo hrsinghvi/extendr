@@ -90,7 +90,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
         side="bottom"
         sideOffset={48}
         avoidCollisions={false}
-        className="w-[420px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl rounded-lg"
+        className="w-[420px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl rounded-lg mt-4"
       >
         {/* Two-column layout: providers left, models right */}
         <div className="flex" style={{ height: '220px' }}>
