@@ -88,9 +88,9 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
       <PopoverContent
         align="start"
         side="bottom"
-        sideOffset={48}
+        sideOffset={32}
         avoidCollisions={false}
-        className="w-[420px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl rounded-lg mt-4"
+        className="w-[420px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl rounded-lg"
       >
         {/* Two-column layout: providers left, models right */}
         <div className="flex" style={{ height: '220px' }}>
