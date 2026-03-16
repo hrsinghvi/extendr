@@ -564,7 +564,7 @@ export function FeaturesSectionWithBentoGrid() {
       </div>
 
       {/* ─── SPOTLIGHT SECTION ─── */}
-      <div className="px-4 max-w-7xl mx-auto mt-16" ref={spotlightRef}>
+      <div className="px-4 max-w-7xl mx-auto mt-24" ref={spotlightRef}>
         <div className="rounded-3xl border border-border/30 bg-gradient-to-r from-card/60 via-[#080c10] to-card/60 p-8 sm:p-12 relative overflow-hidden">
           <div className="flex flex-col lg:flex-row gap-12 items-start">
             {/* Left content */}
