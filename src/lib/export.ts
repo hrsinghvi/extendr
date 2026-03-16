@@ -165,73 +165,44 @@ function injectPopupDimensions(html: string, dimensions: PopupDimensions): strin
     const height = Math.max(200, Math.min(600, dimensions.height || DEFAULT_POPUP_DIMENSIONS.height));
     
     // Create the sizing style tag
-    // This must aggressively override the preview scaffold CSS which sets
-    // dark backgrounds, min-height: 100vh, and rigid flex layouts that
-    // don't work in a Chrome extension popup context.
+    // This is a safety net that sets the popup dimensions and fixes
+    // common issues from the preview scaffold CSS (100vh, dark backgrounds).
+    // The AI is instructed to build responsive layouts, so this should
+    // only need to set the outer dimensions — content should adapt naturally.
     const POPUP_STYLE = `<style data-extendr-popup-sizing>
   /* Extendr: Popup dimensions for Chrome extension */
-  html {
+  html, body {
     width: ${width}px !important;
     height: ${height}px !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    max-width: ${width}px !important;
-    max-height: ${height}px !important;
-    overflow: hidden !important;
-    background: #ffffff !important;
-  }
-
-  body {
-    width: ${width}px !important;
-    height: ${height}px !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    max-width: ${width}px !important;
-    max-height: ${height}px !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: auto !important;
-    background: #ffffff !important;
-    /* Override the dark preview background */
-    background-color: #ffffff !important;
+    overflow: hidden !important;
   }
 
-  /* Force #root to fill popup exactly, not viewport */
+  /* Override preview scaffold styles that don't work in popups */
+  body {
+    min-height: 0 !important; /* Kill 100vh from scaffold */
+    overflow-y: auto !important;
+  }
+
+  /* Force #root to fill popup exactly, scroll if content overflows */
   #root {
     width: 100% !important;
     height: 100% !important;
     min-height: 0 !important;
-    max-height: ${height}px !important;
-    overflow: auto !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
-  /* Make app content fit within the popup, not overflow */
+  /* Ensure direct children of #root stretch to fill */
   #root > * {
     width: 100% !important;
     min-height: 0 !important;
-    max-width: ${width}px !important;
+    flex-shrink: 1 !important;
     box-sizing: border-box !important;
-  }
-
-  /* Scale down content that was designed for a larger viewport */
-  /* Uses container query approach: if content overflows, shrink to fit */
-  @media (max-width: ${width}px) {
-    body {
-      font-size: clamp(12px, 2.5vw, 16px) !important;
-    }
-  }
-
-  /* Fix common Tailwind dark mode backgrounds leaking into popup */
-  .dark, [data-theme="dark"] {
-    background-color: transparent !important;
-    color-scheme: light !important;
-  }
-
-  /* Prevent fixed/absolute positioned elements from breaking out of the popup */
-  [style*="position: fixed"], [style*="position:fixed"],
-  .fixed, .absolute {
-    max-width: ${width}px !important;
-    max-height: ${height}px !important;
   }
 </style>`;
     

@@ -180,28 +180,26 @@ export const DEFAULT_INDEX_CSS = `@tailwind base;
 @tailwind utilities;
 
 /*
- * Base Preview Styles (auto-injected)
- * Ensures content fills the full preview viewport
+ * Base Styles (auto-injected)
+ * Uses flexbox to fill available space — works in both preview and Chrome popup.
+ * No viewport units (vh/vw) or fixed backgrounds — those break in popups.
  */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  min-height: 100vh;
-  background-color: #1a1a1a;
   overflow-x: hidden;
 }
 
 #root {
   width: 100%;
   height: 100%;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* Force app content to fill available space */
+/* App content fills available space and shrinks if needed */
 #root > * {
   width: 100%;
   flex: 1;

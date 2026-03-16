@@ -689,6 +689,43 @@ Do NOT create: package.json, vite.config.ts, tailwind.config.js, postcss.config.
 
 ## Style Guidelines
 
+### RESPONSIVE POPUP LAYOUT (CRITICAL)
+Chrome extension popups can be any size (350px–800px wide, 450px–640px tall). Users choose the popup size at export time. Your layout MUST adapt to ANY size without breaking. Follow these rules strictly:
+
+- **NEVER use fixed pixel widths** on containers (e.g., \`w-[500px]\`, \`width: 600px\`). Use \`w-full\`, \`max-w-full\`, or percentages instead.
+- **NEVER use \`min-height: 100vh\`** or any viewport units (\`vh\`, \`vw\`) — popups are NOT viewports. Use \`h-full\`, \`min-h-full\`, or \`flex-1\` instead.
+- **ALWAYS use flexbox** for layout: \`flex flex-col\` on the outermost container, \`flex-1\` on the main content area so it stretches to fill available space.
+- **ALWAYS use \`overflow-y-auto\`** on scrollable content areas so content scrolls instead of overflowing the popup.
+- **Use relative/fluid sizing**: \`w-full\`, \`max-w-full\`, \`flex-1\`, \`flex-shrink\`, percentages. Content should flow and wrap naturally.
+- **Text should wrap**: Use \`break-words\` or \`truncate\` for long text. Never assume a minimum width for text containers.
+- **Images/icons should scale**: Always use \`max-w-full h-auto\` or fixed small sizes (\`w-6 h-6\`) on images.
+- **Grid layouts must be responsive**: Use \`grid-cols-1 sm:grid-cols-2\` or \`flex flex-wrap\` so items reflow at small sizes.
+
+Example of a CORRECT responsive popup layout:
+\`\`\`tsx
+export default function App() {
+  return (
+    <div className="w-full h-full flex flex-col bg-gray-900 text-white">
+      {/* Header - fixed height */}
+      <header className="flex items-center justify-between p-4 border-b border-gray-700 shrink-0">
+        <h1 className="text-lg font-bold truncate">My Extension</h1>
+      </header>
+      {/* Content - fills remaining space, scrolls if needed */}
+      <main className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-3">
+          {/* Content here adapts to any width */}
+        </div>
+      </main>
+      {/* Footer - fixed height */}
+      <footer className="p-3 border-t border-gray-700 shrink-0">
+        <button className="w-full py-2 bg-green-600 rounded-lg">Action</button>
+      </footer>
+    </div>
+  );
+}
+\`\`\`
+
+### Theme & Visual Style
 - **Dark theme**: \`bg-gray-900\`, \`bg-gray-800\`, \`text-white\`
 - **Green accents**: \`bg-green-600\`, \`hover:bg-green-700\`
 - **Container sizing**: Use \`w-full h-full\` on outer container
