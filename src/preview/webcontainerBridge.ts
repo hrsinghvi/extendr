@@ -1102,7 +1102,69 @@ export async function buildAndReadDist(sourceFiles: FileMap): Promise<FileMap | 
       console.log('[WebContainer] Copied manifest.json from public/');
     }
   }
-  
+
+  // Copy manifest-referenced assets that may not be in dist/
+  // (icons, background scripts, content scripts)
+  const manifestContent = distFiles['manifest.json'] || sourceFiles['manifest.json'] || sourceFiles['public/manifest.json'];
+  if (manifestContent) {
+    try {
+      const manifest = JSON.parse(manifestContent);
+      const referencedPaths: string[] = [];
+
+      // Collect icon paths
+      if (manifest.icons) {
+        Object.values(manifest.icons).forEach((p: any) => { if (typeof p === 'string') referencedPaths.push(p); });
+      }
+      if (manifest.action?.default_icon) {
+        if (typeof manifest.action.default_icon === 'string') {
+          referencedPaths.push(manifest.action.default_icon);
+        } else {
+          Object.values(manifest.action.default_icon).forEach((p: any) => { if (typeof p === 'string') referencedPaths.push(p); });
+        }
+      }
+
+      // Background service worker
+      if (manifest.background?.service_worker) {
+        referencedPaths.push(manifest.background.service_worker);
+      }
+
+      // Content scripts
+      if (manifest.content_scripts) {
+        for (const cs of manifest.content_scripts) {
+          if (cs.js) referencedPaths.push(...cs.js);
+          if (cs.css) referencedPaths.push(...cs.css);
+        }
+      }
+
+      // Copy any missing referenced files from source
+      for (const refPath of referencedPaths) {
+        const normalized = refPath.startsWith('/') ? refPath.slice(1) : refPath;
+        if (!distFiles[normalized]) {
+          // Try source locations
+          const candidates = [normalized, `public/${normalized}`, `src/${normalized}`];
+          for (const candidate of candidates) {
+            if (sourceFiles[candidate]) {
+              distFiles[normalized] = sourceFiles[candidate];
+              console.log(`[WebContainer] Copied missing asset ${normalized} from source (${candidate})`);
+              break;
+            }
+          }
+        }
+      }
+
+      // Also copy all icon files from icons/ directory in source
+      for (const [path, content] of Object.entries(sourceFiles)) {
+        if ((path.startsWith('icons/') || path.startsWith('public/icons/')) && !distFiles[path.replace('public/', '')]) {
+          const destPath = path.replace('public/', '');
+          distFiles[destPath] = content;
+          console.log(`[WebContainer] Copied icon asset: ${destPath}`);
+        }
+      }
+    } catch (e) {
+      console.warn('[WebContainer] Could not parse manifest for asset copying:', e);
+    }
+  }
+
   writeToTerminal(`\x1b[1;32m[WebContainer]\x1b[0m Read ${Object.keys(distFiles).length} files from dist/\r\n`);
   return distFiles;
 }

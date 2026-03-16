@@ -42,11 +42,11 @@ export const DEFAULT_PACKAGE_JSON = {
 export const DEFAULT_VITE_CONFIG = `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
-import { copyFileSync, existsSync, mkdirSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 
-// Plugin to copy manifest.json to dist after build
-const copyManifestPlugin = () => ({
-  name: 'copy-manifest',
+// Plugin to copy manifest.json and extension assets (icons) to dist after build
+const copyExtensionAssetsPlugin = () => ({
+  name: 'copy-extension-assets',
   closeBundle() {
     // Ensure dist exists
     if (!existsSync('dist')) {
@@ -60,11 +60,49 @@ const copyManifestPlugin = () => ({
       copyFileSync('public/manifest.json', 'dist/manifest.json');
       console.log('✓ Copied public/manifest.json to dist/');
     }
+    // Copy icons/ directory to dist/icons/
+    if (existsSync('icons')) {
+      mkdirSync('dist/icons', { recursive: true });
+      const copyDirRecursive = (src, dest) => {
+        if (!existsSync(dest)) mkdirSync(dest, { recursive: true });
+        const entries = readdirSync(src, { withFileTypes: true });
+        for (const entry of entries) {
+          const srcPath = src + '/' + entry.name;
+          const destPath = dest + '/' + entry.name;
+          if (entry.isDirectory()) {
+            copyDirRecursive(srcPath, destPath);
+          } else {
+            copyFileSync(srcPath, destPath);
+          }
+        }
+      };
+      copyDirRecursive('icons', 'dist/icons');
+      console.log('✓ Copied icons/ to dist/icons/');
+    }
+    // Also copy any public/icons/ to dist/icons/
+    if (existsSync('public/icons')) {
+      mkdirSync('dist/icons', { recursive: true });
+      const copyDirRecursive = (src, dest) => {
+        if (!existsSync(dest)) mkdirSync(dest, { recursive: true });
+        const entries = readdirSync(src, { withFileTypes: true });
+        for (const entry of entries) {
+          const srcPath = src + '/' + entry.name;
+          const destPath = dest + '/' + entry.name;
+          if (entry.isDirectory()) {
+            copyDirRecursive(srcPath, destPath);
+          } else {
+            copyFileSync(srcPath, destPath);
+          }
+        }
+      };
+      copyDirRecursive('public/icons', 'dist/icons');
+      console.log('✓ Copied public/icons/ to dist/icons/');
+    }
   }
 });
 
 export default defineConfig({
-  plugins: [react(), copyManifestPlugin()],
+  plugins: [react(), copyExtensionAssetsPlugin()],
   // Use relative paths for Chrome extension compatibility
   base: './',
   resolve: {

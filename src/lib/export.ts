@@ -628,10 +628,24 @@ export async function exportExtension(
     return null;
   };
   
+  // Dev-only files that should never be in a Chrome extension ZIP
+  const DEV_ONLY_FILES = new Set([
+    'vite.config.ts', 'vite.config.js', 'vite.config.mjs',
+    'tsconfig.json', 'tsconfig.node.json',
+    'postcss.config.js', 'postcss.config.cjs', 'postcss.config.ts',
+    'tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs',
+    'package.json', 'package-lock.json',
+    '.gitignore', '.eslintrc', '.eslintrc.js', '.prettierrc',
+  ]);
+
+  // Prefixes for directories that should never be exported
+  const DEV_ONLY_PREFIXES = ['node_modules/', '.git/', 'src/', '.vite/'];
+
   // Add all existing files to ZIP, ensuring manifest.json is at root
   for (const [path, content] of Object.entries(filesToExport)) {
-    // Skip node_modules and other build artifacts
-    if (path.includes('node_modules') || path.includes('.git')) {
+    // Skip node_modules, .git, raw source, and dev config files
+    if (DEV_ONLY_FILES.has(path) || DEV_ONLY_PREFIXES.some(prefix => path.startsWith(prefix))) {
+      console.log(`[Export] Skipping dev file: ${path}`);
       continue;
     }
     
@@ -855,48 +869,36 @@ export async function buildAndDownloadExtension(
   dimensions?: PopupDimensions,
   onProgress?: (message: string) => void
 ): Promise<void> {
-  let filesToExport: FileMap = sourceFiles;
-  let usedFallback = false;
-  
-  // Try to build with WebContainer if available
+  let filesToExport: FileMap;
+
+  // Build with WebContainer — never fall back to raw source files
   try {
     // Import dynamically to avoid circular dependencies
     const { buildAndReadDist, isBooted } = await import('@/preview/webcontainerBridge');
-    
-    // Only attempt build if WebContainer is booted
-    if (isBooted()) {
-      onProgress?.('Building extension for production...');
-      console.log('[Export] Starting production build...');
-      
-      const builtFiles = await buildAndReadDist(sourceFiles);
-      
-      if (builtFiles && Object.keys(builtFiles).length > 0) {
-        console.log('[Export] Build complete, got files:', Object.keys(builtFiles));
-        filesToExport = builtFiles;
-      } else {
-        console.warn('[Export] Build returned no files, using source files');
-        usedFallback = true;
-      }
-    } else {
-      console.log('[Export] WebContainer not booted, exporting source files directly');
-      usedFallback = true;
+
+    if (!isBooted()) {
+      throw new Error('Preview is not running. Please ensure your extension builds successfully in the preview before exporting.');
     }
+
+    onProgress?.('Building extension for production...');
+    console.log('[Export] Starting production build...');
+
+    const builtFiles = await buildAndReadDist(sourceFiles);
+
+    if (!builtFiles || Object.keys(builtFiles).length === 0) {
+      throw new Error('Build failed — no output files were produced. Please ensure your extension builds successfully in the preview before exporting.');
+    }
+
+    console.log('[Export] Build complete, got files:', Object.keys(builtFiles));
+    filesToExport = builtFiles;
   } catch (buildError: any) {
-    console.warn('[Export] Build failed, falling back to source export:', buildError.message);
-    usedFallback = true;
+    // Re-throw with a user-friendly message
+    const msg = buildError.message || 'Unknown build error';
+    console.error('[Export] Build failed:', msg);
+    throw new Error(`Export failed: ${msg}`);
   }
-  
-  // Validate we have files to export
-  if (Object.keys(filesToExport).length === 0) {
-    throw new Error('No files to export. Please create some extension files first.');
-  }
-  
-  if (usedFallback) {
-    onProgress?.('Packaging source files...');
-    console.log('[Export] Exporting source files:', Object.keys(filesToExport));
-  } else {
-    onProgress?.('Packaging extension...');
-  }
+
+  onProgress?.('Packaging extension...');
   
   // Use provided dimensions or default to medium size
   const exportDimensions = dimensions || DEFAULT_POPUP_DIMENSIONS;
@@ -909,5 +911,5 @@ export async function buildAndDownloadExtension(
   onProgress?.('Downloading...');
   downloadBlob(blob, `${sanitizedName}.zip`);
   
-  console.log('[Export] Download started', usedFallback ? '(source files)' : '(built files)');
+  console.log('[Export] Download started (built files)');
 }
