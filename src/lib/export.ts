@@ -170,38 +170,46 @@ function injectPopupDimensions(html: string, dimensions: PopupDimensions): strin
     // The AI is instructed to build responsive layouts, so this should
     // only need to set the outer dimensions — content should adapt naturally.
     const POPUP_STYLE = `<style data-extendr-popup-sizing>
-  /* Extendr: Popup dimensions for Chrome extension */
-  html, body {
+  /* Extendr: Chrome extension popup sizing */
+
+  /* html sets the popup dimensions Chrome uses to size the window.
+     overflow is visible so body can scroll within it. */
+  html {
     width: ${width}px !important;
+    min-width: ${width}px !important;
     height: ${height}px !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
+    min-height: ${height}px !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
+    overflow: auto !important;
+    background: inherit !important;
   }
 
-  /* Override preview scaffold styles that don't work in popups */
+  /* body fills the popup and scrolls when content overflows */
   body {
-    min-height: 0 !important; /* Kill 100vh from scaffold */
+    width: ${width}px !important;
+    min-width: ${width}px !important;
+    height: ${height}px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
     overflow-y: auto !important;
+    min-height: 0 !important;
   }
 
-  /* Force #root to fill popup exactly, scroll if content overflows */
+  /* #root fills body, uses flex column so children can stretch */
   #root {
     width: 100% !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
+    min-height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
   }
 
-  /* Ensure direct children of #root stretch to fill */
+  /* Direct children of #root fill available space */
   #root > * {
     width: 100% !important;
+    flex: 1 1 auto !important;
     min-height: 0 !important;
-    flex-shrink: 1 !important;
     box-sizing: border-box !important;
   }
 </style>`;
