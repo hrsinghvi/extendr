@@ -88,7 +88,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider }: Mode
       <PopoverContent
         align="start"
         side="bottom"
-        sideOffset={16}
+        sideOffset={8}
         avoidCollisions={false}
         className="w-[420px] p-0 bg-[#1F2020] border-[#2a2a2a] text-white shadow-xl rounded-lg"
       >
