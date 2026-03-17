@@ -1111,11 +1111,10 @@ export default function Resources() {
       setActiveSection(sectionId);
       setSidebarOpen(false);
       setActiveHeading("");
-      // Scroll content to top
+      // Scroll the content panel to top
       if (contentRef.current) {
         contentRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }
-      window.scrollTo({ top: 0, behavior: "smooth" });
     },
     []
   );
@@ -1123,15 +1122,16 @@ export default function Resources() {
   const scrollToHeading = useCallback((headingId: string) => {
     setActiveHeading(headingId);
     const el = document.getElementById(headingId);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el && contentRef.current) {
+      const elTop = el.offsetTop - contentRef.current.offsetTop;
+      contentRef.current.scrollTo({ top: elTop - 24, behavior: "smooth" });
     }
   }, []);
 
-  // Track active heading on scroll
+  // Track active heading on scroll within the content panel
   useEffect(() => {
     const headings = currentSection.headings.map((h) => document.getElementById(h.id));
-    if (headings.length === 0) return;
+    if (headings.length === 0 || !contentRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -1141,7 +1141,7 @@ export default function Resources() {
           }
         }
       },
-      { rootMargin: "-100px 0px -60% 0px", threshold: 0.1 }
+      { root: contentRef.current, rootMargin: "-80px 0px -60% 0px", threshold: 0.1 }
     );
 
     headings.forEach((h) => h && observer.observe(h));
@@ -1177,7 +1177,7 @@ export default function Resources() {
   }, [activeSection]);
 
   return (
-    <div className="min-h-screen bg-[#050609]">
+    <div className="h-screen bg-[#050609] flex flex-col overflow-hidden">
       <Header />
 
       {/* Mobile sidebar toggle */}
@@ -1202,13 +1202,13 @@ export default function Resources() {
         )}
       </AnimatePresence>
 
-      <div className="pt-20 lg:pt-24">
-        <div className="max-w-[1400px] mx-auto flex">
+      <div className="flex-1 pt-20 lg:pt-24 overflow-hidden">
+        <div className="max-w-[1400px] mx-auto flex h-full">
           {/* ─── LEFT SIDEBAR ─── */}
           <aside
             className={`
-              fixed lg:sticky top-0 lg:top-24 left-0 z-40 lg:z-10
-              w-[280px] lg:w-[260px] xl:w-[280px] h-screen lg:h-[calc(100vh-6rem)]
+              fixed lg:relative top-0 lg:top-0 left-0 z-40 lg:z-10
+              w-[280px] lg:w-[260px] xl:w-[280px] h-screen lg:h-full
               bg-[#0a0c10] lg:bg-transparent border-r border-border/10
               overflow-y-auto overscroll-contain
               transition-transform duration-300 ease-in-out
@@ -1262,10 +1262,10 @@ export default function Resources() {
             </nav>
           </aside>
 
-          {/* ─── MAIN CONTENT ─── */}
+          {/* ─── MAIN CONTENT (only scrollable area) ─── */}
           <main
             ref={contentRef}
-            className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 xl:px-16 py-6 lg:py-2"
+            className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 xl:px-16 py-6 lg:py-2 overflow-y-auto h-full custom-scrollbar"
           >
             <article className="max-w-[720px]" itemScope itemType="https://schema.org/TechArticle">
               {/* Breadcrumb */}
@@ -1361,11 +1361,12 @@ export default function Resources() {
                 </a>
               </div>
             </article>
+            <Footer />
           </main>
 
           {/* ─── RIGHT TOC SIDEBAR ─── */}
           {currentSection.headings.length > 0 && (
-            <aside className="hidden xl:block w-[220px] flex-shrink-0 sticky top-24 h-[calc(100vh-6rem)] py-2">
+            <aside className="hidden xl:block w-[220px] flex-shrink-0 h-full py-2">
               <nav aria-label="On this page">
                 <div className="flex items-center gap-2 px-3 mb-3">
                   <Layers className="w-3.5 h-3.5 text-muted-foreground/50" />
@@ -1398,8 +1399,6 @@ export default function Resources() {
           )}
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }
