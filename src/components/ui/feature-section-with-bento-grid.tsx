@@ -57,18 +57,18 @@ export function FeaturesSectionWithBentoGrid() {
     <div className="relative overflow-x-hidden">
       {/* ─── HERO SECTION ─── */}
       <div
-        className="px-4 pt-44 max-w-7xl mx-auto relative"
+        className="px-4 pt-24 sm:pt-32 lg:pt-44 max-w-7xl mx-auto relative"
         ref={featuresRef}
       >
-        <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-center items-start justify-between gap-12">
+        <article className="flex xl:flex-row flex-col xl:pb-0 pb-4 xl:items-center items-start justify-between gap-8 xl:gap-12">
           {/* Left: Title & CTA */}
-          <div className="text-left mb-6 max-w-xl">
+          <div className="text-left mb-6 xl:max-w-xl">
             <div className="mb-4 pt-8">
               <span className="text-primary font-semibold text-sm tracking-widest uppercase">
                 Features
               </span>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold leading-[120%] text-foreground mb-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[120%] text-foreground mb-6">
               <VerticalCutReveal
                 splitBy="words"
                 staggerDuration={0.15}
@@ -128,7 +128,7 @@ export function FeaturesSectionWithBentoGrid() {
             animationNum={1}
             timelineRef={featuresRef}
             customVariants={revealVariants}
-            className="flex-1 max-w-lg w-full hidden md:block"
+            className="flex-1 max-w-lg w-full hidden xl:block"
           >
             <div className="relative mt-8 pr-4">
               {/* Chat message mockup */}
@@ -245,17 +245,22 @@ export function FeaturesSectionWithBentoGrid() {
               opacity: 0,
             },
           }}
-          className="mt-32 mb-8"
+          className="mt-16 sm:mt-24 lg:mt-32 mb-8"
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0 rounded-2xl bg-[#0a0e13]/70 backdrop-blur-sm border border-border/30">
-            {numberedFeatures.map((feat, i) => (
+            {numberedFeatures.map((feat, i) => {
+              // 2-col: items 0,2 get right border; items 0,1 get bottom border
+              // 4-col (md+): items 0,1,2 get right border; no bottom borders
+              const cls = [
+                "py-6 px-4 sm:px-6",
+                i % 2 === 0 ? "border-r border-border/30" : "",
+                i < 2 ? "border-b border-border/30 md:border-b-0" : "",
+                i === 1 || i === 2 ? "md:border-r md:border-border/30" : "",
+              ].filter(Boolean).join(" ");
+              return (
               <div
                 key={feat.num}
-                className={`py-6 px-6 ${
-                  i < numberedFeatures.length - 1
-                    ? "border-r border-border/30"
-                    : ""
-                }`}
+                className={cls}
               >
                 <div className="border-t border-border/50 pt-4">
                   <span className="text-xs font-mono text-foreground/50 tracking-wider">
@@ -267,7 +272,8 @@ export function FeaturesSectionWithBentoGrid() {
                   <p className="text-sm text-foreground/60 mt-1">{feat.desc}</p>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </TimelineContent>
       </div>
@@ -294,7 +300,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 30 }}
             animate={bentoInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[280px] sm:min-h-[340px] flex flex-col"
           >
             {/* Glow effect */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
@@ -350,7 +356,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 30 }}
             animate={bentoInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="group rounded-2xl border border-border/50 bg-gradient-to-bl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-bl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[280px] sm:min-h-[340px] flex flex-col"
           >
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-blue/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -417,7 +423,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 30 }}
             animate={bentoInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="group rounded-2xl border border-border/50 bg-gradient-to-tr from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-tr from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[280px] sm:min-h-[340px] flex flex-col"
           >
             <div className="absolute top-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -482,7 +488,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 30 }}
             animate={bentoInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="group rounded-2xl border border-border/50 bg-gradient-to-tl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[340px] flex flex-col items-center justify-center text-center"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-tl from-card/80 to-[#0a0f12] p-8 relative overflow-hidden min-h-[280px] sm:min-h-[340px] flex flex-col items-center justify-center text-center"
           >
             <div className="absolute bottom-0 right-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -565,7 +571,7 @@ export function FeaturesSectionWithBentoGrid() {
 
       {/* ─── SPOTLIGHT SECTION ─── */}
       <div className="px-4 max-w-7xl mx-auto mt-6" ref={spotlightRef}>
-        <div className="rounded-3xl border border-border/30 bg-gradient-to-r from-card/60 via-[#080c10] to-card/60 p-8 sm:p-12 relative overflow-hidden">
+        <div className="rounded-2xl sm:rounded-3xl border border-border/30 bg-gradient-to-r from-card/60 via-[#080c10] to-card/60 p-5 sm:p-8 lg:p-12 relative overflow-hidden">
           <div className="flex flex-col lg:flex-row gap-12 items-start">
             {/* Left content */}
             <div className="flex-1 max-w-lg">
@@ -573,13 +579,13 @@ export function FeaturesSectionWithBentoGrid() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={spotlightInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5 }}
-                className="text-3xl sm:text-4xl font-bold text-foreground leading-tight mb-6"
+                className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight mb-6"
               >
                 15+ AI tools working
-                <br />
-                together to build your
-                <br />
-                extension
+                <br className="hidden sm:block" />
+                {" "}together to build your
+                <br className="hidden sm:block" />
+                {" "}extension
               </motion.h3>
 
               <motion.p
@@ -598,7 +604,7 @@ export function FeaturesSectionWithBentoGrid() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={spotlightInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="grid grid-cols-2 gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -685,7 +691,7 @@ export function FeaturesSectionWithBentoGrid() {
       </div>
 
       {/* ─── BOTTOM FEATURES GRID ─── */}
-      <div className="px-4 max-w-7xl mx-auto mt-32 mb-16" ref={bottomRef}>
+      <div className="px-4 max-w-7xl mx-auto mt-16 sm:mt-24 lg:mt-32 mb-16" ref={bottomRef}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={bottomInView ? { opacity: 1, y: 0 } : {}}
