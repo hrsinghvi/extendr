@@ -333,30 +333,47 @@ export default function PricingSection3() {
                     </div>
                   )}
 
-                  <div className="flex items-baseline">
+                  <div>
                     {plan.isCustom ? (
                       <span className="text-3xl font-semibold">Custom Enterprise</span>
                     ) : (
                       <>
-                        <span className="text-4xl font-semibold ">
-                          $
-                          <NumberFlow
-                            format={{
-                              currency: "USD",
-                            }}
-                            value={isYearly ? plan.yearlyPrice! : plan.price!}
-                            className="text-4xl font-semibold"
-                          />
-                        </span>
-                        <span
-                          className={
-                            plan.popular
-                              ? "text-primary-foreground/70 ml-1"
-                              : "text-muted-foreground ml-1"
-                          }
-                        >
-                          /{isYearly ? "year" : "month"}
-                        </span>
+                        <div className="flex items-baseline">
+                          <span className="text-4xl font-semibold">
+                            $
+                            <NumberFlow
+                              format={{
+                                currency: "USD",
+                              }}
+                              value={isYearly ? Math.round(plan.yearlyPrice! / 12) : plan.price!}
+                              className="text-4xl font-semibold"
+                            />
+                          </span>
+                          <span
+                            className={
+                              plan.popular
+                                ? "text-primary-foreground/70 ml-1"
+                                : "text-muted-foreground ml-1"
+                            }
+                          >
+                            /month
+                          </span>
+                        </div>
+                        {isYearly && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className={cn(
+                                "text-xs",
+                                plan.popular ? "text-primary-foreground/60" : "text-muted-foreground"
+                              )}
+                            >
+                              ${plan.yearlyPrice}/yr — billed yearly
+                            </span>
+                            <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                              Save {Math.round((1 - plan.yearlyPrice! / (plan.price! * 12)) * 100)}%
+                            </span>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
