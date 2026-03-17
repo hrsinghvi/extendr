@@ -691,7 +691,7 @@ export function FeaturesSectionWithBentoGrid() {
       </div>
 
       {/* ─── BOTTOM FEATURES GRID ─── */}
-      <div className="px-4 max-w-7xl mx-auto mt-16 sm:mt-24 lg:mt-32 mb-16" ref={bottomRef}>
+      <div className="px-4 max-w-7xl mx-auto mt-16 sm:mt-24 lg:mt-32 mb-4" ref={bottomRef}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={bottomInView ? { opacity: 1, y: 0 } : {}}
@@ -926,7 +926,7 @@ export function FeaturesSectionWithBentoGrid() {
           initial={{ opacity: 0, y: 20 }}
           animate={bottomInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.5, duration: 0.5 }}
-          className="text-center mt-20"
+          className="text-center mt-12"
         >
           <p className="text-foreground mb-6">
             Ready to build your first Chrome extension?
