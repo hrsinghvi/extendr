@@ -707,7 +707,7 @@ export function FeaturesSectionWithBentoGrid() {
         </motion.div>
 
         {/* Top row: 3 equal columns */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5">
           {/* Natural Language Input */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
