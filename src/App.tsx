@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
@@ -175,16 +175,14 @@ const AnimatedRoutes = () => {
   return (
     <>
       <ScrollToTop />
-      <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route
           path="/"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Index />
             </motion.div>
@@ -194,10 +192,9 @@ const AnimatedRoutes = () => {
           path="/auth"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Auth />
             </motion.div>
@@ -207,10 +204,9 @@ const AnimatedRoutes = () => {
           path="/features"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Features />
             </motion.div>
@@ -220,10 +216,9 @@ const AnimatedRoutes = () => {
           path="/pricing"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Pricing />
             </motion.div>
@@ -233,10 +228,9 @@ const AnimatedRoutes = () => {
           path="/resources"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Resources />
             </motion.div>
@@ -246,10 +240,9 @@ const AnimatedRoutes = () => {
           path="/build"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Build />
             </motion.div>
@@ -259,10 +252,9 @@ const AnimatedRoutes = () => {
           path="/settings"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Settings />
             </motion.div>
@@ -273,17 +265,15 @@ const AnimatedRoutes = () => {
           path="*"
           element={
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <NotFound />
             </motion.div>
           }
         />
       </Routes>
-      </AnimatePresence>
     </>
   );
 };
