@@ -103,30 +103,6 @@ const plans: Plan[] = [
       "Webhook / API access",
     ],
   },
-  {
-    name: "Custom",
-    description:
-      "Custom solutions for teams with dedicated support and SLAs",
-    price: null,
-    yearlyPrice: null,
-    isCustom: true,
-    buttonText: "Contact sales",
-    buttonVariant: "outline" as const,
-    monthlyCredits: 0,
-    yearlyCredits: 0,
-    features: [
-      { text: "Custom integrations", icon: <Briefcase size={20} /> },
-      { text: "Dedicated support", icon: <Database size={20} /> },
-      { text: "SLA guarantees", icon: <Server size={20} /> },
-    ],
-    includes: [
-      "Everything in Ultra, plus:",
-      "Unlimited credits",
-      "SSO & SAML",
-      "Custom contracts",
-      "Dedicated account manager",
-    ],
-  },
 ];
 
 const PricingSwitch = ({
@@ -330,7 +306,7 @@ export default function PricingSection3() {
         animationNum={2}
         timelineRef={pricingRef}
         customVariants={revealVariants}
-        className="grid md:grid-cols-4 gap-4 mx-auto bg-muted/30 sm:p-2 rounded-lg"
+        className="grid md:grid-cols-3 gap-4 mx-auto bg-muted/30 sm:p-2 rounded-lg"
       >
         {plans.map((plan, index) => (
           <TimelineContent
