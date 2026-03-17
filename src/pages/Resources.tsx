@@ -1177,7 +1177,7 @@ export default function Resources() {
   }, [activeSection]);
 
   return (
-    <div className="h-screen bg-[#050609] flex flex-col overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Header />
 
       {/* Mobile sidebar toggle */}
@@ -1209,7 +1209,7 @@ export default function Resources() {
             className={`
               fixed lg:relative top-0 lg:top-0 left-0 z-40 lg:z-10
               w-[280px] lg:w-[260px] xl:w-[280px] h-screen lg:h-full
-              bg-[#0a0c10] lg:bg-transparent border-r border-border/10
+              bg-background lg:bg-transparent border-r border-border/10
               overflow-y-auto overscroll-contain
               transition-transform duration-300 ease-in-out
               ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
