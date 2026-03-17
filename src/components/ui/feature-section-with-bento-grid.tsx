@@ -713,7 +713,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={bottomInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0, duration: 0.4 }}
-            className="group rounded-2xl border border-border/30 bg-card/40 hover:bg-card/60 hover:border-border/50 transition-all duration-300 overflow-hidden"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] hover:border-border/60 transition-all duration-300 overflow-hidden"
           >
             <div className="h-48 relative bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-6 overflow-hidden">
               {/* Chat bubble illustration */}
@@ -753,7 +753,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={bottomInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.08, duration: 0.4 }}
-            className="group rounded-2xl border border-border/30 bg-card/40 hover:bg-card/60 hover:border-border/50 transition-all duration-300 overflow-hidden"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] hover:border-border/60 transition-all duration-300 overflow-hidden"
           >
             <div className="h-48 relative bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-6 overflow-hidden">
               {/* Shield + manifest illustration */}
@@ -790,7 +790,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={bottomInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.16, duration: 0.4 }}
-            className="group rounded-2xl border border-border/30 bg-card/40 hover:bg-card/60 hover:border-border/50 transition-all duration-300 overflow-hidden"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] hover:border-border/60 transition-all duration-300 overflow-hidden"
           >
             <div className="h-48 relative bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-6 overflow-hidden">
               {/* Terminal/container illustration */}
@@ -831,7 +831,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={bottomInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.24, duration: 0.4 }}
-            className="group rounded-2xl border border-border/30 bg-card/40 hover:bg-card/60 hover:border-border/50 transition-all duration-300 overflow-hidden"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] hover:border-border/60 transition-all duration-300 overflow-hidden"
           >
             <div className="h-48 relative bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-6 overflow-hidden">
               {/* Version tree illustration */}
@@ -876,7 +876,7 @@ export function FeaturesSectionWithBentoGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={bottomInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.32, duration: 0.4 }}
-            className="group rounded-2xl border border-border/30 bg-card/40 hover:bg-card/60 hover:border-border/50 transition-all duration-300 overflow-hidden"
+            className="group rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-[#0a0f12] hover:border-border/60 transition-all duration-300 overflow-hidden"
           >
             <div className="h-48 relative bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-6 overflow-hidden">
               {/* Model icons illustration */}

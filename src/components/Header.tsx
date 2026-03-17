@@ -68,8 +68,8 @@ export function Header() {
     },
     {
       name: "Resources",
-      link: "#", // Placeholder
-      onClick: () => {},
+      link: "/resources",
+      onClick: () => navigate("/resources"),
     },
     {
       name: "Pricing",
