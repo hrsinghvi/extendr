@@ -23,87 +23,88 @@ interface Plan {
   includes: string[];
   popular?: boolean;
   isCustom?: boolean;
-  planId?: "free" | "pro" | "premium";
-  dailyCredits: number;
+  planId?: "free" | "pro" | "premium" | "ultra";
   monthlyCredits: number;
+  yearlyCredits: number;
 }
 
 const plans: Plan[] = [
   {
-    name: "Free",
-    planId: "free",
-    description:
-      "Perfect for trying out Extendr and building your first extension",
-    price: 0,
-    yearlyPrice: 0,
-    buttonText: "Get started",
-    buttonVariant: "outline" as const,
-    dailyCredits: 100,
-    monthlyCredits: 0,
-    features: [
-      { text: "Up to 3 extensions", icon: <Briefcase size={20} /> },
-      { text: "Basic templates", icon: <Database size={20} /> },
-      { text: "Community support", icon: <Server size={20} /> },
-    ],
-    includes: [
-      "Free includes:",
-      "100 daily AI credits",
-      "AI-powered generation",
-      "Live preview",
-      "Export to ZIP",
-    ],
-  },
-  {
     name: "Pro",
     planId: "pro",
     description:
-      "Best for indie developers building multiple extensions",
-    price: 20,
-    yearlyPrice: 190,
-    buttonText: "Upgrade to Pro",
+      "Great for getting started with AI-powered extension building",
+    price: 12,
+    yearlyPrice: 120,
+    buttonText: "Get Pro",
     buttonVariant: "outline" as const,
-    dailyCredits: 100,
-    monthlyCredits: 40,
+    monthlyCredits: 15,
+    yearlyCredits: 150,
     features: [
-      { text: "Unlimited extensions", icon: <Briefcase size={20} /> },
-      { text: "All templates", icon: <Database size={20} /> },
-      { text: "Priority AI generation", icon: <Server size={20} /> },
+      { text: "AI-powered generation", icon: <Briefcase size={20} /> },
+      { text: "Live preview", icon: <Database size={20} /> },
+      { text: "Email support", icon: <Server size={20} /> },
     ],
     includes: [
-      "Everything in Free, plus:",
-      "100 daily + 40 monthly credits",
-      "Advanced customization",
-      "Version history",
-      "Email support",
+      "Pro includes:",
+      "AI-powered generation",
+      "Live preview",
+      "Export as zip to Chrome",
+      "Personal API key access",
+      "Email Support",
     ],
   },
   {
     name: "Premium",
     planId: "premium",
     description:
-      "For power users who need all features and faster generation",
-    price: 40,
-    yearlyPrice: 380,
+      "For power users who need advanced tools and priority support",
+    price: 24,
+    yearlyPrice: 240,
     popular: true,
-    buttonText: "Upgrade to Premium",
+    buttonText: "Get Premium",
     buttonVariant: "default" as const,
-    dailyCredits: 100,
-    monthlyCredits: 80,
+    monthlyCredits: 30,
+    yearlyCredits: 300,
     features: [
-      { text: "Unlimited everything", icon: <Briefcase size={20} /> },
-      { text: "Custom branding", icon: <Database size={20} /> },
-      { text: "Fastest AI generation", icon: <Server size={20} /> },
+      { text: "Priority support", icon: <Briefcase size={20} /> },
+      { text: "OpenRouter & Hugging Face", icon: <Database size={20} /> },
+      { text: "Advanced analytics", icon: <Server size={20} /> },
     ],
     includes: [
       "Everything in Pro, plus:",
-      "100 daily + 80 monthly credits",
-      "Priority support",
-      "Advanced analytics",
-      "API access",
+      "Priority Support",
+      "OpenRouter and Hugging Face Access",
+      "Advanced Analytics",
     ],
   },
   {
-    name: " ",
+    name: "Ultra",
+    planId: "ultra",
+    description:
+      "For professionals who need the full suite of tools and maximum power",
+    price: 40,
+    yearlyPrice: 400,
+    buttonText: "Get Ultra",
+    buttonVariant: "outline" as const,
+    monthlyCredits: 55,
+    yearlyCredits: 550,
+    features: [
+      { text: "Elite API access", icon: <Briefcase size={20} /> },
+      { text: "Advanced customization", icon: <Database size={20} /> },
+      { text: "Webhook / API access", icon: <Server size={20} /> },
+    ],
+    includes: [
+      "Everything in Premium, plus:",
+      "Elite API Access",
+      "Advanced Customization",
+      "Increased Storage",
+      "Version history & rollback",
+      "Webhook / API access",
+    ],
+  },
+  {
+    name: "Custom",
     description:
       "Custom solutions for teams with dedicated support and SLAs",
     price: null,
@@ -111,15 +112,15 @@ const plans: Plan[] = [
     isCustom: true,
     buttonText: "Contact sales",
     buttonVariant: "outline" as const,
-    dailyCredits: 100,
     monthlyCredits: 0,
+    yearlyCredits: 0,
     features: [
       { text: "Custom integrations", icon: <Briefcase size={20} /> },
       { text: "Dedicated support", icon: <Database size={20} /> },
       { text: "SLA guarantees", icon: <Server size={20} /> },
     ],
     includes: [
-      "Everything in Premium, plus:",
+      "Everything in Ultra, plus:",
       "Unlimited credits",
       "SSO & SAML",
       "Custom contracts",
@@ -183,7 +184,7 @@ const PricingSwitch = ({
           <span className="relative flex items-center gap-2">
             Yearly
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-              Save 20%
+              Save 17%
             </span>
           </span>
         </button>
@@ -196,7 +197,7 @@ export default function PricingSection3() {
   const [isYearly, setIsYearly] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [pendingPlan, setPendingPlan] = useState<{ plan: "pro" | "premium"; interval: BillingInterval } | null>(null);
+  const [pendingPlan, setPendingPlan] = useState<{ plan: "pro" | "premium" | "ultra"; interval: BillingInterval } | null>(null);
   const pricingRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -230,12 +231,6 @@ export default function PricingSection3() {
   const handlePlanClick = async (plan: Plan) => {
     const interval: BillingInterval = isYearly ? "yearly" : "monthly";
 
-    // Free plan - just go to build
-    if (plan.planId === "free") {
-      navigate("/build");
-      return;
-    }
-
     // Custom enterprise - contact sales
     if (plan.isCustom) {
       window.location.href = "mailto:sales@extendr.dev?subject=Enterprise%20Inquiry";
@@ -244,19 +239,19 @@ export default function PricingSection3() {
 
     // Paid plans - check auth first
     if (!isAuthenticated) {
-      setPendingPlan({ plan: plan.planId as "pro" | "premium", interval });
+      setPendingPlan({ plan: plan.planId as "pro" | "premium" | "ultra", interval });
       setShowAuthModal(true);
       return;
     }
 
     // Proceed with checkout
-    await handleCheckout(plan.planId as "pro" | "premium", interval);
+    await handleCheckout(plan.planId as "pro" | "premium" | "ultra", interval);
   };
 
   /**
    * Handle Stripe Checkout redirect
    */
-  const handleCheckout = async (planId: "pro" | "premium", interval: BillingInterval) => {
+  const handleCheckout = async (planId: "pro" | "premium" | "ultra", interval: BillingInterval) => {
     setLoadingPlan(planId);
     
     try {
@@ -408,8 +403,8 @@ export default function PricingSection3() {
                 {!plan.isCustom && (
                   <div className={cn(
                     "flex items-center gap-2 mb-4 p-2 rounded-lg",
-                    plan.popular 
-                      ? "bg-primary-foreground/10" 
+                    plan.popular
+                      ? "bg-primary-foreground/10"
                       : "bg-muted"
                   )}>
                     <Zap className={cn(
@@ -420,9 +415,7 @@ export default function PricingSection3() {
                       "text-sm font-medium",
                       plan.popular ? "text-primary-foreground" : "text-foreground"
                     )}>
-                      {plan.dailyCredits} daily
-                      {plan.monthlyCredits > 0 && ` + ${plan.monthlyCredits} monthly`}
-                      {" "}credits
+                      {isYearly ? plan.yearlyCredits : plan.monthlyCredits} credits / {isYearly ? "year" : "month"}
                     </span>
                   </div>
                 )}

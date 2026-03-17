@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
@@ -169,121 +169,41 @@ const ScrollToTop = () => {
   return null;
 };
 
+/**
+ * PageTransition - fade+slide entrance animation per route.
+ * No exit animation or AnimatePresence to avoid stuck/overlapping pages.
+ */
+const PageTransition = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  return (
+    <motion.div
+      key={location.pathname}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
     <>
       <ScrollToTop />
-      <AnimatePresence mode="popLayout">
       <Routes location={location} key={location.pathname}>
-        <Route
-          path="/"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <Index />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/auth"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <Auth />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/features"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <Features />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/pricing"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <Pricing />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/resources"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <Resources />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/build"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <Build />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <Settings />
-            </motion.div>
-          }
-        />
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
+        <Route path="/features" element={<PageTransition><Features /></PageTransition>} />
+        <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
+        <Route path="/resources" element={<PageTransition><Resources /></PageTransition>} />
+        <Route path="/build" element={<PageTransition><Build /></PageTransition>} />
+        <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route
-          path="*"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <NotFound />
-            </motion.div>
-          }
-        />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
-      </AnimatePresence>
     </>
   );
 };

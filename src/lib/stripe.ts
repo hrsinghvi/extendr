@@ -19,9 +19,13 @@ export const STRIPE_PRICES = {
     monthly: import.meta.env.VITE_STRIPE_PREMIUM_MONTHLY_PRICE_ID ?? '',
     yearly: import.meta.env.VITE_STRIPE_PREMIUM_YEARLY_PRICE_ID ?? '',
   },
+  ultra: {
+    monthly: import.meta.env.VITE_STRIPE_ULTRA_MONTHLY_PRICE_ID ?? '',
+    yearly: import.meta.env.VITE_STRIPE_ULTRA_YEARLY_PRICE_ID ?? '',
+  },
 } as const;
 
-export type PlanName = 'free' | 'pro' | 'premium';
+export type PlanName = 'free' | 'pro' | 'premium' | 'ultra';
 export type BillingInterval = 'monthly' | 'yearly';
 
 interface CheckoutResponse {
@@ -138,7 +142,7 @@ export async function useCredit(): Promise<CreditResponse> {
  * Redirect to Stripe Checkout for a plan
  */
 export async function redirectToCheckout(
-  plan: 'pro' | 'premium',
+  plan: 'pro' | 'premium' | 'ultra',
   interval: BillingInterval = 'monthly'
 ): Promise<void> {
   const priceId = STRIPE_PRICES[plan][interval];
