@@ -162,21 +162,24 @@ export class GeminiProvider extends BaseAIProvider {
       }
       
       this.log('Sending request to', model, useProxy ? '(via proxy)' : '(direct)');
-      
+
+      // 90-second timeout to prevent hanging forever
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90_000);
+
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          // Add Authorization header if using proxy (optional, but good practice if RLS/Auth is needed)
-          // For now, we'll assume the function is public or handles anon key if needed, 
-          // but usually Edge Functions need the Authorization header with the anon key.
           ...(useProxy ? {
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
           } : {})
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
-      
+
+      clearTimeout(timeout);
       const data: GeminiResponse = await response.json();
       
       if (!response.ok) {
@@ -194,6 +197,9 @@ export class GeminiProvider extends BaseAIProvider {
       
     } catch (error: any) {
       this.logError('Request failed', error);
+      if (error.name === 'AbortError') {
+        return this.errorResponse('Request timed out. The AI model took too long to respond. Please try again or switch to a different model.');
+      }
       return this.errorResponse(error.message);
     }
   }

@@ -129,6 +129,10 @@ export class OpenRouterProvider extends OpenAIProvider {
 
       this.log('Sending request to', this.getModel());
 
+      // 90-second timeout to prevent "Thinking..." hanging forever
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90_000);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -137,8 +141,11 @@ export class OpenRouterProvider extends OpenAIProvider {
           'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://localhost', // Required by OpenRouter
           'X-Title': 'Extendr' // App name for OpenRouter dashboard
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
+
+      clearTimeout(timeout);
 
       const data: OpenRouterResponse = await response.json();
 
@@ -160,6 +167,9 @@ export class OpenRouterProvider extends OpenAIProvider {
 
     } catch (error: any) {
       this.logError('Request failed', error);
+      if (error.name === 'AbortError') {
+        return this.errorResponse('Request timed out. The AI model took too long to respond. Please try again or switch to a different model.');
+      }
       return this.errorResponse(error.message);
     }
   }

@@ -118,7 +118,11 @@ export class ClaudeProvider extends BaseAIProvider {
       }
       
       this.log('Sending request to', this.getModel());
-      
+
+      // 90-second timeout to prevent hanging forever
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90_000);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -126,9 +130,11 @@ export class ClaudeProvider extends BaseAIProvider {
           'x-api-key': this.config.apiKey,
           'anthropic-version': this.apiVersion
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
-      
+
+      clearTimeout(timeout);
       const data: ClaudeResponse = await response.json();
       
       if (!response.ok || data.error) {
@@ -146,10 +152,13 @@ export class ClaudeProvider extends BaseAIProvider {
       
     } catch (error: any) {
       this.logError('Request failed', error);
+      if (error.name === 'AbortError') {
+        return this.errorResponse('Request timed out. The AI model took too long to respond. Please try again or switch to a different model.');
+      }
       return this.errorResponse(error.message);
     }
   }
-  
+
   /**
    * Convert our Message format to Claude format
    */
