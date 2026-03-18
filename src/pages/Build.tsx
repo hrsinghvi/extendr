@@ -724,18 +724,19 @@ export default function Build() {
       return;
     }
 
-    console.log('[Persistence] Restoring', Object.keys(files).length, 'files to WebContainer...');
-    
-    for (const [path, content] of Object.entries(files)) {
-      try {
-        await wcWriteFile(path, content);
-        console.log('[Persistence] ✓ Restored:', path);
-      } catch (e) {
-        console.warn('[Persistence] Could not restore to WC:', path, e);
-        // Continue with other files even if one fails
-      }
-    }
-    
+    const entries = Object.entries(files);
+    console.log('[Persistence] Restoring', entries.length, 'files to WebContainer in parallel...');
+
+    await Promise.all(
+      entries.map(async ([path, content]) => {
+        try {
+          await wcWriteFile(path, content);
+        } catch (e) {
+          console.warn('[Persistence] Could not restore to WC:', path, e);
+        }
+      })
+    );
+
     console.log('[Persistence] ✓ All files restored to WebContainer');
   }, []);
 
@@ -745,23 +746,23 @@ export default function Build() {
    */
   async function loadOrCreateChat(userId: string, projectId: string) {
     try {
-      // Step 1: Load project files from Supabase FIRST
-      console.log('[loadOrCreateChat] Loading project files...');
-      await initializeProjectFiles(projectId);
-      
-      // Step 2: Load or create chat
-      const { data: existingChats, error: fetchError } = await supabase
-        .from("chats")
-        .select("*")
-        .eq("project_id", projectId)
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(1);
-      
-      if (fetchError) throw fetchError;
-      
-      if (existingChats && existingChats.length > 0) {
-        const chat = existingChats[0] as Chat;
+      // Load project files and chat data IN PARALLEL for faster opening
+      console.log('[loadOrCreateChat] Loading files + chat in parallel...');
+      const [, chatResult] = await Promise.all([
+        initializeProjectFiles(projectId),
+        supabase
+          .from("chats")
+          .select("*")
+          .eq("project_id", projectId)
+          .eq("user_id", userId)
+          .order("updated_at", { ascending: false })
+          .limit(1),
+      ]);
+
+      if (chatResult.error) throw chatResult.error;
+
+      if (chatResult.data && chatResult.data.length > 0) {
+        const chat = chatResult.data[0] as Chat;
         setCurrentChat(chat);
         await loadMessages(chat.id);
       } else {

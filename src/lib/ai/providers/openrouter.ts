@@ -40,6 +40,11 @@ const TOOL_CALL_BLOCK_REGEX = /<tool_call>([\s\S]*?)<\/tool_call>/gi;
 const TOOL_FUNCTION_REGEX = /<function=([a-zA-Z0-9_:-]+)>/i;
 const TOOL_PARAMETER_REGEX = /<parameter=([a-zA-Z0-9_:-]+)>([\s\S]*?)<\/parameter>/gi;
 
+// Anthropic-style XML: <function_calls><invoke name="..."><parameter name="...">value</parameter></invoke></function_calls>
+const FUNCTION_CALLS_BLOCK_REGEX = /<function_calls>([\s\S]*?)<\/function_calls>/gi;
+const INVOKE_REGEX = /<invoke\s+name="([^"]+)">([\s\S]*?)<\/invoke>/gi;
+const PARAM_NAME_REGEX = /<parameter\s+name="([^"]+)"[^>]*>([\s\S]*?)<\/parameter>/gi;
+
 // ============================================================================
 // OpenRouter Provider Implementation
 // ============================================================================
@@ -187,7 +192,13 @@ export class OpenRouterProvider extends OpenAIProvider {
     // Fallback for models that emit pseudo XML-style tool tags in plain text.
     const pseudoToolCalls = this.parsePseudoToolCalls(normalizedContent);
     if (pseudoToolCalls.length > 0) {
-      const cleanedContent = normalizedContent.replace(TOOL_CALL_BLOCK_REGEX, '').trim();
+      // Strip all known tool-call XML formats from the content shown to the user
+      const cleanedContent = normalizedContent
+        .replace(TOOL_CALL_BLOCK_REGEX, '')
+        .replace(FUNCTION_CALLS_BLOCK_REGEX, '')
+        .replace(INVOKE_REGEX, '')
+        .replace(/<\/?function_calls>/gi, '')
+        .trim();
       this.log('Parsed pseudo tool calls', pseudoToolCalls.map(tc => tc.name));
       return this.toolCallsResponse(pseudoToolCalls, data, cleanedContent || undefined);
     }
@@ -218,52 +229,82 @@ export class OpenRouterProvider extends OpenAIProvider {
     // Without this, raw XML leaks into the chat as the final response text.
     text = text.replace(/<tool_call>(?:(?!<\/tool_call>)[\s\S])*$/i, '').trim();
 
+    // Strip unclosed Anthropic-style blocks too
+    text = text.replace(/<function_calls>(?:(?!<\/function_calls>)[\s\S])*$/i, '').trim();
+    text = text.replace(/<invoke\s[^>]*>(?:(?!<\/invoke>)[\s\S])*$/i, '').trim();
+
     return text;
   }
 
   private parsePseudoToolCalls(content: string) {
     const calls: Array<{ id: string; name: string; arguments: Record<string, unknown> }> = [];
-    if (!content || !content.includes('<tool_call>')) return calls;
+    if (!content) return calls;
 
-    const blocks = [...content.matchAll(TOOL_CALL_BLOCK_REGEX)];
-    for (const match of blocks) {
-      const block = (match[1] || '').trim();
+    // --- Format 1: <tool_call>...</tool_call> blocks ---
+    if (content.includes('<tool_call>')) {
+      const blocks = [...content.matchAll(TOOL_CALL_BLOCK_REGEX)];
+      for (const match of blocks) {
+        const block = (match[1] || '').trim();
 
-      // --- JSON format: <tool_call>{"name": "...", "arguments": {...}}</tool_call> ---
-      if (block.startsWith('{')) {
-        try {
-          const parsed = JSON.parse(block) as { name?: string; arguments?: Record<string, unknown> };
-          if (parsed.name) {
-            calls.push({
-              id: this.generateId(),
-              name: parsed.name,
-              arguments: parsed.arguments || {}
-            });
-            continue;
+        // JSON format: <tool_call>{"name": "...", "arguments": {...}}</tool_call>
+        if (block.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(block) as { name?: string; arguments?: Record<string, unknown> };
+            if (parsed.name) {
+              calls.push({
+                id: this.generateId(),
+                name: parsed.name,
+                arguments: parsed.arguments || {}
+              });
+              continue;
+            }
+          } catch {
+            // fall through to XML parser
           }
-        } catch {
-          // fall through to XML parser
         }
+
+        // XML format: <function=name><parameter=key>value</parameter></function>
+        const fnMatch = block.match(TOOL_FUNCTION_REGEX);
+        const name = fnMatch?.[1]?.trim();
+        if (!name) continue;
+
+        const args: Record<string, unknown> = {};
+        TOOL_PARAMETER_REGEX.lastIndex = 0;
+        for (const pMatch of block.matchAll(TOOL_PARAMETER_REGEX)) {
+          const key = pMatch[1]?.trim();
+          if (!key) continue;
+          args[key] = this.parseScalar(pMatch[2] || '');
+        }
+
+        calls.push({ id: this.generateId(), name, arguments: args });
       }
+    }
 
-      // --- XML format: <function=name><parameter=key>value</parameter></function> ---
-      const fnMatch = block.match(TOOL_FUNCTION_REGEX);
-      const name = fnMatch?.[1]?.trim();
-      if (!name) continue;
+    // --- Format 2: Anthropic-style <function_calls><invoke name="...">...</invoke></function_calls> ---
+    if (content.includes('<function_calls>') || content.includes('<invoke')) {
+      // Try wrapped in <function_calls> first
+      FUNCTION_CALLS_BLOCK_REGEX.lastIndex = 0;
+      const fcBlocks = [...content.matchAll(FUNCTION_CALLS_BLOCK_REGEX)];
+      const textToParse = fcBlocks.length > 0
+        ? fcBlocks.map(m => m[1]).join('\n')
+        : content; // Some models emit <invoke> without wrapping <function_calls>
 
-      const args: Record<string, unknown> = {};
-      TOOL_PARAMETER_REGEX.lastIndex = 0;
-      for (const pMatch of block.matchAll(TOOL_PARAMETER_REGEX)) {
-        const key = pMatch[1]?.trim();
-        if (!key) continue;
-        args[key] = this.parseScalar(pMatch[2] || '');
+      INVOKE_REGEX.lastIndex = 0;
+      for (const invokeMatch of textToParse.matchAll(INVOKE_REGEX)) {
+        const name = invokeMatch[1]?.trim();
+        if (!name) continue;
+
+        const body = invokeMatch[2] || '';
+        const args: Record<string, unknown> = {};
+        PARAM_NAME_REGEX.lastIndex = 0;
+        for (const pMatch of body.matchAll(PARAM_NAME_REGEX)) {
+          const key = pMatch[1]?.trim();
+          if (!key) continue;
+          args[key] = this.parseScalar(pMatch[2] || '');
+        }
+
+        calls.push({ id: this.generateId(), name, arguments: args });
       }
-
-      calls.push({
-        id: this.generateId(),
-        name,
-        arguments: args
-      });
     }
 
     return calls;
