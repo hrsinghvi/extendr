@@ -106,6 +106,9 @@ export const ALL_PROVIDERS: AIProviderType[] = [
   'huggingface',
 ];
 
+// Providers that are always locked regardless of API key availability
+export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'gemini']);
+
 // ============================================================================
 // API Key Utilities
 // ============================================================================

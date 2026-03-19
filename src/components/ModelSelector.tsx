@@ -18,6 +18,7 @@ import {
   PROVIDER_MODELS,
   PROVIDER_DISPLAY_NAMES,
   ALL_PROVIDERS,
+  LOCKED_PROVIDERS,
   type ModelEntry,
   type StoredModelConfig,
 } from '@/hooks/useModelConfig';
@@ -76,7 +77,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
   };
 
   const models = PROVIDER_MODELS[activeProvider] || [];
-  const activeProviderAvailable = getApiKeyForProvider(activeProvider).length > 10;
+  const activeProviderAvailable = !LOCKED_PROVIDERS.has(activeProvider) && getApiKeyForProvider(activeProvider).length > 10;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -99,7 +100,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
           {/* Provider sidebar */}
           <div className="w-[130px] border-r border-[#2a2a2a] py-2 flex flex-col gap-0.5 overflow-y-auto scrollbar-none">
             {ALL_PROVIDERS.map(p => {
-              const available = getApiKeyForProvider(p).length > 10;
+              const available = !LOCKED_PROVIDERS.has(p) && getApiKeyForProvider(p).length > 10;
               const isActive = activeProvider === p;
               return (
                 <button
@@ -125,7 +126,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
               {!activeProviderAvailable && (
                 <div className="flex items-center gap-1.5 text-xs text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5 mb-2">
                   <Lock className="w-3 h-3 flex-shrink-0" />
-                  <span>No API key set</span>
+                  <span>{LOCKED_PROVIDERS.has(activeProvider) ? 'Coming soon' : 'No API key set'}</span>
                 </div>
               )}
               <div className="space-y-0.5">
