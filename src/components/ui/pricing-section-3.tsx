@@ -39,7 +39,7 @@ const plans: Plan[] = [
     buttonText: "Get Pro",
     buttonVariant: "outline" as const,
     monthlyCredits: 15,
-    yearlyCredits: 150,
+    yearlyCredits: 180,
     features: [
       { text: "AI-powered generation", icon: <Briefcase size={20} /> },
       { text: "Live preview", icon: <Database size={20} /> },
@@ -65,7 +65,7 @@ const plans: Plan[] = [
     buttonText: "Get Premium",
     buttonVariant: "default" as const,
     monthlyCredits: 30,
-    yearlyCredits: 300,
+    yearlyCredits: 360,
     features: [
       { text: "Priority support", icon: <Briefcase size={20} /> },
       { text: "OpenRouter & Hugging Face", icon: <Database size={20} /> },
@@ -88,7 +88,7 @@ const plans: Plan[] = [
     buttonText: "Get Ultra",
     buttonVariant: "outline" as const,
     monthlyCredits: 55,
-    yearlyCredits: 550,
+    yearlyCredits: 660,
     features: [
       { text: "Elite API access", icon: <Briefcase size={20} /> },
       { text: "Advanced customization", icon: <Database size={20} /> },
