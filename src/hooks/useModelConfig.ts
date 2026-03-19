@@ -76,10 +76,6 @@ export const PROVIDER_MODELS: Record<AIProviderType, string[]> = {
   ],
   huggingface: [
     'Qwen/Qwen2.5-Coder-32B-Instruct',
-    'meta-llama/Llama-3.3-70B-Instruct',
-    'Qwen/Qwen3-235B-A22B',
-    'deepseek-ai/DeepSeek-R1',
-    'deepseek-ai/DeepSeek-V3.2',
   ],
 };
 
