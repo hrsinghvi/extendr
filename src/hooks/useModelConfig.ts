@@ -106,8 +106,11 @@ export const ALL_PROVIDERS: AIProviderType[] = [
   'huggingface',
 ];
 
-// Providers that are always locked regardless of API key availability
-export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'gemini']);
+// Providers that are always locked (not included in any plan yet)
+export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'gemini', 'claude']);
+
+// Providers that require Premium or Ultra plan
+export const PREMIUM_PROVIDERS: Set<AIProviderType> = new Set(['openrouter', 'huggingface']);
 
 // ============================================================================
 // API Key Utilities

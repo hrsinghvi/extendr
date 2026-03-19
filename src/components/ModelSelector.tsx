@@ -19,9 +19,11 @@ import {
   PROVIDER_DISPLAY_NAMES,
   ALL_PROVIDERS,
   LOCKED_PROVIDERS,
+  PREMIUM_PROVIDERS,
   type ModelEntry,
   type StoredModelConfig,
 } from '@/hooks/useModelConfig';
+import { usePlanAccess } from '@/context/SubscriptionContext';
 import type { AIProviderType } from '@/lib/ai/types';
 
 // ============================================================================
@@ -60,6 +62,10 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
   );
   const [customModel, setCustomModel] = useState('');
   const [showCustom, setShowCustom] = useState(false);
+  const { isPremium, planName } = usePlanAccess();
+
+  // Premium/Ultra users can access premium providers
+  const hasPremiumAccess = isPremium || planName === 'ultra';
 
   const triggerLabel = shortModelName(config.primary.model);
 
@@ -76,8 +82,20 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
     setShowCustom(false);
   };
 
+  const isProviderAvailable = (p: AIProviderType): boolean => {
+    if (LOCKED_PROVIDERS.has(p)) return false;
+    if (PREMIUM_PROVIDERS.has(p) && !hasPremiumAccess) return false;
+    return getApiKeyForProvider(p).length > 10;
+  };
+
+  const getLockedMessage = (p: AIProviderType): string => {
+    if (LOCKED_PROVIDERS.has(p)) return 'Not included in your plan';
+    if (PREMIUM_PROVIDERS.has(p) && !hasPremiumAccess) return 'Upgrade to Premium to unlock';
+    return 'No API key set';
+  };
+
   const models = PROVIDER_MODELS[activeProvider] || [];
-  const activeProviderAvailable = !LOCKED_PROVIDERS.has(activeProvider) && getApiKeyForProvider(activeProvider).length > 10;
+  const activeProviderAvailable = isProviderAvailable(activeProvider);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -100,7 +118,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
           {/* Provider sidebar */}
           <div className="w-[130px] border-r border-[#2a2a2a] py-2 flex flex-col gap-0.5 overflow-y-auto scrollbar-none">
             {ALL_PROVIDERS.map(p => {
-              const available = !LOCKED_PROVIDERS.has(p) && getApiKeyForProvider(p).length > 10;
+              const available = isProviderAvailable(p);
               const isActive = activeProvider === p;
               return (
                 <button
@@ -126,7 +144,7 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
               {!activeProviderAvailable && (
                 <div className="flex items-center gap-1.5 text-xs text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5 mb-2">
                   <Lock className="w-3 h-3 flex-shrink-0" />
-                  <span>{LOCKED_PROVIDERS.has(activeProvider) ? 'Coming soon' : 'No API key set'}</span>
+                  <span>{getLockedMessage(activeProvider)}</span>
                 </div>
               )}
               <div className="space-y-0.5">
