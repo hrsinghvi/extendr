@@ -350,11 +350,11 @@ export default function PricingSection3() {
                         </span>
                         <span
                           className={cn(
-                            "text-sm leading-tight",
+                            "text-sm",
                             plan.popular ? "text-primary-foreground/70" : "text-muted-foreground"
                           )}
                         >
-                          per month{isYearly ? <><br />billed yearly</> : ""}
+                          {isYearly ? "per month, billed yearly" : "per month"}
                         </span>
                       </div>
                     )}
