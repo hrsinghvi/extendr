@@ -18,9 +18,9 @@ export const stripe = new Stripe(stripeSecretKey, {
  * Plan name to monthly credits mapping
  */
 export const PLAN_CREDITS: Record<string, number> = {
-  free: 0,
-  pro: 40,
-  premium: 80,
+  pro: 15,
+  premium: 30,
+  ultra: 55,
 };
 
 /**
@@ -29,6 +29,6 @@ export const PLAN_CREDITS: Record<string, number> = {
  */
 export function getPlanFromPriceId(priceId: string, prices: Array<{ stripe_price_id: string; plan_name: string }>): string {
   const price = prices.find(p => p.stripe_price_id === priceId);
-  return price?.plan_name ?? 'free';
+  return price?.plan_name ?? 'pro';
 }
 

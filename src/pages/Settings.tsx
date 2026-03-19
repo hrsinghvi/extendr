@@ -446,12 +446,12 @@ export default function Settings() {
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 flex items-center justify-center">
-                      {planName === 'premium' ? (
+                      {planName === 'ultra' ? (
                         <Sparkles className="w-6 h-6 text-white" />
-                      ) : planName === 'pro' ? (
+                      ) : planName === 'premium' ? (
                         <Crown className="w-6 h-6 text-white" />
                       ) : (
-                        <span className="text-white text-xl font-bold">F</span>
+                        <Crown className="w-6 h-6 text-white" />
                       )}
                     </div>
                     <div>
@@ -471,28 +471,18 @@ export default function Settings() {
                     </div>
                   </div>
                   
-                  {planName !== 'free' ? (
-                    <Button 
-                      variant="outline"
-                      size="lg"
-                      onClick={handleManageSubscription}
-                      disabled={isManagingSubscription}
-                      className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white px-6"
-                    >
-                      {isManagingSubscription ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      ) : null}
-                      Manage
-                    </Button>
-                  ) : (
-                    <Button 
-                      size="lg"
-                      onClick={() => navigate('/pricing')}
-                      className="bg-primary hover:bg-primary/90 px-8 text-base"
-                    >
-                      Upgrade
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={handleManageSubscription}
+                    disabled={isManagingSubscription}
+                    className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white px-6"
+                  >
+                    {isManagingSubscription ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : null}
+                    Manage
+                  </Button>
                 </div>
 
                 {/* Credits Card */}

@@ -222,9 +222,9 @@ async function handleSubscriptionDeleted(subscription: any) {
     return;
   }
 
-  // Reset monthly credits to 0 (free tier)
+  // Reset monthly credits to 0 (subscription canceled)
   if (subData?.user_id) {
-    await resetMonthlyCredits(subData.user_id, 'free');
+    await resetMonthlyCredits(subData.user_id, 'canceled');
   }
 
   console.log(`Subscription canceled: ${subscription.id}`);

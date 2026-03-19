@@ -48,7 +48,7 @@ serve(async (req: Request) => {
       .eq('status', 'active')
       .single();
 
-    const planName = subscription?.plan_name ?? 'free';
+    const planName = subscription?.plan_name ?? 'pro';
 
     // Call the use_credit database function
     // This handles daily reset logic and credit deduction atomically

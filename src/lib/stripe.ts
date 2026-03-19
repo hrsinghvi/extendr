@@ -25,7 +25,7 @@ export const STRIPE_PRICES = {
   },
 } as const;
 
-export type PlanName = 'free' | 'pro' | 'premium' | 'ultra';
+export type PlanName = 'pro' | 'premium' | 'ultra';
 export type BillingInterval = 'monthly' | 'yearly';
 
 interface CheckoutResponse {
@@ -183,26 +183,26 @@ export function getPlanInfo(planName: PlanName): {
   features: string[];
 } {
   const plans = {
-    free: {
-      name: 'Free',
-      dailyCredits: 100,
-      monthlyCredits: 0,
-      features: ['Up to 3 extensions', 'Basic templates', 'Community support'],
-    },
     pro: {
       name: 'Pro',
       dailyCredits: 100,
-      monthlyCredits: 40,
-      features: ['Unlimited extensions', 'All templates', 'Priority AI generation'],
+      monthlyCredits: 15,
+      features: ['Up to 5 extensions', 'All templates', 'Priority AI generation'],
     },
     premium: {
       name: 'Premium',
       dailyCredits: 100,
-      monthlyCredits: 80,
-      features: ['Unlimited everything', 'Custom branding', 'Fastest AI generation'],
+      monthlyCredits: 30,
+      features: ['Unlimited extensions', 'All templates', 'Fastest AI generation'],
+    },
+    ultra: {
+      name: 'Ultra',
+      dailyCredits: 100,
+      monthlyCredits: 55,
+      features: ['Unlimited everything', 'Custom branding', 'Priority support'],
     },
   };
 
-  return plans[planName] ?? plans.free;
+  return plans[planName] ?? plans.pro;
 }
 

@@ -237,8 +237,8 @@ function QuickStartContent() {
         <Link to="/auth" className="text-primary hover:underline font-medium">
           sign up page
         </Link>{" "}
-        and create your account. You can sign up with email or Google. Every new account
-        comes with free credits to get started — no credit card required.
+        and create your account. You can sign up with email or Google. Choose the plan
+        that fits your needs and start building right away.
       </p>
 
       <h2 id="step-2-describe" className="text-xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
@@ -730,8 +730,8 @@ function PlansCreditsContent() {
         <Link to="/pricing" className="text-primary hover:underline font-medium">
           pricing page
         </Link>{" "}
-        to compare plans and choose the one that works for you. Every new account starts
-        with free credits to try Extendr before committing to a plan.
+        to compare plans and choose the one that works for you. All plans include
+        daily credits that reset every day plus monthly credits based on your tier.
       </p>
 
       <h2 id="extension-ownership" className="text-xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">

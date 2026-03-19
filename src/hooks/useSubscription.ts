@@ -27,7 +27,7 @@ export interface UseSubscriptionReturn {
   isActive: boolean;
   isPro: boolean;
   isPremium: boolean;
-  isFree: boolean;
+  isUltra: boolean;
 }
 
 export function useSubscription(): UseSubscriptionReturn {
@@ -57,12 +57,12 @@ export function useSubscription(): UseSubscriptionReturn {
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 = no rows found, which means free tier
+        // PGRST116 = no rows found, which means no active subscription
         throw fetchError;
       }
 
       if (!data) {
-        // No active subscription = free tier
+        // No active subscription
         setSubscription(null);
         return;
       }
@@ -120,11 +120,11 @@ export function useSubscription(): UseSubscriptionReturn {
     };
   }, [user?.id, fetchSubscription]);
 
-  const planName: PlanName = subscription?.planName ?? 'free';
+  const planName: PlanName = subscription?.planName ?? 'pro';
   const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
   const isPro = planName === 'pro' && isActive;
   const isPremium = planName === 'premium' && isActive;
-  const isFree = !isActive || planName === 'free';
+  const isUltra = planName === 'ultra' && isActive;
 
   return {
     subscription,
@@ -135,7 +135,7 @@ export function useSubscription(): UseSubscriptionReturn {
     isActive,
     isPro,
     isPremium,
-    isFree,
+    isUltra,
   };
 }
 

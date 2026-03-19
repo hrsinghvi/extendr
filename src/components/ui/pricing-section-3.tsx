@@ -23,7 +23,7 @@ interface Plan {
   includes: string[];
   popular?: boolean;
   isCustom?: boolean;
-  planId?: "free" | "pro" | "premium" | "ultra";
+  planId?: "pro" | "premium" | "ultra";
   monthlyCredits: number;
   yearlyCredits: number;
 }

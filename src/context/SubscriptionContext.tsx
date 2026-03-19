@@ -2,7 +2,7 @@
  * SubscriptionContext - Subscription and credits state management
  * 
  * Provides:
- * - Current subscription plan (free/pro/premium)
+ * - Current subscription plan (pro/premium/ultra)
  * - Credit balance (daily + monthly)
  * - Methods for using credits and checking access
  */
@@ -19,7 +19,7 @@ interface SubscriptionContextType {
   isActive: boolean;
   isPro: boolean;
   isPremium: boolean;
-  isFree: boolean;
+  isUltra: boolean;
   
   // Credits state
   credits: Credits | null;
@@ -54,7 +54,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     isActive,
     isPro,
     isPremium,
-    isFree,
+    isUltra,
   } = useSubscription();
 
   const {
@@ -81,7 +81,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         dailyRemaining: 0,
         monthlyRemaining: 0,
         monthlyTotal: 0,
-        planName: 'free',
+        planName: 'pro',
       };
       setLastCreditResult(result);
       return result;
@@ -120,8 +120,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     isActive,
     isPro,
     isPremium,
-    isFree,
-    
+    isUltra,
+
     // Credits
     credits,
     hasCredits,
@@ -172,7 +172,7 @@ export function useHasCredits(): boolean {
  * Convenience hook for plan checks
  */
 export function usePlanAccess() {
-  const { isPro, isPremium, isFree, planName } = useSubscriptionContext();
-  return { isPro, isPremium, isFree, planName };
+  const { isPro, isPremium, isUltra, planName } = useSubscriptionContext();
+  return { isPro, isPremium, isUltra, planName };
 }
 

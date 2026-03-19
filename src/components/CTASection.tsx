@@ -10,7 +10,7 @@ export function CTASection() {
           </h2>
 
           <p className="text-xl text-muted-foreground">
-            Try it out and start building for free
+            Start building your first Chrome extension today
           </p>
 
           {/* Trust chips */}

@@ -15,7 +15,7 @@ export interface Subscription {
   user_id: string;
   stripe_subscription_id: string;
   stripe_price_id: string;
-  plan_name: 'free' | 'pro' | 'premium';
+  plan_name: 'pro' | 'premium' | 'ultra';
   status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'unpaid';
   current_period_start: string;
   current_period_end: string;
@@ -61,8 +61,8 @@ export interface UseCreditResult {
  * Credit allocation by plan
  */
 export const PLAN_CREDITS = {
-  free: { daily: 100, monthly: 0 },
-  pro: { daily: 100, monthly: 40 },
-  premium: { daily: 100, monthly: 80 },
+  pro: { daily: 100, monthly: 15 },
+  premium: { daily: 100, monthly: 30 },
+  ultra: { daily: 100, monthly: 55 },
 } as const;
 

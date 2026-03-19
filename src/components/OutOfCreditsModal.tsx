@@ -22,10 +22,10 @@ interface OutOfCreditsModalProps {
 
 export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps) {
   const navigate = useNavigate();
-  const { planName, isFree, isPro, credits } = useSubscriptionContext();
+  const { planName, isPro, isPremium, credits } = useSubscriptionContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpgrade = async (plan: 'pro' | 'premium') => {
+  const handleUpgrade = async (plan: 'pro' | 'premium' | 'ultra') => {
     setIsLoading(true);
     try {
       await redirectToCheckout(plan, 'monthly');
@@ -89,28 +89,9 @@ export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps
           Daily credits reset in {getTimeUntilReset()}
         </p>
 
-        {/* Upgrade options - side by side for free users */}
-        {isFree && (
+        {/* Pro users - upgrade to Premium or Ultra */}
+        {isPro && (
           <div className="grid grid-cols-2 gap-3">
-            {/* Pro */}
-            <button
-              onClick={() => handleUpgrade('pro')}
-              disabled={isLoading}
-              className={cn(
-                "flex flex-col items-center p-4 rounded-xl border border-[#3a3a3a] bg-[#1a1a1a]",
-                "hover:border-[#5A9665]/50 hover:bg-[#5A9665]/5 transition-colors",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
-              )}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5A9665]/10 mb-2">
-                <Sparkles className="h-5 w-5 text-[#5A9665]" />
-              </div>
-              <span className="font-medium text-sm text-white">Pro</span>
-              <span className="text-xs text-gray-400">+40/mo</span>
-              <span className="text-sm font-semibold mt-1 text-white">$20</span>
-            </button>
-
-            {/* Premium */}
             <button
               onClick={() => handleUpgrade('premium')}
               disabled={isLoading}
@@ -124,31 +105,48 @@ export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps
                 <Crown className="h-5 w-5 text-blue-400" />
               </div>
               <span className="font-medium text-sm text-white">Premium</span>
-              <span className="text-xs text-gray-400">+80/mo</span>
-              <span className="text-sm font-semibold mt-1 text-white">$40</span>
+              <span className="text-xs text-gray-400">30 credits/mo</span>
+              <span className="text-sm font-semibold mt-1 text-white">$24/mo</span>
+            </button>
+
+            <button
+              onClick={() => handleUpgrade('ultra')}
+              disabled={isLoading}
+              className={cn(
+                "flex flex-col items-center p-4 rounded-xl border border-purple-500/30 bg-[#1a1a1a]",
+                "hover:border-purple-500/50 transition-colors",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 mb-2">
+                <Sparkles className="h-5 w-5 text-purple-400" />
+              </div>
+              <span className="font-medium text-sm text-white">Ultra</span>
+              <span className="text-xs text-gray-400">55 credits/mo</span>
+              <span className="text-sm font-semibold mt-1 text-white">$40/mo</span>
             </button>
           </div>
         )}
 
-        {/* Pro users - upgrade to premium */}
-        {isPro && (
+        {/* Premium users - upgrade to Ultra */}
+        {isPremium && (
           <button
-            onClick={() => handleUpgrade('premium')}
+            onClick={() => handleUpgrade('ultra')}
             disabled={isLoading}
             className={cn(
-              "flex items-center justify-center gap-3 p-4 rounded-xl border border-blue-500/30 bg-[#1a1a1a]",
-              "hover:border-blue-500/50 transition-colors w-full",
+              "flex items-center justify-center gap-3 p-4 rounded-xl border border-purple-500/30 bg-[#1a1a1a]",
+              "hover:border-purple-500/50 transition-colors w-full",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
-            <Crown className="h-5 w-5 text-blue-400" />
-            <span className="font-medium text-white">Upgrade to Premium</span>
+            <Sparkles className="h-5 w-5 text-purple-400" />
+            <span className="font-medium text-white">Upgrade to Ultra</span>
             <span className="font-semibold text-white">$40/mo</span>
           </button>
         )}
 
-        {/* Premium users */}
-        {planName === 'premium' && (
+        {/* Ultra users */}
+        {planName === 'ultra' && (
           <button
             onClick={handleManageSubscription}
             disabled={isLoading}

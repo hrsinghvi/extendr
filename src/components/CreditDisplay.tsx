@@ -107,7 +107,7 @@ export function CreditDisplay({
               </div>
             )}
             <div className="pt-1 border-t border-border text-xs text-muted-foreground">
-              {planName === 'free' ? 'Free plan' : `${planName.charAt(0).toUpperCase() + planName.slice(1)} plan`}
+              {`${planName.charAt(0).toUpperCase() + planName.slice(1)} plan`}
             </div>
           </div>
         </TooltipContent>
@@ -178,7 +178,7 @@ export function CreditDisplay({
             </div>
           )}
           <div className="text-xs text-gray-500 pt-1">
-            {planName === 'free' ? 'Free plan' : `${planName.charAt(0).toUpperCase() + planName.slice(1)} plan`}
+            {`${planName.charAt(0).toUpperCase() + planName.slice(1)} plan`}
           </div>
         </CollapsibleContent>
       </Collapsible>
