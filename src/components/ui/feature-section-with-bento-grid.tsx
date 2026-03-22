@@ -62,7 +62,7 @@ export function FeaturesSectionWithBentoGrid() {
       >
         <article className="flex xl:flex-row flex-col xl:pb-0 pb-4 xl:items-center items-start justify-between gap-8 xl:gap-12">
           {/* Left: Title & CTA */}
-          <div className="text-left mb-6 xl:max-w-xl">
+          <div className="text-left mb-6 max-w-xl">
             <div className="mb-4 pt-8">
               <span className="text-primary font-semibold text-sm tracking-widest uppercase">
                 Features
