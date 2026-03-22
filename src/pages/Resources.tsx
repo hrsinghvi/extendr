@@ -1202,7 +1202,7 @@ export default function Resources() {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 pt-20 lg:pt-24 overflow-hidden">
+      <div className="flex-1 pt-24 sm:pt-32 lg:pt-44 overflow-hidden">
         <div className="max-w-[1400px] mx-auto flex h-full">
           {/* ─── LEFT SIDEBAR ─── */}
           <aside
