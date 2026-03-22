@@ -68,13 +68,13 @@ const plans: Plan[] = [
     yearlyCredits: 360,
     features: [
       { text: "Priority support", icon: <Briefcase size={20} /> },
-      { text: "OpenRouter & Hugging Face", icon: <Database size={20} /> },
+      { text: "Access to Premium Models", icon: <Database size={20} /> },
       { text: "Advanced analytics", icon: <Server size={20} /> },
     ],
     includes: [
       "Everything in Pro, plus:",
       "Priority Support",
-      "OpenRouter and Hugging Face Access",
+      "Access to Premium Models",
       "Advanced Analytics",
     ],
   },
