@@ -718,7 +718,7 @@ export function FeaturesSectionWithBentoGrid() {
             <div className="h-48 relative bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-6 overflow-hidden">
               {/* Chat bubble illustration */}
               <div className="relative w-full max-w-[220px]">
-                <div className="bg-background/60 backdrop-blur border border-border/40 rounded-xl p-3 mb-2 ml-2">
+                <div className="bg-background/60 backdrop-blur border border-border/40 rounded-xl p-3 mb-2">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
                       <MessageSquare className="w-3 h-3 text-primary" />
@@ -727,7 +727,7 @@ export function FeaturesSectionWithBentoGrid() {
                   </div>
                   <p className="text-[10px] text-foreground/80 leading-relaxed">"Build me a dark mode toggle extension"</p>
                 </div>
-                <div className="bg-primary/10 backdrop-blur border border-primary/20 rounded-xl p-3 mr-2">
+                <div className="bg-primary/10 backdrop-blur border border-primary/20 rounded-xl p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-5 h-5 rounded-full bg-primary/30 flex items-center justify-center">
                       <Sparkles className="w-3 h-3 text-primary" />
@@ -900,16 +900,24 @@ export function FeaturesSectionWithBentoGrid() {
                   <span className="text-[9px] text-muted-foreground font-medium">Gemini</span>
                 </div>
                 {/* Rotation arrows */}
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2">
-                  <svg width="80" height="20" viewBox="0 0 80 20" fill="none" className="text-primary/30">
-                    <path d="M10 15 Q40 0 70 15" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
-                    <path d="M65 12 L70 15 L65 18" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <svg width="100" height="24" viewBox="0 0 100 24" fill="none" className="text-primary/30">
+                    <defs>
+                      <marker id="arrowRight" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                        <path d="M0 0 L6 3 L0 6" fill="currentColor" />
+                      </marker>
+                    </defs>
+                    <path d="M15 18 Q50 0 85 18" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3" fill="none" markerEnd="url(#arrowRight)" />
                   </svg>
                 </div>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                  <svg width="80" height="20" viewBox="0 0 80 20" fill="none" className="text-primary/30">
-                    <path d="M70 5 Q40 20 10 5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
-                    <path d="M15 2 L10 5 L15 8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
+                  <svg width="100" height="24" viewBox="0 0 100 24" fill="none" className="text-primary/30">
+                    <defs>
+                      <marker id="arrowLeft" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
+                        <path d="M6 0 L0 3 L6 6" fill="currentColor" />
+                      </marker>
+                    </defs>
+                    <path d="M85 6 Q50 24 15 6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3" fill="none" markerEnd="url(#arrowLeft)" />
                   </svg>
                 </div>
               </div>
