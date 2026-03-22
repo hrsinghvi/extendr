@@ -256,7 +256,7 @@ export default function PricingSection3() {
 
   return (
     <div
-      className="px-4 pt-24 sm:pt-32 lg:pt-44 min-h-screen max-w-7xl mx-auto relative"
+      className="px-4 pt-24 sm:pt-32 lg:pt-44 pb-16 max-w-7xl mx-auto relative"
       ref={pricingRef}
     >
       <article className="flex sm:flex-row flex-col sm:pb-0 pb-4 sm:items-center items-start justify-between">
