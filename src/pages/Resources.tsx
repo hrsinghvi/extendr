@@ -1177,7 +1177,7 @@ export default function Resources() {
   }, [activeSection]);
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col overflow-auto">
       <Header />
 
       {/* Mobile sidebar toggle */}
@@ -1361,7 +1361,6 @@ export default function Resources() {
                 </a>
               </div>
             </article>
-            <Footer />
           </main>
 
           {/* ─── RIGHT TOC SIDEBAR ─── */}
@@ -1399,6 +1398,7 @@ export default function Resources() {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
