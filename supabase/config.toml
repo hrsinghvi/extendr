@@ -1,2 +1,7 @@
 # Replace with your own Supabase project ID
 project_id = "dqtendtmtexpmacxdica"
+
+# Stripe webhook doesn't send a JWT - it uses stripe-signature header instead
+# Disable JWT verification so Stripe can reach the webhook
+[functions.stripe-webhook]
+verify_jwt = false
