@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Rocket,
@@ -1179,7 +1178,7 @@ export default function Resources() {
   }, [activeSection]);
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] flex flex-col overflow-auto">
+    <div className="h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
       <Header />
 
       {/* Mobile sidebar toggle */}
@@ -1400,7 +1399,6 @@ export default function Resources() {
           )}
         </div>
       </div>
-      <Footer />
     </div>
   );
 }
