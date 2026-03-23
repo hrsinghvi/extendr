@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm your email</title>
+</head>
+<body style="margin:0;padding:0;background-color:#111111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#111111;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;border:1px solid #2a2a2a;overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding:32px 40px 24px;text-align:center;border-bottom:1px solid #2a2a2a;">
+              <div style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
+                extendr
+              </div>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px 40px;">
+              <h1 style="margin:0 0 8px;font-size:22px;font-weight:600;color:#ffffff;">
+                Welcome to Extendr
+              </h1>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#999999;">
+                Thanks for signing up! Confirm your email address to get started building Chrome extensions with AI.
+              </p>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding:8px 0 24px;">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;padding:14px 40px;background-color:#5A9665;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">
+                      Confirm Email
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#666666;">
+                If the button doesn't work, copy and paste this link into your browser:
+              </p>
+              <p style="margin:0 0 24px;font-size:12px;line-height:1.5;color:#5A9665;word-break:break-all;">
+                {{ .ConfirmationURL }}
+              </p>
+
+              <div style="border-top:1px solid #2a2a2a;padding-top:20px;">
+                <p style="margin:0;font-size:12px;line-height:1.5;color:#555555;">
+                  If you didn't create an account with Extendr, you can safely ignore this email.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 40px 28px;border-top:1px solid #2a2a2a;text-align:center;">
+              <p style="margin:0 0 4px;font-size:12px;color:#444444;">
+                Extendr &mdash; Build Chrome extensions with AI
+              </p>
+              <p style="margin:0;font-size:11px;color:#333333;">
+                hi@extendr.dev
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
