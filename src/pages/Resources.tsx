@@ -1123,8 +1123,10 @@ export default function Resources() {
     setActiveHeading(headingId);
     const el = document.getElementById(headingId);
     if (el && contentRef.current) {
-      const elTop = el.offsetTop - contentRef.current.offsetTop;
-      contentRef.current.scrollTo({ top: elTop - 24, behavior: "smooth" });
+      const containerRect = contentRef.current.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const scrollTop = contentRef.current.scrollTop + (elRect.top - containerRect.top) - 24;
+      contentRef.current.scrollTo({ top: scrollTop, behavior: "smooth" });
     }
   }, []);
 
