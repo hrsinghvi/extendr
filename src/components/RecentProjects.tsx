@@ -1,4 +1,4 @@
-import { Search, Trash2, ArrowRight, AlertTriangle } from "lucide-react";
+import { Search, Trash2, ArrowRight, AlertTriangle, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
@@ -69,6 +69,7 @@ export function RecentProjects() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("last-edited");
+  const [sortAsc, setSortAsc] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<{ id: string; title: string } | null>(null);
 
@@ -235,10 +236,20 @@ export function RecentProjects() {
   }
 
 
-  // Filtering
-  const filteredProjects = projects.filter(p =>
-    (p.title ?? "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtering & sorting
+  const filteredProjects = projects
+    .filter(p => (p.title ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === "last-edited") {
+        cmp = new Date(b.updated_at ?? b.created_at ?? 0).getTime() - new Date(a.updated_at ?? a.created_at ?? 0).getTime();
+      } else if (sortBy === "created") {
+        cmp = new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+      } else if (sortBy === "name") {
+        cmp = (a.title ?? "").localeCompare(b.title ?? "");
+      }
+      return sortAsc ? -cmp : cmp;
+    });
 
   const handleDeleteProject = async (projectId: string) => {
     try {
@@ -301,16 +312,25 @@ export function RecentProjects() {
             className="pl-9 bg-[#161B1B] border-[#2a2a2a] text-white placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-gray-700"
           />
         </div>
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[180px] bg-[#161B1B] border-[#2a2a2a] text-white">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#161B1B] border-[#2a2a2a] text-white">
-            <SelectItem value="last-edited">Last edited</SelectItem>
-            <SelectItem value="created">Created</SelectItem>
-            <SelectItem value="name">Name</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[180px] bg-[#161B1B] border-[#2a2a2a] text-white">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#161B1B] border-[#2a2a2a] text-white">
+              <SelectItem value="last-edited">Last edited</SelectItem>
+              <SelectItem value="created">Created</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+            </SelectContent>
+          </Select>
+          <button
+            onClick={() => setSortAsc(prev => !prev)}
+            className="p-2.5 rounded-lg bg-[#161B1B] border border-[#2a2a2a] text-gray-400 hover:text-white hover:border-[#555] transition-colors"
+            title={sortAsc ? "Ascending" : "Descending"}
+          >
+            <ArrowUpDown className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {filteredProjects.length === 0 ? (
