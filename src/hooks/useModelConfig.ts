@@ -107,10 +107,10 @@ export const ALL_PROVIDERS: AIProviderType[] = [
 ];
 
 // Providers that are always locked (not included in any plan yet)
-export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'gemini', 'claude']);
+export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'gemini', 'claude', 'openrouter']);
 
 // Providers that require Premium or Ultra plan
-export const PREMIUM_PROVIDERS: Set<AIProviderType> = new Set(['openrouter', 'huggingface']);
+export const PREMIUM_PROVIDERS: Set<AIProviderType> = new Set(['huggingface']);
 
 // ============================================================================
 // API Key Utilities
