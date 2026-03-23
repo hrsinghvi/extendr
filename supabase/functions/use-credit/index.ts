@@ -1,10 +1,7 @@
 /**
  * Use Credit Edge Function
- * 
- * Checks and deducts a credit from the user's allowance.
- * Priority: Daily credits first, then monthly credits.
- * 
- * Daily credits reset at 12 AM PST for all users.
+ *
+ * Checks and deducts a credit from the user's monthly allowance.
  * Monthly credits reset on billing cycle (handled by webhook).
  */
 import 'https://deno.land/x/xhr@0.3.0/mod.ts';
@@ -15,7 +12,6 @@ import { supabaseAdmin, getUserFromToken } from '../_shared/supabase.ts';
 interface CreditResponse {
   allowed: boolean;
   message: string;
-  dailyRemaining: number;
   monthlyRemaining: number;
   monthlyTotal: number;
   planName: string;
@@ -50,58 +46,72 @@ serve(async (req: Request) => {
 
     const planName = subscription?.plan_name ?? 'pro';
 
-    // Call the use_credit database function
-    // This handles daily reset logic and credit deduction atomically
-    const { data, error } = await supabaseAdmin
-      .rpc('use_credit', { p_user_id: user.id });
+    // Get current credits
+    const { data: credits, error: creditsError } = await supabaseAdmin
+      .from('user_credits')
+      .select('monthly_credits_remaining, monthly_credits_total')
+      .eq('user_id', user.id)
+      .single();
 
-    if (error) {
-      console.error('Error using credit:', error);
-      throw error;
+    if (creditsError && creditsError.code !== 'PGRST116') {
+      throw creditsError;
     }
 
-    const result = data?.[0];
-    
-    if (!result) {
-      // No credits record found - create one and allow (first use)
-      await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          daily_credits_remaining: 99, // 100 - 1 for this use
-          daily_credits_last_reset: getCurrentPSTDate(),
-        });
-
+    // No credits record — no subscription credits available
+    if (!credits) {
       const response: CreditResponse = {
-        allowed: true,
-        message: 'Credit used from daily allowance',
-        dailyRemaining: 99,
+        allowed: false,
+        message: 'No credits available. Please subscribe to a plan.',
         monthlyRemaining: 0,
         monthlyTotal: 0,
         planName,
       };
-
       return new Response(
         JSON.stringify(response),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Check if user has monthly credits remaining
+    if (credits.monthly_credits_remaining <= 0) {
+      const response: CreditResponse = {
+        allowed: false,
+        message: 'No credits remaining. Credits reset at the start of your next billing cycle.',
+        monthlyRemaining: 0,
+        monthlyTotal: credits.monthly_credits_total,
+        planName,
+      };
+      return new Response(
+        JSON.stringify(response),
+        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Deduct one monthly credit
+    const newRemaining = credits.monthly_credits_remaining - 1;
+    const { error: updateError } = await supabaseAdmin
+      .from('user_credits')
+      .update({
+        monthly_credits_remaining: newRemaining,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
     const response: CreditResponse = {
-      allowed: result.success,
-      message: result.message,
-      dailyRemaining: result.daily_remaining,
-      monthlyRemaining: result.monthly_remaining,
-      monthlyTotal: result.monthly_total,
+      allowed: true,
+      message: 'Credit used',
+      monthlyRemaining: newRemaining,
+      monthlyTotal: credits.monthly_credits_total,
       planName,
     };
 
-    // Return 402 Payment Required if no credits
-    const status = result.success ? 200 : 402;
-
     return new Response(
       JSON.stringify(response),
-      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
@@ -112,13 +122,3 @@ serve(async (req: Request) => {
     );
   }
 });
-
-/**
- * Get current date in PST timezone (America/Los_Angeles)
- */
-function getCurrentPSTDate(): string {
-  const now = new Date();
-  const pstDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-  return pstDate.toISOString().split('T')[0];
-}
-

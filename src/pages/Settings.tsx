@@ -1,6 +1,6 @@
 /**
  * Settings Page
- * 
+ *
  * Displays user account settings including:
  * - Profile info (name, email)
  * - Password change
@@ -35,52 +35,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-/**
- * Get the next daily reset time in PST
- * Credits reset at midnight PST
- */
-function getNextDailyReset(): Date {
-  const now = new Date();
-  // Get current time in PST
-  const pstNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-  
-  // Set to midnight PST tomorrow
-  const nextReset = new Date(pstNow);
-  nextReset.setDate(nextReset.getDate() + 1);
-  nextReset.setHours(0, 0, 0, 0);
-  
-  // Convert back to local time for display
-  // This is a bit hacky but works for display purposes
-  const pstOffset = -8; // PST is UTC-8 (ignoring DST for simplicity)
-  const localOffset = now.getTimezoneOffset() / 60;
-  const hourDiff = localOffset + pstOffset;
-  
-  nextReset.setHours(nextReset.getHours() - hourDiff);
-  
-  return nextReset;
-}
-
-/**
- * Format date for display
- */
-function formatResetDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
-
 export default function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
-  const { 
-    subscription, 
-    planName, 
-    credits, 
+  const {
+    subscription,
+    planName,
+    credits,
     totalCreditsAvailable,
     isLoadingSubscription,
     isLoadingCredits,
@@ -91,13 +53,13 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
+
   // Loading states
   const [isUpdatingName, setIsUpdatingName] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  
+
   // Ref for timeline animations
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -115,9 +77,9 @@ export default function Settings() {
   // Initialize display name from user metadata
   useEffect(() => {
     if (user) {
-      const name = user.user_metadata?.full_name 
-        || user.user_metadata?.name 
-        || user.email?.split("@")[0] 
+      const name = user.user_metadata?.full_name
+        || user.user_metadata?.name
+        || user.email?.split("@")[0]
         || "";
       setDisplayName(name);
     }
@@ -125,8 +87,7 @@ export default function Settings() {
 
   const userEmail = user?.email ?? "";
   const planInfo = getPlanInfo(planName);
-  const nextReset = getNextDailyReset();
-  const totalCredits = (credits?.dailyTotal ?? 0) + (credits?.monthlyTotal ?? 0);
+  const totalCredits = credits?.monthlyTotal ?? 0;
 
   /**
    * Update display name
@@ -207,7 +168,7 @@ export default function Settings() {
         title: "Password changed",
         description: "Your password has been updated successfully.",
       });
-      
+
       // Clear password fields
       setCurrentPassword("");
       setNewPassword("");
@@ -249,12 +210,12 @@ export default function Settings() {
       // Sign out first, then the user can contact support for full deletion
       // (Full deletion requires admin/server-side action)
       await signOut();
-      
+
       toast({
         title: "Account signed out",
         description: "Contact support to complete account deletion.",
       });
-      
+
       navigate("/");
     } catch (error: any) {
       toast({
@@ -297,7 +258,7 @@ export default function Settings() {
       <GradientBackground />
       <div className="relative z-10">
         <Header />
-        
+
         <main className="px-4 pt-20 min-h-screen max-w-7xl mx-auto relative" ref={settingsRef}>
           {/* Header - matches Pricing page style */}
           <div className="text-left mb-8">
@@ -341,7 +302,7 @@ export default function Settings() {
               className="mb-8"
             >
               <h2 className="text-lg font-semibold mb-6 text-white">Account</h2>
-              
+
               {/* Email - Read only */}
               <div className="border-b border-[#333] pb-6 mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-16">
@@ -352,7 +313,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="lg:flex-1">
-                    <Input 
+                    <Input
                       type="email"
                       value={userEmail}
                       disabled
@@ -372,14 +333,14 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="lg:flex-1 flex gap-2 max-w-md">
-                    <Input 
+                    <Input
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       className="flex-1 bg-[#1a1a1a] border-[#3a3a3a] text-white"
                       placeholder="Your name"
                     />
-                    <Button 
+                    <Button
                       onClick={handleUpdateName}
                       disabled={isUpdatingName}
                       size="sm"
@@ -401,21 +362,21 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="lg:flex-1 space-y-3 max-w-md">
-                    <Input 
+                    <Input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       className="bg-[#1a1a1a] border-[#3a3a3a] text-white"
                       placeholder="New password"
                     />
-                    <Input 
+                    <Input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="bg-[#1a1a1a] border-[#3a3a3a] text-white"
                       placeholder="Confirm new password"
                     />
-                    <Button 
+                    <Button
                       onClick={handleChangePassword}
                       disabled={isChangingPassword || !newPassword || !confirmPassword}
                       size="sm"
@@ -440,7 +401,7 @@ export default function Settings() {
               className="mb-8"
             >
               <h2 className="text-lg font-semibold mb-4 text-white">Plan & Credits</h2>
-              
+
               <div className="grid sm:grid-cols-2 gap-4">
                 {/* Current Plan Card */}
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5 flex items-center justify-between">
@@ -470,7 +431,7 @@ export default function Settings() {
                       )}
                     </div>
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="lg"
@@ -497,40 +458,36 @@ export default function Settings() {
                       )}
                     </span>
                   </div>
-                  
+
                   {/* Progress bar */}
                   <div className="h-2 w-full bg-[#2a2a2a] rounded-full overflow-hidden mb-4">
-                    <div 
+                    <div
                       className="h-full rounded-full transition-all duration-500"
-                      style={{ 
-                        width: totalCredits > 0 
-                          ? `${Math.min(100, (totalCreditsAvailable / totalCredits) * 100)}%` 
+                      style={{
+                        width: totalCredits > 0
+                          ? `${Math.min(100, (totalCreditsAvailable / totalCredits) * 100)}%`
                           : '0%',
                         background: 'linear-gradient(90deg, #5A9665 0%, #4B8256 70%, #6B9FD4 100%)',
-                      }} 
+                      }}
                     />
                   </div>
 
                   {/* Credit details */}
                   <div className="space-y-2 text-sm">
-                    {credits?.monthlyTotal > 0 && (
-                      <div className="flex items-center gap-2 text-white/70">
-                        <Check className="w-4 h-4 text-primary" />
-                        <span>Up to {credits.monthlyTotal} credits rollover</span>
-                      </div>
-                    )}
-                    
                     <div className="flex items-center gap-2 text-white/70">
-                      <Clock className="w-4 h-4 text-primary" />
-                      <span>
-                        {credits?.dailyTotal ?? 100} credits reset on {formatResetDate(nextReset)}
-                      </span>
+                      <Check className="w-4 h-4 text-primary" />
+                      <span>{totalCredits} credits / month</span>
                     </div>
 
-                    {credits?.monthlyRemaining !== undefined && credits.monthlyRemaining > 0 && (
+                    {subscription?.currentPeriodEnd && (
                       <div className="flex items-center gap-2 text-white/70">
-                        <div className="w-2 h-2 rounded-full bg-blue-400" />
-                        <span>Daily credits used first</span>
+                        <Clock className="w-4 h-4 text-primary" />
+                        <span>
+                          Resets on {subscription.currentPeriodEnd.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -546,7 +503,7 @@ export default function Settings() {
               customVariants={revealVariants}
             >
               <h2 className="text-lg font-semibold mb-4 text-destructive">Danger Zone</h2>
-              
+
               <div className="border border-destructive/30 rounded-xl p-5 bg-destructive/5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
@@ -555,10 +512,10 @@ export default function Settings() {
                       Permanently delete your extendr account. This cannot be undone.
                     </p>
                   </div>
-                  
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
+                      <Button
                         variant="destructive"
                         size="sm"
                         className="sm:w-auto w-full"

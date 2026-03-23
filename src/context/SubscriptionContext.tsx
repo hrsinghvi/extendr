@@ -78,7 +78,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const result: CreditResponse = {
         allowed: false,
         message: 'Not authenticated',
-        dailyRemaining: 0,
         monthlyRemaining: 0,
         monthlyTotal: 0,
         planName: 'pro',
@@ -101,7 +100,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const result: CreditResponse = {
         allowed: false,
         message: error instanceof Error ? error.message : 'Failed to use credit',
-        dailyRemaining: credits?.dailyRemaining ?? 0,
         monthlyRemaining: credits?.monthlyRemaining ?? 0,
         monthlyTotal: credits?.monthlyTotal ?? 0,
         planName,

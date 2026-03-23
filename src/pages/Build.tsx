@@ -941,7 +941,7 @@ export default function Build() {
           setShowOutOfCreditsModal(true);
         } else {
           console.log('[Build] Credit used:', creditResult.message,
-            `Daily: ${creditResult.dailyRemaining}, Monthly: ${creditResult.monthlyRemaining}`);
+            `Monthly: ${creditResult.monthlyRemaining}/${creditResult.monthlyTotal}`);
         }
       } catch (creditError) {
         console.error('[Build] Credit deduction error (non-fatal):', creditError);

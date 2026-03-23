@@ -40,7 +40,6 @@ interface PortalResponse {
 export interface CreditResponse {
   allowed: boolean;
   message: string;
-  dailyRemaining: number;
   monthlyRemaining: number;
   monthlyTotal: number;
   planName: string;
@@ -178,26 +177,22 @@ export async function redirectToPortal(): Promise<void> {
  */
 export function getPlanInfo(planName: PlanName): {
   name: string;
-  dailyCredits: number;
   monthlyCredits: number;
   features: string[];
 } {
   const plans = {
     pro: {
       name: 'Pro',
-      dailyCredits: 100,
       monthlyCredits: 15,
       features: ['Up to 5 extensions', 'All templates', 'Priority AI generation'],
     },
     premium: {
       name: 'Premium',
-      dailyCredits: 100,
       monthlyCredits: 30,
       features: ['Unlimited extensions', 'All templates', 'Fastest AI generation'],
     },
     ultra: {
       name: 'Ultra',
-      dailyCredits: 100,
       monthlyCredits: 55,
       features: ['Unlimited everything', 'Custom branding', 'Priority support'],
     },

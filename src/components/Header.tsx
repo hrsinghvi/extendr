@@ -161,7 +161,7 @@ export function Header() {
                           className="h-full bg-[#5A9665] transition-all duration-300" 
                           style={{ 
                             width: credits 
-                              ? `${Math.min(100, (totalAvailable / (credits.dailyTotal + credits.monthlyTotal || 1)) * 100)}%` 
+                              ? `${Math.min(100, (totalAvailable / (credits.monthlyTotal || 1)) * 100)}%`
                               : '0%' 
                           }} 
                         />

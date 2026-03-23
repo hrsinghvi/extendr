@@ -1,8 +1,8 @@
 /**
  * OutOfCreditsModal Component
- * 
+ *
  * Compact modal that displays when user runs out of credits.
- * Shows current plan, credits remaining, reset timer, and upgrade options.
+ * Shows current plan, credits remaining, reset date, and upgrade options.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,7 @@ interface OutOfCreditsModalProps {
 
 export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps) {
   const navigate = useNavigate();
-  const { planName, isPro, isPremium, credits } = useSubscriptionContext();
+  const { planName, isPro, isPremium, credits, subscription } = useSubscriptionContext();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleUpgrade = async (plan: 'pro' | 'premium' | 'ultra') => {
@@ -48,21 +48,15 @@ export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps
     }
   };
 
-  const getTimeUntilReset = () => {
-    const now = new Date();
-    const pst = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-    const midnight = new Date(pst);
-    midnight.setHours(24, 0, 0, 0);
-    
-    const diff = midnight.getTime() - pst.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-  };
+  const monthlyRemaining = credits?.monthlyRemaining ?? 0;
+  const monthlyTotal = credits?.monthlyTotal ?? 0;
 
-  const totalRemaining = (credits?.dailyRemaining ?? 0) + (credits?.monthlyRemaining ?? 0);
-  const totalMax = (credits?.dailyTotal ?? 100) + (credits?.monthlyTotal ?? 0);
+  const resetDate = subscription?.currentPeriodEnd
+    ? subscription.currentPeriodEnd.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      })
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,13 +74,13 @@ export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-400 uppercase tracking-wide text-xs font-medium">Remaining Credits</span>
-            <span className="font-semibold text-destructive">{totalRemaining}/{totalMax}</span>
+            <span className="font-semibold text-destructive">{monthlyRemaining}/{monthlyTotal}</span>
           </div>
         </div>
 
-        {/* Reset timer */}
+        {/* Reset date */}
         <p className="text-center text-sm text-gray-400">
-          Daily credits reset in {getTimeUntilReset()}
+          {resetDate ? `Credits reset on ${resetDate}` : 'Credits reset each billing cycle'}
         </p>
 
         {/* Pro users - upgrade to Premium or Ultra */}
@@ -159,4 +153,3 @@ export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps
     </Dialog>
   );
 }
-

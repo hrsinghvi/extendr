@@ -25,7 +25,6 @@ interface Plan {
   isCustom?: boolean;
   planId?: "pro" | "premium" | "ultra";
   monthlyCredits: number;
-  yearlyCredits: number;
 }
 
 const plans: Plan[] = [
@@ -39,7 +38,6 @@ const plans: Plan[] = [
     buttonText: "Get Pro",
     buttonVariant: "outline" as const,
     monthlyCredits: 15,
-    yearlyCredits: 180,
     features: [
       { text: "AI-powered generation", icon: <Briefcase size={20} /> },
       { text: "Live preview", icon: <Database size={20} /> },
@@ -65,7 +63,6 @@ const plans: Plan[] = [
     buttonText: "Get Premium",
     buttonVariant: "default" as const,
     monthlyCredits: 30,
-    yearlyCredits: 360,
     features: [
       { text: "Priority support", icon: <Briefcase size={20} /> },
       { text: "Access to Premium Models", icon: <Database size={20} /> },
@@ -88,7 +85,6 @@ const plans: Plan[] = [
     buttonText: "Get Ultra",
     buttonVariant: "outline" as const,
     monthlyCredits: 55,
-    yearlyCredits: 660,
     features: [
       { text: "Elite API access", icon: <Briefcase size={20} /> },
       { text: "Advanced customization", icon: <Database size={20} /> },
@@ -390,7 +386,7 @@ export default function PricingSection3() {
                       "text-sm font-medium",
                       plan.popular ? "text-primary-foreground" : "text-foreground"
                     )}>
-                      {isYearly ? plan.yearlyCredits : plan.monthlyCredits} credits / {isYearly ? "year" : "month"}
+                      {plan.monthlyCredits} credits / month
                     </span>
                   </div>
                 )}

@@ -37,8 +37,6 @@ export interface Price {
 export interface UserCredits {
   id: string;
   user_id: string;
-  daily_credits_remaining: number;
-  daily_credits_last_reset: string; // date string YYYY-MM-DD
   monthly_credits_remaining: number;
   monthly_credits_total: number;
   monthly_credits_reset_at: string | null;
@@ -52,17 +50,16 @@ export interface UserCredits {
 export interface UseCreditResult {
   success: boolean;
   message: string;
-  daily_remaining: number;
   monthly_remaining: number;
   monthly_total: number;
 }
 
 /**
- * Credit allocation by plan
+ * Credit allocation by plan (monthly credits only)
  */
 export const PLAN_CREDITS = {
-  pro: { daily: 100, monthly: 15 },
-  premium: { daily: 100, monthly: 30 },
-  ultra: { daily: 100, monthly: 55 },
+  pro: { monthly: 15 },
+  premium: { monthly: 30 },
+  ultra: { monthly: 55 },
 } as const;
 
