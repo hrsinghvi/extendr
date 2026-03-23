@@ -127,9 +127,9 @@ export function CreditDisplay({
               {monthlyRemaining}/{monthlyTotal}
             </span>
           </div>
-          {subscription?.currentPeriodEnd && (
+          {credits.nextResetDate && (
             <div className="text-xs text-gray-500 pt-1">
-              Resets on {subscription.currentPeriodEnd.toLocaleDateString('en-US', {
+              Resets on {credits.nextResetDate.toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
               })}

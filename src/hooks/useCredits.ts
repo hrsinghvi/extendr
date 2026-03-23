@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 export interface Credits {
   monthlyRemaining: number;
   monthlyTotal: number;
+  nextResetDate: Date | null;
 }
 
 export interface UseCreditsReturn {
@@ -53,13 +54,22 @@ export function useCredits(): UseCreditsReturn {
         setCredits({
           monthlyRemaining: 0,
           monthlyTotal: 0,
+          nextResetDate: null,
         });
         return;
+      }
+
+      // Calculate next reset date as monthly_credits_reset_at + 1 month
+      let nextReset: Date | null = null;
+      if (data.monthly_credits_reset_at) {
+        nextReset = new Date(data.monthly_credits_reset_at);
+        nextReset.setMonth(nextReset.getMonth() + 1);
       }
 
       setCredits({
         monthlyRemaining: data.monthly_credits_remaining,
         monthlyTotal: data.monthly_credits_total,
+        nextResetDate: nextReset,
       });
 
     } catch (err) {

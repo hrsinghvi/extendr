@@ -496,11 +496,11 @@ export default function Settings() {
                       <span>{totalCredits} credits / month</span>
                     </div>
 
-                    {subscription?.currentPeriodEnd && (
+                    {credits?.nextResetDate && (
                       <div className="flex items-center gap-2 text-white/70">
                         <Clock className="w-4 h-4 text-primary" />
                         <span>
-                          Resets on {subscription.currentPeriodEnd.toLocaleDateString('en-US', {
+                          Resets on {credits.nextResetDate.toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                           })}

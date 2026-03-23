@@ -51,8 +51,8 @@ export function OutOfCreditsModal({ open, onOpenChange }: OutOfCreditsModalProps
   const monthlyRemaining = credits?.monthlyRemaining ?? 0;
   const monthlyTotal = credits?.monthlyTotal ?? 0;
 
-  const resetDate = subscription?.currentPeriodEnd
-    ? subscription.currentPeriodEnd.toLocaleDateString('en-US', {
+  const resetDate = credits?.nextResetDate
+    ? credits.nextResetDate.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
       })

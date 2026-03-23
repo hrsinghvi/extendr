@@ -386,7 +386,7 @@ export default function PricingSection3() {
                       "text-sm font-medium",
                       plan.popular ? "text-primary-foreground" : "text-foreground"
                     )}>
-                      {plan.monthlyCredits} credits / month
+                      {isYearly ? `${plan.monthlyCredits * 10} credits / year` : `${plan.monthlyCredits} credits / month`}
                     </span>
                   </div>
                 )}
