@@ -1177,7 +1177,7 @@ export default function Resources() {
   }, [activeSection]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-auto">
+    <div className="min-h-screen bg-[#1a1a1a] flex flex-col overflow-auto">
       <Header />
 
       {/* Mobile sidebar toggle */}
