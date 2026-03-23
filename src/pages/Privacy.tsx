@@ -21,7 +21,8 @@ export default function Privacy() {
         <Header />
 
         <main className="px-4 pt-24 sm:pt-32 lg:pt-44 min-h-screen max-w-4xl mx-auto relative">
-          <div className="text-left mb-8 pt-8">
+          <div className="bg-[#1a1a1a] rounded-2xl p-8 sm:p-12 mb-12">
+          <div className="text-left mb-8">
             <h1 className="text-4xl font-bold leading-[130%] text-white mb-4">
               Privacy Policy
             </h1>
@@ -503,6 +504,7 @@ export default function Privacy() {
                 </p>
               </div>
             </section>
+          </div>
           </div>
         </main>
 
