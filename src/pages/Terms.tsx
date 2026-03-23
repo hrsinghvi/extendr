@@ -21,7 +21,7 @@ export default function Terms() {
       <div className="relative z-10">
         <Header />
 
-        <main className="px-4 pt-20 min-h-screen max-w-4xl mx-auto relative">
+        <main className="px-4 pt-24 sm:pt-32 lg:pt-44 min-h-screen max-w-4xl mx-auto relative">
           <div className="text-left mb-8 pt-8">
             <h1 className="text-4xl font-bold leading-[130%] text-white mb-4">
               Terms and Conditions
