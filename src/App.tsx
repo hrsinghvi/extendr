@@ -15,6 +15,9 @@ import Pricing from "./pages/Pricing";
 import Build from "./pages/Build";
 import Settings from "./pages/Settings";
 import Resources from "./pages/Resources";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Careers from "./pages/Careers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -201,6 +204,9 @@ const AnimatedRoutes = () => {
         <Route path="/resources" element={<PageTransition><Resources /></PageTransition>} />
         <Route path="/build" element={<PageTransition><Build /></PageTransition>} />
         <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+        <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+        <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+        <Route path="/careers" element={<PageTransition><Careers /></PageTransition>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
