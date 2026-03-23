@@ -6,14 +6,12 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, Plus, X, Check, Cpu, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronDown, Check, Cpu, Lock } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
 import {
   PROVIDER_MODELS,
   PROVIDER_DISPLAY_NAMES,
@@ -60,8 +58,6 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
   const [activeProvider, setActiveProvider] = useState<AIProviderType>(
     config.primary.provider
   );
-  const [customModel, setCustomModel] = useState('');
-  const [showCustom, setShowCustom] = useState(false);
   const { isPremium, planName } = usePlanAccess();
 
   // Premium/Ultra users can access premium providers
@@ -72,14 +68,6 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
   const handleSelect = (entry: ModelEntry) => {
     setPrimary(entry);
     setOpen(false);
-  };
-
-  const handleCustomAdd = () => {
-    const m = customModel.trim();
-    if (!m) return;
-    handleSelect({ provider: activeProvider, model: m });
-    setCustomModel('');
-    setShowCustom(false);
   };
 
   const isProviderAvailable = (p: AIProviderType): boolean => {
@@ -170,37 +158,6 @@ export function ModelSelector({ config, setPrimary, getApiKeyForProvider, side =
               </div>
             </div>
 
-            {/* Custom model input */}
-            <div className="px-2 py-1.5 border-t border-[#2a2a2a]">
-              {showCustom ? (
-                <div className="flex gap-1.5">
-                  <Input
-                    value={customModel}
-                    onChange={e => setCustomModel(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleCustomAdd()}
-                    placeholder={activeProvider === 'openrouter' ? 'org/model-name' : 'model-id'}
-                    className="h-7 text-xs bg-[#1a1a1a] border-[#3a3a3a] text-white flex-1"
-                    autoFocus
-                    disabled={!activeProviderAvailable}
-                  />
-                  <Button size="sm" className="h-7 px-2 text-xs" onClick={handleCustomAdd} disabled={!customModel.trim() || !activeProviderAvailable}>
-                    Use
-                  </Button>
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-gray-400" onClick={() => { setShowCustom(false); setCustomModel(''); }}>
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowCustom(true)}
-                  disabled={!activeProviderAvailable}
-                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-3 h-3" />
-                  Custom model ID
-                </button>
-              )}
-            </div>
           </div>
         </div>
 
