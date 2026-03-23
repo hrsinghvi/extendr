@@ -5,66 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirm email change</title>
 </head>
-<body style="margin:0;padding:0;background-color:#111111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#111111;padding:40px 20px;">
+<body style="margin:0;padding:0;background-color:#0d0d0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0d0d0d;padding:48px 20px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;border:1px solid #2a2a2a;overflow:hidden;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
 
-          <!-- Header -->
+          <!-- Logo Header -->
           <tr>
-            <td style="padding:32px 40px 24px;text-align:center;border-bottom:1px solid #2a2a2a;">
-              <div style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
-                extendr
-              </div>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td style="padding:32px 40px;">
-              <h1 style="margin:0 0 8px;font-size:22px;font-weight:600;color:#ffffff;">
-                Confirm email change
-              </h1>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#999999;">
-                We received a request to change the email address associated with your Extendr account. Click the button below to confirm this change.
-              </p>
-
-              <!-- CTA Button -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <td align="center" style="padding:0 0 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td align="center" style="padding:8px 0 24px;">
-                    <a href="{{ .ConfirmationURL }}"
-                       style="display:inline-block;padding:14px 40px;background-color:#5A9665;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">
-                      Confirm New Email
-                    </a>
+                  <td style="vertical-align:middle;padding-right:10px;">
+                    <img src="https://extendr.dev/logo.svg" alt="Extendr" width="32" height="32" style="display:block;border-radius:8px;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">extendr</span>
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
 
-              <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#666666;">
-                If the button doesn't work, copy and paste this link into your browser:
-              </p>
-              <p style="margin:0 0 24px;font-size:12px;line-height:1.5;color:#5A9665;word-break:break-all;">
-                {{ .ConfirmationURL }}
-              </p>
+          <!-- Main Card -->
+          <tr>
+            <td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#161616;border-radius:20px;border:1px solid #262626;overflow:hidden;">
 
-              <div style="border-top:1px solid #2a2a2a;padding-top:20px;">
-                <p style="margin:0;font-size:12px;line-height:1.5;color:#555555;">
-                  If you didn't request this change, please contact us immediately at hi@extendr.dev. Your current email will remain unchanged until you confirm.
-                </p>
-              </div>
+                <!-- Purple Accent Bar -->
+                <tr>
+                  <td style="height:4px;background:linear-gradient(90deg,#8B5CF6,#7c4de8,#9d6ff8);font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+
+                <!-- Icon + Heading -->
+                <tr>
+                  <td style="padding:40px 44px 0;text-align:center;">
+                    <div style="display:inline-block;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#7c4de8);line-height:64px;text-align:center;margin-bottom:20px;">
+                      <span style="font-size:28px;color:#ffffff;">&#9993;</span>
+                    </div>
+                    <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">
+                      Confirm email change
+                    </h1>
+                    <p style="margin:0;font-size:14px;color:#8B5CF6;font-weight:500;">
+                      Verify your new email address
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                  <td style="padding:24px 44px 0;">
+                    <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#a0a0a0;text-align:center;">
+                      We received a request to change the email address on your Extendr account. Click below to confirm this change.
+                    </p>
+
+                    <!-- CTA Button -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" style="padding:0 0 28px;">
+                          <a href="{{ .ConfirmationURL }}"
+                             style="display:inline-block;padding:16px 48px;background-color:#8B5CF6;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;border-radius:12px;letter-spacing:0.3px;box-shadow:0 4px 16px rgba(139,92,246,0.3);">
+                            Confirm New Email &rarr;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Divider -->
+                <tr>
+                  <td style="padding:0 44px;">
+                    <div style="height:1px;background-color:#262626;"></div>
+                  </td>
+                </tr>
+
+                <!-- Warning Box -->
+                <tr>
+                  <td style="padding:24px 44px 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#1d1d1d;border-radius:12px;border:1px solid #2a2a2a;">
+                      <tr>
+                        <td style="padding:16px 20px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="vertical-align:top;padding-right:12px;font-size:18px;">&#9888;</td>
+                              <td style="vertical-align:top;">
+                                <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#dddddd;">Important</p>
+                                <p style="margin:0;font-size:12px;line-height:1.5;color:#777777;">
+                                  Your current email will remain active until you confirm this change. After confirmation, you'll use your new email to log in.
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Fallback Link -->
+                <tr>
+                  <td style="padding:28px 44px 0;">
+                    <div style="height:1px;background-color:#262626;margin-bottom:20px;"></div>
+                    <p style="margin:0 0 8px;font-size:12px;color:#555555;">
+                      Button not working? Copy this link into your browser:
+                    </p>
+                    <p style="margin:0;font-size:11px;line-height:1.6;color:#8B5CF6;word-break:break-all;">
+                      {{ .ConfirmationURL }}
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Disclaimer -->
+                <tr>
+                  <td style="padding:24px 44px 36px;">
+                    <p style="margin:0;font-size:11px;line-height:1.5;color:#444444;">
+                      If you didn't request this change, please contact us immediately at hi@extendr.dev.
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="padding:20px 40px 28px;border-top:1px solid #2a2a2a;text-align:center;">
-              <p style="margin:0 0 4px;font-size:12px;color:#444444;">
+            <td style="padding:28px 20px 0;text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;color:#444444;">
                 Extendr &mdash; Build Chrome extensions with AI
               </p>
-              <p style="margin:0;font-size:11px;color:#333333;">
-                hi@extendr.dev
+              <p style="margin:0 0 6px;font-size:11px;color:#333333;">
+                <a href="https://extendr.dev" style="color:#5A9665;text-decoration:none;">extendr.dev</a>
+                &nbsp;&middot;&nbsp;
+                <a href="mailto:hi@extendr.dev" style="color:#444444;text-decoration:none;">hi@extendr.dev</a>
+              </p>
+              <p style="margin:0;font-size:10px;color:#2a2a2a;">
+                &copy; 2025 Extendr. All rights reserved.
               </p>
             </td>
           </tr>
