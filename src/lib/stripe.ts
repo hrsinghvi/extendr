@@ -25,7 +25,7 @@ export const STRIPE_PRICES = {
   },
 } as const;
 
-export type PlanName = 'pro' | 'premium' | 'ultra';
+export type PlanName = 'free' | 'pro' | 'premium' | 'ultra';
 export type BillingInterval = 'monthly' | 'yearly';
 
 interface CheckoutResponse {
@@ -212,6 +212,11 @@ export function getPlanInfo(planName: PlanName): {
   features: string[];
 } {
   const plans = {
+    free: {
+      name: 'Free',
+      monthlyCredits: 0,
+      features: [],
+    },
     pro: {
       name: 'Pro',
       monthlyCredits: 15,

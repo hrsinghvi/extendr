@@ -80,7 +80,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         message: 'Not authenticated',
         monthlyRemaining: 0,
         monthlyTotal: 0,
-        planName: 'pro',
+        planName: 'free',
       };
       setLastCreditResult(result);
       return result;

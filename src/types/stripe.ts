@@ -15,7 +15,7 @@ export interface Subscription {
   user_id: string;
   stripe_subscription_id: string;
   stripe_price_id: string;
-  plan_name: 'pro' | 'premium' | 'ultra';
+  plan_name: 'free' | 'pro' | 'premium' | 'ultra';
   status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'unpaid';
   current_period_start: string;
   current_period_end: string;

@@ -120,7 +120,7 @@ export function useSubscription(): UseSubscriptionReturn {
     };
   }, [user?.id, fetchSubscription]);
 
-  const planName: PlanName = subscription?.planName ?? 'pro';
+  const planName: PlanName = subscription?.planName ?? 'free';
   const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
   const isPro = planName === 'pro' && isActive;
   const isPremium = planName === 'premium' && isActive;
