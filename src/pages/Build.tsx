@@ -26,6 +26,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import { OutOfCreditsModal } from "@/components/OutOfCreditsModal";
 import { SubscriptionRequiredModal } from "@/components/SubscriptionRequiredModal";
+import { ExportInstructionsModal } from "@/components/ExportInstructionsModal";
 import { CreditDisplay } from "@/components/CreditDisplay";
 
 // Preview system imports
@@ -124,6 +125,7 @@ export default function Build() {
   // Credits modal state
   const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
   const [showSubRequiredModal, setShowSubRequiredModal] = useState(false);
+  const [showExportInstructions, setShowExportInstructions] = useState(false);
 
   // Rename modal state
   const [showRenameModal, setShowRenameModal] = useState(false);
@@ -1382,12 +1384,9 @@ export default function Build() {
                   }
                 );
                 
-                // Dismiss building toast and show success
+                // Dismiss building toast and show instructions
                 buildingToast.dismiss?.();
-                toast({
-                  title: "Exported!",
-                  description: `Extension built and downloaded (${dimensions.width}×${dimensions.height}). Ready to load in Chrome!`,
-                });
+                setShowExportInstructions(true);
               } catch (error: any) {
                 console.error("Export error:", error);
                 buildingToast.dismiss?.();
@@ -1418,6 +1417,12 @@ export default function Build() {
       <SubscriptionRequiredModal
         open={showSubRequiredModal}
         onOpenChange={setShowSubRequiredModal}
+      />
+
+      {/* Export Instructions Modal */}
+      <ExportInstructionsModal
+        open={showExportInstructions}
+        onOpenChange={setShowExportInstructions}
       />
 
       {/* Rename Project Modal */}
