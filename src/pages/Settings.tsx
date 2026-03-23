@@ -74,15 +74,23 @@ export default function Settings() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  // Initialize display name from user metadata
+  // Initialize display name from profiles table (authoritative), fallback to auth metadata
   useEffect(() => {
-    if (user) {
-      const name = user.user_metadata?.full_name
+    if (!user) return;
+    const loadName = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+      const name = data?.full_name
+        || user.user_metadata?.full_name
         || user.user_metadata?.name
         || user.email?.split("@")[0]
         || "";
       setDisplayName(name);
-    }
+    };
+    loadName();
   }, [user]);
 
   const userEmail = user?.email ?? "";
@@ -104,11 +112,20 @@ export default function Settings() {
 
     setIsUpdatingName(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: { full_name: displayName.trim() }
-      });
+      const trimmedName = displayName.trim();
 
-      if (error) throw error;
+      // Update auth user metadata
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { full_name: trimmedName }
+      });
+      if (authError) throw authError;
+
+      // Also persist to profiles table so it survives sign-out/sign-in
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ full_name: trimmedName, updated_at: new Date().toISOString() })
+        .eq("id", user!.id);
+      if (profileError) throw profileError;
 
       toast({
         title: "Name updated",

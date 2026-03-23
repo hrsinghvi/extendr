@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -52,11 +53,27 @@ export function Header() {
   // Derive user display info from user or session
   const account = user ?? session?.user ?? null;
   const userEmail = account?.email ?? "";
-  const userName = account?.user_metadata?.full_name 
-    || account?.user_metadata?.name 
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  // Fetch authoritative name from profiles table
+  useEffect(() => {
+    if (!account?.id) return;
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", account.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) setProfileName(data.full_name);
+      });
+  }, [account?.id]);
+
+  const userName = profileName
+    || account?.user_metadata?.full_name
+    || account?.user_metadata?.name
     || (userEmail ? userEmail.split("@")[0] : "User");
-  const userAvatar = account?.user_metadata?.avatar_url 
-    || account?.user_metadata?.picture 
+  const userAvatar = account?.user_metadata?.avatar_url
+    || account?.user_metadata?.picture
     || null;
   const userInitial = userName.charAt(0).toUpperCase() || "U";
 
