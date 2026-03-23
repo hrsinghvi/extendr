@@ -99,18 +99,18 @@ export const DEFAULT_MODELS: Record<AIProviderType, string> = {
 
 // Ordered list of all supported providers (add new ones here)
 export const ALL_PROVIDERS: AIProviderType[] = [
+  'huggingface',
   'openai',
   'claude',
   'gemini',
   'openrouter',
-  'huggingface',
 ];
 
 // Providers that are always locked (not included in any plan yet)
 export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'gemini', 'claude', 'openrouter']);
 
 // Providers that require Premium or Ultra plan
-export const PREMIUM_PROVIDERS: Set<AIProviderType> = new Set(['huggingface']);
+export const PREMIUM_PROVIDERS: Set<AIProviderType> = new Set([]);
 
 // ============================================================================
 // API Key Utilities
@@ -144,9 +144,7 @@ export function getAvailableProviders(): AIProviderType[] {
 const STORAGE_KEY = 'extendr_model_config';
 
 function getDefaultPrimary(): ModelEntry {
-  const available = getAvailableProviders();
-  const provider = available[0] || 'openrouter';
-  return { provider, model: DEFAULT_MODELS[provider] };
+  return { provider: 'huggingface', model: DEFAULT_MODELS['huggingface'] };
 }
 
 function loadConfig(): StoredModelConfig {
