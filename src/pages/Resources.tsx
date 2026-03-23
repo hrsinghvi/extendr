@@ -98,7 +98,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     <div className="border-b border-border/20 last:border-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-4 text-left group"
+        className="w-full flex items-center justify-between px-5 py-4 text-left group"
       >
         <span className="text-sm font-medium text-foreground pr-4 group-hover:text-primary transition-colors">
           {q}
@@ -118,7 +118,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <p className="text-sm text-muted-foreground leading-relaxed pb-4">{a}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed px-5 pb-4">{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -794,7 +794,7 @@ function FAQContent() {
       <p className="text-muted-foreground leading-relaxed mb-8">
         Quick answers to the most common questions about Extendr.
       </p>
-      <div className="border border-border/20 rounded-lg overflow-hidden">
+      <div className="border border-border/20 rounded-xl overflow-hidden py-2">
         {faqs.map((faq, i) => (
           <FaqItem key={i} q={faq.q} a={faq.a} />
         ))}
