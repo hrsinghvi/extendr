@@ -863,8 +863,8 @@ function CommonIssuesContent() {
       </h2>
       <p className="text-muted-foreground leading-relaxed mb-4">
         If you can't resolve your issue, reach out to us at{" "}
-        <a href="mailto:support@extendr.dev" className="text-primary hover:underline font-medium">
-          support@extendr.dev
+        <a href="mailto:hi@extendr.dev" className="text-primary hover:underline font-medium">
+          hi@extendr.dev
         </a>{" "}
         and we'll help you out.
       </p>
@@ -1354,7 +1354,7 @@ export default function Resources() {
                   Can't find what you're looking for? Reach out and we'll help you get started.
                 </p>
                 <a
-                  href="mailto:support@extendr.dev"
+                  href="mailto:hi@extendr.dev"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm transition-all hover:bg-primary/90 hover:shadow-glow"
                 >
                   Contact Support

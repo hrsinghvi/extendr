@@ -1092,10 +1092,10 @@ export default function Terms() {
                 <p>
                   <span className="text-white font-semibold">Email:</span>{" "}
                   <a
-                    href="mailto:support@extendr.dev"
+                    href="mailto:hi@extendr.dev"
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
-                    support@extendr.dev
+                    hi@extendr.dev
                   </a>
                 </p>
                 <p>
