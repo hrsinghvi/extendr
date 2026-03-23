@@ -9,7 +9,7 @@
  * - Account deletion
  */
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { GradientBackground } from "@/components/GradientBackground";
@@ -37,7 +37,6 @@ import {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
   const {
@@ -47,25 +46,7 @@ export default function Settings() {
     totalCreditsAvailable,
     isLoadingSubscription,
     isLoadingCredits,
-    refetchSubscription,
-    refetchCredits,
   } = useSubscriptionContext();
-
-  // Show success toast after checkout redirect
-  useEffect(() => {
-    if (searchParams.get('checkout') === 'success') {
-      toast({
-        title: "Subscription activated!",
-        description: "Your plan is now active. You can start building extensions.",
-      });
-      // Remove the query param
-      searchParams.delete('checkout');
-      setSearchParams(searchParams, { replace: true });
-      // Refetch to pick up the new subscription
-      refetchSubscription();
-      refetchCredits();
-    }
-  }, []);
 
   // Form states
   const [displayName, setDisplayName] = useState("");

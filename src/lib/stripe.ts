@@ -61,7 +61,7 @@ async function getAuthHeader(): Promise<string> {
  */
 export async function createCheckoutSession(
   priceId: string,
-  successUrl: string = `${window.location.origin}/settings?checkout=success`,
+  successUrl: string = `${window.location.origin}/?checkout=success`,
   cancelUrl: string = `${window.location.origin}/pricing?checkout=canceled`
 ): Promise<CheckoutResponse> {
   const authHeader = await getAuthHeader();
@@ -170,6 +170,37 @@ export async function redirectToPortal(): Promise<void> {
   } else {
     throw new Error('No portal URL returned');
   }
+}
+
+/**
+ * Sync subscription from Stripe
+ * Called after checkout redirect to ensure the subscription
+ * and credits are properly set up in Supabase, even if the
+ * webhook failed.
+ */
+export async function syncSubscription(): Promise<{
+  synced: boolean;
+  planName?: string;
+  monthlyCredits?: number;
+}> {
+  const authHeader = await getAuthHeader();
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/sync-subscription`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': authHeader,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('Sync subscription error:', data);
+    throw new Error(data.error ?? 'Failed to sync subscription');
+  }
+
+  return data;
 }
 
 /**
