@@ -193,12 +193,15 @@ async function handleSubscriptionUpdated(subscription: any) {
     throw error;
   }
 
-  // If plan changed, update credits
-  if (subscription.status === 'active') {
+  // If user just canceled (cancel_at_period_end flipped to true), zero credits immediately
+  if (subscription.cancel_at_period_end) {
+    await resetMonthlyCredits(targetUserId, 'canceled');
+    console.log(`Subscription canceled at period end for user ${targetUserId} — credits zeroed immediately`);
+  } else if (subscription.status === 'active') {
+    // Plan changed or reactivated — set credits for the plan
     await resetMonthlyCredits(targetUserId, planName);
+    console.log(`Subscription updated for user ${targetUserId}, plan: ${planName}`);
   }
-
-  console.log(`Subscription updated for user ${targetUserId}, status: ${subscription.status}`);
 }
 
 /**
