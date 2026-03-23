@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import { OutOfCreditsModal } from "@/components/OutOfCreditsModal";
+import { SubscriptionRequiredModal } from "@/components/SubscriptionRequiredModal";
 import { CreditDisplay } from "@/components/CreditDisplay";
 
 // Preview system imports
@@ -122,13 +123,14 @@ export default function Build() {
   
   // Credits modal state
   const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
-  
+  const [showSubRequiredModal, setShowSubRequiredModal] = useState(false);
+
   // Rename modal state
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameValue, setRenameValue] = useState("");
-  
+
   // Subscription/credits context
-  const { useCredit, hasCredits, isUsingCredit } = useSubscriptionContext();
+  const { useCredit, hasCredits, isUsingCredit, isActive } = useSubscriptionContext();
 
   // Model hotswapping — single source of truth; props passed down to ModelSelector
   const { getNextEntry, getApiKeyForProvider, setPrimary, config: modelConfig } = useModelConfig();
@@ -889,6 +891,12 @@ export default function Build() {
     }
     aiServiceRef.current = svc;
     
+    // Gate: require active subscription
+    if (!isActive) {
+      setShowSubRequiredModal(true);
+      return;
+    }
+
     // FAST PATH: Check hasCredits immediately (no network call, just checks cached state)
     if (!hasCredits) {
       setShowOutOfCreditsModal(true);
@@ -1401,9 +1409,15 @@ export default function Build() {
       </div>
       
       {/* Out of Credits Modal */}
-      <OutOfCreditsModal 
-        open={showOutOfCreditsModal} 
-        onOpenChange={setShowOutOfCreditsModal} 
+      <OutOfCreditsModal
+        open={showOutOfCreditsModal}
+        onOpenChange={setShowOutOfCreditsModal}
+      />
+
+      {/* Subscription Required Modal */}
+      <SubscriptionRequiredModal
+        open={showSubRequiredModal}
+        onOpenChange={setShowSubRequiredModal}
       />
 
       {/* Rename Project Modal */}

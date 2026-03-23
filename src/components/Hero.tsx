@@ -6,28 +6,39 @@ import { AuthModal } from "./AuthModal";
 import { useNavigate } from "react-router-dom";
 import { RecentProjects } from "./RecentProjects";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import { ModelSelector } from "./ModelSelector";
 import { useModelConfig } from "@/hooks/useModelConfig";
+import { SubscriptionRequiredModal } from "./SubscriptionRequiredModal";
 
 export function Hero() {
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSubRequiredModal, setShowSubRequiredModal] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState<{ message: string; files?: File[] } | null>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { isActive } = useSubscriptionContext();
   const { config: modelConfig, setPrimary, getApiKeyForProvider } = useModelConfig();
 
   /**
    * Handle prompt submission
-   * Shows auth modal if not authenticated, otherwise navigates to build page
+   * 1. Not authenticated → auth modal
+   * 2. No active subscription → subscription required modal
+   * 3. Otherwise → navigate to build
    */
   const handleSend = (message: string, files?: File[]) => {
-    // Check if user is authenticated
     if (!isAuthenticated) {
-      // Show sign up modal
+      setPendingPrompt({ message, files });
       setShowAuthModal(true);
-    } else {
-      // User is authenticated, redirect to build screen with prompt
-      navigate("/build", { state: { prompt: message, files } });
+      return;
     }
+
+    if (!isActive) {
+      setShowSubRequiredModal(true);
+      return;
+    }
+
+    navigate("/build", { state: { prompt: message, files } });
   };
 
   return (
@@ -59,8 +70,6 @@ export function Hero() {
             Create custom Chrome extensions in seconds.
           </motion.p>
         </div>
-
-        {/* Authenticated user badge removed for restart; header handles login state */}
 
         {/* AI Prompt Box */}
         <motion.div
@@ -97,8 +106,25 @@ export function Hero() {
       {/* Auth Modal */}
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        onClose={() => {
+          setShowAuthModal(false);
+          // If user just signed in and had a pending prompt, check subscription
+          if (isAuthenticated && pendingPrompt) {
+            if (isActive) {
+              navigate("/build", { state: { prompt: pendingPrompt.message, files: pendingPrompt.files } });
+            } else {
+              setShowSubRequiredModal(true);
+            }
+            setPendingPrompt(null);
+          }
+        }}
         mode="signup"
+      />
+
+      {/* Subscription Required Modal */}
+      <SubscriptionRequiredModal
+        open={showSubRequiredModal}
+        onOpenChange={setShowSubRequiredModal}
       />
     </section>
   );

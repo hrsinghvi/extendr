@@ -61,7 +61,7 @@ async function getAuthHeader(): Promise<string> {
  */
 export async function createCheckoutSession(
   priceId: string,
-  successUrl: string = `${window.location.origin}/build?checkout=success`,
+  successUrl: string = `${window.location.origin}/settings?checkout=success`,
   cancelUrl: string = `${window.location.origin}/pricing?checkout=canceled`
 ): Promise<CheckoutResponse> {
   const authHeader = await getAuthHeader();
