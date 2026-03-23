@@ -1,26 +1,20 @@
-import { MessageCircle, Linkedin, Youtube, Twitter, Instagram, Circle, ArrowUpRight } from "lucide-react";
+import { MessageCircle, Linkedin, Instagram, ArrowUpRight } from "lucide-react";
 
 const footerLinks = {
   Resources: [
-    { label: "Support", href: "#support" },
-    { label: "Blog", href: "#blog" },
-    { label: "Gallery", href: "#gallery" },
-    { label: "Status", href: "#status" },
+    { label: "Privacy", href: "#privacy" },
+    { label: "Terms", href: "#terms" },
   ],
   Company: [
     { label: "Careers", href: "#careers" },
-    { label: "Privacy", href: "#privacy" },
-    { label: "Terms", href: "#terms" },
+    { label: "Support", href: "#support" },
   ],
 };
 
 const socialLinks = [
   { icon: MessageCircle, href: "#", label: "Discord" },
   { icon: Linkedin, href: "#", label: "LinkedIn" },
-  { icon: Youtube, href: "#", label: "YouTube" },
-  { icon: Twitter, href: "#", label: "Twitter/X" },
   { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Circle, href: "#", label: "Reddit" },
 ];
 
 export function Footer() {
@@ -78,7 +72,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground text-center">
-            © 2025 extendr - All rights reserved.
+            © 2026 extendr - All rights reserved.
           </p>
         </div>
       </div>
