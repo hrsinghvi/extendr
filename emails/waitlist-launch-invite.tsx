@@ -264,7 +264,7 @@ function StepCircle({ num, gradient }: { num: string; gradient: string }) {
 // ─── Main Email ───
 
 export default function WaitlistLaunchInvite() {
-  const ctaUrl = "{{CTA_URL}}";
+  const ctaUrl = "https://extendr.dev";
 
   return (
     <Html>
@@ -376,8 +376,23 @@ export default function WaitlistLaunchInvite() {
               </Text>
             </Section>
 
+            {/* ═══ DISCOUNT TEASER ═══ */}
+            <Section style={{ padding: "16px 48px 0", textAlign: "center" as const }}>
+              <Text
+                style={{
+                  margin: 0,
+                  fontSize: "13px",
+                  color: colors.greenPrimary,
+                  fontWeight: 600,
+                  fontFamily,
+                }}
+              >
+                ↓ Scroll down for an exclusive waitlist discount ↓
+              </Text>
+            </Section>
+
             {/* ═══ HERO CTA ═══ */}
-            <Section style={{ padding: "36px 48px 0", textAlign: "center" as const }}>
+            <Section style={{ padding: "24px 48px 0", textAlign: "center" as const }}>
               <GreenButton href={ctaUrl}>Start Building →</GreenButton>
             </Section>
           </Section>
@@ -424,7 +439,7 @@ export default function WaitlistLaunchInvite() {
                           fontFamily: monoFamily,
                         }}
                       >
-                        extendr.dev/build
+                        extendr.dev
                       </td>
                     </tr>
                   </table>
@@ -701,7 +716,7 @@ export default function WaitlistLaunchInvite() {
 
           {/* ═══ DIVIDER ═══ */}
           <Section style={{ padding: "72px 48px 0" }}>
-            <Hr style={{ borderTop: `1px solid ${colors.borderSubtle}`, margin: 0 }} />
+            <Hr style={{ borderTop: `1px solid #333333`, margin: 0 }} />
           </Section>
 
           {/* ═══ FEATURE 1: Vibe code in seconds ═══ */}
@@ -1092,7 +1107,7 @@ export default function WaitlistLaunchInvite() {
 
           {/* ═══ DIVIDER ═══ */}
           <Section style={{ padding: "72px 48px 0" }}>
-            <Hr style={{ borderTop: `1px solid ${colors.borderSubtle}`, margin: 0 }} />
+            <Hr style={{ borderTop: `1px solid #333333`, margin: 0 }} />
           </Section>
 
           {/* ═══ SOCIAL PROOF ═══ */}
@@ -1353,7 +1368,7 @@ export default function WaitlistLaunchInvite() {
             padding: "64px 48px 0",
           }}
         >
-          <Hr style={{ borderTop: `1px solid ${colors.borderSubtle}`, margin: "0 0 48px" }} />
+          <Hr style={{ borderTop: `1px solid #333333`, margin: "0 0 48px" }} />
 
           <Text
             style={{
@@ -1423,7 +1438,7 @@ export default function WaitlistLaunchInvite() {
             padding: "48px 48px 40px",
           }}
         >
-          <Hr style={{ borderTop: `1px solid #12171e`, margin: "0 0 32px" }} />
+          <Hr style={{ borderTop: `1px solid #333333`, margin: "0 0 32px" }} />
 
           <Row>
             <Column style={{ verticalAlign: "middle" }}>
