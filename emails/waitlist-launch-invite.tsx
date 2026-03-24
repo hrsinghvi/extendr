@@ -1167,7 +1167,7 @@ export default function WaitlistLaunchInvite() {
                 {
                   name: "DesignLab",
                   quote: '"We replaced 3 internal tools with one custom extension."',
-                  desc: "A design agency that built a client portal extension to streamline feedback.",
+                  desc: "A design agency that built a client portal extension to streamline their feedback workflow.",
                 },
               ].map((t, i) => (
                 <Column
@@ -1192,7 +1192,7 @@ export default function WaitlistLaunchInvite() {
                     }}
                   >
                     <tr>
-                      <td style={{ padding: "24px" }}>
+                      <td style={{ padding: "24px", height: "220px", verticalAlign: "top" }}>
                         <Text style={{ margin: "0 0 4px", fontSize: "15px", fontWeight: 700, color: colors.white, fontFamily }}>{t.name}</Text>
                         <Text style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: 600, color: "#cccccc", lineHeight: "22px", fontFamily }}>{t.quote}</Text>
                         <Text style={{ margin: "0 0 16px", fontSize: "13px", color: "#777777", lineHeight: "21px", fontFamily }}>{t.desc}</Text>
