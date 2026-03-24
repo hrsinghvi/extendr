@@ -716,7 +716,7 @@ export default function WaitlistLaunchInvite() {
 
           {/* ═══ DIVIDER ═══ */}
           <Section style={{ padding: "72px 48px 0" }}>
-            <Hr style={{ borderTop: `1px solid #333333`, margin: 0 }} />
+            <Hr style={{ borderTop: `1px solid #d0d0d0`, margin: 0 }} />
           </Section>
 
           {/* ═══ FEATURE 1: Vibe code in seconds ═══ */}
@@ -752,7 +752,7 @@ export default function WaitlistLaunchInvite() {
                   boilerplate, no setup hell. Just tell the AI what you want and
                   watch it build.
                 </Text>
-                <OutlineButton href={ctaUrl}>Try it free →</OutlineButton>
+                <OutlineButton href={ctaUrl}>Try it now →</OutlineButton>
               </Column>
               <Column style={{ width: "45%", verticalAlign: "top" }}>
                 <table
@@ -936,7 +936,7 @@ export default function WaitlistLaunchInvite() {
                   money for tools that save them time. No app store middlemen.
                 </Text>
                 <OutlineButton href={ctaUrl}>
-                  Explore Marketplace →
+                  Explore →
                 </OutlineButton>
               </Column>
             </Row>
@@ -1107,7 +1107,7 @@ export default function WaitlistLaunchInvite() {
 
           {/* ═══ DIVIDER ═══ */}
           <Section style={{ padding: "72px 48px 0" }}>
-            <Hr style={{ borderTop: `1px solid #333333`, margin: 0 }} />
+            <Hr style={{ borderTop: `1px solid #d0d0d0`, margin: 0 }} />
           </Section>
 
           {/* ═══ SOCIAL PROOF ═══ */}
@@ -1368,7 +1368,7 @@ export default function WaitlistLaunchInvite() {
             padding: "64px 48px 0",
           }}
         >
-          <Hr style={{ borderTop: `1px solid #333333`, margin: "0 0 48px" }} />
+          <Hr style={{ borderTop: `1px solid #d0d0d0`, margin: "0 0 48px" }} />
 
           <Text
             style={{
@@ -1438,7 +1438,7 @@ export default function WaitlistLaunchInvite() {
             padding: "48px 48px 40px",
           }}
         >
-          <Hr style={{ borderTop: `1px solid #333333`, margin: "0 0 32px" }} />
+          <Hr style={{ borderTop: `1px solid #d0d0d0`, margin: "0 0 32px" }} />
 
           <Row>
             <Column style={{ verticalAlign: "middle" }}>
