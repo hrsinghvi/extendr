@@ -289,8 +289,6 @@ export default function WaitlistLaunchInvite() {
           margin: 0,
           padding: 0,
           backgroundColor: colors.bg,
-          backgroundImage:
-            "radial-gradient(ellipse at center bottom, rgba(90,150,101,0.25) 0%, rgba(90,150,101,0.08) 40%, rgba(5,6,9,0) 70%)",
           fontFamily,
           WebkitFontSmoothing: "antialiased" as any,
         }}
@@ -310,70 +308,78 @@ export default function WaitlistLaunchInvite() {
             backgroundColor: colors.card,
           }}
         >
-          {/* ═══ LOGO ═══ */}
-          <Section style={{ padding: "48px 48px 0", textAlign: "center" as const }}>
-            <Text
-              style={{
-                fontSize: "22px",
-                fontWeight: 700,
-                color: colors.white,
-                letterSpacing: "-0.5px",
-                margin: 0,
-                fontFamily,
-              }}
-            >
-              extendr
-            </Text>
-          </Section>
+          {/* ═══ TOP HERO WITH GREEN GRADIENT ═══ */}
+          <Section
+            style={{
+              backgroundImage:
+                "radial-gradient(ellipse at center top, rgba(90,150,101,0.30) 0%, rgba(90,150,101,0.12) 35%, rgba(10,14,20,0) 65%)",
+            }}
+          >
+            {/* ═══ LOGO ═══ */}
+            <Section style={{ padding: "48px 48px 0", textAlign: "center" as const }}>
+              <Text
+                style={{
+                  fontSize: "22px",
+                  fontWeight: 700,
+                  color: colors.white,
+                  letterSpacing: "-0.5px",
+                  margin: 0,
+                  fontFamily,
+                }}
+              >
+                extendr
+              </Text>
+            </Section>
 
-          {/* ═══ PILL BADGE ═══ */}
-          <Section style={{ padding: "40px 48px 0", textAlign: "center" as const }}>
-            <PillBadge>Now Live</PillBadge>
-          </Section>
+            {/* ═══ PILL BADGE ═══ */}
+            <Section style={{ padding: "40px 48px 0", textAlign: "center" as const }}>
+              <PillBadge>Now Live</PillBadge>
+            </Section>
 
-          {/* ═══ HERO HEADLINE ═══ */}
-          <Section style={{ padding: "32px 48px 0", textAlign: "center" as const }}>
-            <Heading
-              as="h1"
-              style={{
-                margin: 0,
-                fontSize: "48px",
-                fontWeight: 800,
-                color: colors.white,
-                letterSpacing: "-1.5px",
-                lineHeight: "56px",
-                fontFamily,
-              }}
-            >
-              What will you
-              <br />
-              <em style={{ fontStyle: "italic", color: colors.greenPrimary }}>
-                build
-              </em>{" "}
-              today?
-            </Heading>
-          </Section>
+            {/* ═══ HERO HEADLINE ═══ */}
+            <Section style={{ padding: "32px 48px 0", textAlign: "center" as const }}>
+              <Heading
+                as="h1"
+                style={{
+                  margin: 0,
+                  fontSize: "48px",
+                  fontWeight: 800,
+                  color: colors.white,
+                  letterSpacing: "-1.5px",
+                  lineHeight: "56px",
+                  fontFamily,
+                }}
+              >
+                What will you
+                <br />
+                <em style={{ fontStyle: "italic", color: colors.greenPrimary }}>
+                  build
+                </em>{" "}
+                today?
+              </Heading>
+            </Section>
 
-          {/* ═══ HERO SUBTITLE ═══ */}
-          <Section style={{ padding: "24px 64px 0", textAlign: "center" as const }}>
-            <Text
-              style={{
-                margin: 0,
-                fontSize: "17px",
-                color: colors.textSecondary,
-                lineHeight: "28px",
-                fontWeight: 400,
-                fontFamily,
-              }}
-            >
-              extendr is live. Build Chrome extensions with AI, ship them to
-              businesses, and turn your skills into recurring revenue.
-            </Text>
-          </Section>
+            {/* ═══ HERO SUBTITLE ═══ */}
+            <Section style={{ padding: "24px 64px 0", textAlign: "center" as const }}>
+              <Text
+                style={{
+                  margin: 0,
+                  fontSize: "17px",
+                  color: colors.textSecondary,
+                  lineHeight: "28px",
+                  fontWeight: 400,
+                  fontFamily,
+                }}
+              >
+                extendr is live. Build Chrome extensions with AI, ship them to
+                businesses, and turn your skills into recurring revenue.
+              </Text>
+            </Section>
 
-          {/* ═══ HERO CTA ═══ */}
-          <Section style={{ padding: "36px 48px 0", textAlign: "center" as const }}>
-            <GreenButton href={ctaUrl}>Start Building →</GreenButton>
+            {/* ═══ HERO CTA ═══ */}
+            <Section style={{ padding: "36px 48px 0", textAlign: "center" as const }}>
+              <GreenButton href={ctaUrl}>Start Building →</GreenButton>
+            </Section>
           </Section>
 
           {/* ═══ APP MOCKUP ═══ */}
