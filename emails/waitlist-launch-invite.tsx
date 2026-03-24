@@ -39,6 +39,7 @@ const colors = {
 const fontFamily =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 const monoFamily = "'Courier New', Courier, monospace";
+const serifFamily = "'Instrument Serif', Georgia, 'Times New Roman', serif";
 
 // ─── Reusable components ───
 
@@ -279,6 +280,16 @@ export default function WaitlistLaunchInvite() {
           fontWeight={400}
           fontStyle="normal"
         />
+        <Font
+          fontFamily="Instrument Serif"
+          fallbackFontFamily={["Georgia", "Times New Roman", "serif"]}
+          webFont={{
+            url: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap",
+            format: "woff2",
+          }}
+          fontWeight={400}
+          fontStyle="italic"
+        />
       </Head>
       <Preview>
         Extendr is live. Build Chrome extensions with AI, ship them, earn
@@ -352,7 +363,7 @@ export default function WaitlistLaunchInvite() {
               >
                 What will you
                 <br />
-                <em style={{ fontStyle: "italic", color: colors.greenPrimary }}>
+                <em style={{ fontStyle: "italic", color: colors.greenPrimary, fontFamily: serifFamily, fontSize: "54px" }}>
                   build
                 </em>
                 {" "}today?
@@ -736,7 +747,7 @@ export default function WaitlistLaunchInvite() {
                     fontFamily,
                   }}
                 >
-                  <span style={{ color: colors.greenPrimary }}>Vibe code</span>{" "}
+                  <span style={{ color: colors.greenPrimary, fontFamily: serifFamily, fontStyle: "italic", fontSize: "32px" }}>Vibe code</span>{" "}
                   in seconds
                 </Heading>
                 <Text
@@ -920,7 +931,7 @@ export default function WaitlistLaunchInvite() {
                     fontFamily,
                   }}
                 >
-                  <span style={{ color: colors.blue }}>Sell directly</span> to
+                  <span style={{ color: colors.blue, fontFamily: serifFamily, fontStyle: "italic", fontSize: "32px" }}>Sell directly</span> to
                   businesses
                 </Heading>
                 <Text
@@ -960,7 +971,7 @@ export default function WaitlistLaunchInvite() {
                   }}
                 >
                   Own your{" "}
-                  <span style={{ color: colors.greenPrimary }}>
+                  <span style={{ color: colors.greenPrimary, fontFamily: serifFamily, fontStyle: "italic", fontSize: "32px" }}>
                     revenue stream
                   </span>
                 </Heading>
@@ -1136,6 +1147,8 @@ export default function WaitlistLaunchInvite() {
                 style={{
                   color: colors.greenPrimary,
                   fontStyle: "italic",
+                  fontFamily: serifFamily,
+                  fontSize: "34px",
                 }}
               >
                 already building
@@ -1225,7 +1238,7 @@ export default function WaitlistLaunchInvite() {
             }}
           >
             You're early. Here's{" "}
-            <span style={{ color: colors.greenPrimary }}>20% off</span>
+            <span style={{ color: colors.greenPrimary, fontFamily: serifFamily, fontStyle: "italic", fontSize: "34px" }}>20% off</span>
           </Heading>
 
           <Text
@@ -1328,6 +1341,8 @@ export default function WaitlistLaunchInvite() {
                 style={{
                   color: colors.greenPrimary,
                   fontStyle: "italic",
+                  fontFamily: serifFamily,
+                  fontSize: "34px",
                 }}
               >
                 your first extension
