@@ -55,101 +55,67 @@
 
     /* ===== KEYFRAME ANIMATIONS ===== */
 
-    /* Slow-rotating gradient orb glow */
     @keyframes orbPulse {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 0.7;
-      }
-      50% {
-        transform: scale(1.15);
-        opacity: 1;
-      }
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
     }
 
-    /* Secondary orb counter-pulse */
     @keyframes orbPulse2 {
-      0%, 100% {
-        transform: scale(1.1);
-        opacity: 0.5;
-      }
-      50% {
-        transform: scale(0.9);
-        opacity: 0.8;
-      }
+      0%, 100% { transform: scale(1.1); opacity: 0.5; }
+      50% { transform: scale(0.9); opacity: 0.85; }
     }
 
-    /* Third orb drift */
     @keyframes orbDrift {
-      0%, 100% {
-        transform: translate(0, 0) scale(1);
-        opacity: 0.4;
-      }
-      33% {
-        transform: translate(15px, -10px) scale(1.1);
-        opacity: 0.7;
-      }
-      66% {
-        transform: translate(-10px, 8px) scale(0.95);
-        opacity: 0.5;
-      }
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+      33% { transform: translate(15px, -10px) scale(1.1); opacity: 0.7; }
+      66% { transform: translate(-10px, 8px) scale(0.95); opacity: 0.5; }
     }
 
-    /* Fade-in from bottom */
     @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Fade-in scale */
     @keyframes fadeInScale {
-      from {
-        opacity: 0;
-        transform: scale(0.8);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
     }
 
-    /* Gentle float */
     @keyframes gentleFloat {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-6px); }
     }
 
-    /* Shimmer effect for the CTA button */
     @keyframes shimmer {
       0% { background-position: -200% center; }
       100% { background-position: 200% center; }
     }
 
-    /* Glow pulse on CTA */
     @keyframes glowPulse {
       0%, 100% { box-shadow: 0 4px 24px rgba(90,150,101,0.3), 0 0 40px rgba(90,150,101,0.1); }
       50% { box-shadow: 0 4px 32px rgba(90,150,101,0.5), 0 0 60px rgba(90,150,101,0.2); }
     }
 
-    /* Badge glow */
-    @keyframes badgeGlow {
-      0%, 100% { box-shadow: 0 0 12px rgba(90,150,101,0.2), inset 0 0 12px rgba(90,150,101,0.05); }
-      50% { box-shadow: 0 0 24px rgba(90,150,101,0.4), inset 0 0 20px rgba(90,150,101,0.1); }
-    }
-
-    /* Reveal line expand */
     @keyframes lineExpand {
       from { width: 0; }
       to { width: 100%; }
     }
 
-    /* Particle float for decorative dots */
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes dashBorder {
+      from { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: -20; }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
     @keyframes particleFloat1 {
       0%, 100% { transform: translate(0, 0); opacity: 0.3; }
       25% { transform: translate(20px, -30px); opacity: 0.8; }
@@ -161,93 +127,53 @@
       30% { transform: translate(-25px, -20px); opacity: 0.7; }
       60% { transform: translate(10px, -40px); opacity: 0.3; }
     }
-    @keyframes particleFloat3 {
-      0%, 100% { transform: translate(0, 0); opacity: 0.4; }
-      40% { transform: translate(30px, -15px); opacity: 0.6; }
-      70% { transform: translate(-15px, -35px); opacity: 0.2; }
-    }
-
-    /* Ring rotation */
-    @keyframes ringRotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    /* Feature card slide in */
-    @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-40px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    /* Number counter fade */
-    @keyframes numberReveal {
-      from { opacity: 0; transform: scale(0.5) rotate(-10deg); }
-      to { opacity: 1; transform: scale(1) rotate(0deg); }
-    }
 
     /* ===== ANIMATION CLASSES ===== */
     .anim-orb1 { animation: orbPulse 4s ease-in-out infinite; }
     .anim-orb2 { animation: orbPulse2 5s ease-in-out infinite; }
     .anim-orb3 { animation: orbDrift 7s ease-in-out infinite; }
     .anim-fade-up-1 { animation: fadeInUp 0.8s ease-out 0.2s both; }
-    .anim-fade-up-2 { animation: fadeInUp 0.8s ease-out 0.5s both; }
-    .anim-fade-up-3 { animation: fadeInUp 0.8s ease-out 0.8s both; }
-    .anim-fade-up-4 { animation: fadeInUp 0.8s ease-out 1.1s both; }
-    .anim-fade-up-5 { animation: fadeInUp 0.8s ease-out 1.4s both; }
-    .anim-fade-up-6 { animation: fadeInUp 0.8s ease-out 1.7s both; }
+    .anim-fade-up-2 { animation: fadeInUp 0.8s ease-out 0.4s both; }
+    .anim-fade-up-3 { animation: fadeInUp 0.8s ease-out 0.6s both; }
+    .anim-fade-up-4 { animation: fadeInUp 0.8s ease-out 0.8s both; }
+    .anim-fade-up-5 { animation: fadeInUp 0.8s ease-out 1.0s both; }
+    .anim-fade-up-6 { animation: fadeInUp 0.8s ease-out 1.2s both; }
+    .anim-fade-up-7 { animation: fadeInUp 0.8s ease-out 1.4s both; }
     .anim-fade-scale { animation: fadeInScale 0.6s ease-out 0.3s both; }
     .anim-float { animation: gentleFloat 3s ease-in-out infinite; }
-    .anim-shimmer {
-      background: linear-gradient(90deg, #5A9665 0%, #7bc68a 40%, #5A9665 60%, #5A9665 100%);
-      background-size: 200% 100%;
-      animation: shimmer 3s ease-in-out infinite;
-    }
     .anim-glow { animation: glowPulse 2.5s ease-in-out infinite; }
-    .anim-badge-glow { animation: badgeGlow 3s ease-in-out infinite; }
     .anim-line { animation: lineExpand 1.2s ease-out 0.5s both; }
+    .anim-slide-1 { animation: slideInLeft 0.7s ease-out 1.2s both; }
+    .anim-slide-2 { animation: slideInLeft 0.7s ease-out 1.5s both; }
+    .anim-slide-3 { animation: slideInLeft 0.7s ease-out 1.8s both; }
     .anim-particle1 { animation: particleFloat1 6s ease-in-out infinite; }
     .anim-particle2 { animation: particleFloat2 8s ease-in-out infinite 1s; }
-    .anim-particle3 { animation: particleFloat3 7s ease-in-out infinite 0.5s; }
-    .anim-ring { animation: ringRotate 20s linear infinite; }
-    .anim-slide-1 { animation: slideInLeft 0.7s ease-out 1.0s both; }
-    .anim-slide-2 { animation: slideInLeft 0.7s ease-out 1.3s both; }
-    .anim-slide-3 { animation: slideInLeft 0.7s ease-out 1.6s both; }
-    .anim-slide-4 { animation: slideInLeft 0.7s ease-out 1.9s both; }
-    .anim-num { animation: numberReveal 0.5s ease-out both; }
-    .anim-num-1 { animation-delay: 1.0s; }
-    .anim-num-2 { animation-delay: 1.3s; }
-    .anim-num-3 { animation-delay: 1.6s; }
-    .anim-num-4 { animation-delay: 1.9s; }
+    .anim-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
 
     /* ===== MOBILE ===== */
     @media only screen and (max-width: 620px) {
       .container { width: 100% !important; max-width: 100% !important; }
       .mobile-padding { padding-left: 24px !important; padding-right: 24px !important; }
-      .mobile-padding-sm { padding-left: 20px !important; padding-right: 20px !important; }
-      .mobile-full-width { width: 100% !important; display: block !important; }
-      .mobile-center { text-align: center !important; }
-      .mobile-stack { display: block !important; width: 100% !important; }
       .mobile-cta a { display: block !important; width: 100% !important; text-align: center !important; box-sizing: border-box !important; }
-      .feature-cell { display: block !important; width: 100% !important; padding-bottom: 16px !important; }
       .hero-text { font-size: 36px !important; line-height: 42px !important; }
-      .hero-sub { font-size: 16px !important; }
-      .stat-cell { display: block !important; width: 100% !important; padding: 12px 0 !important; }
-      .gradient-header { height: 280px !important; }
+      .hero-sub { font-size: 16px !important; line-height: 24px !important; }
+      .gradient-header { height: 160px !important; }
     }
 
     /* ===== REDUCED MOTION ===== */
     @media (prefers-reduced-motion: reduce) {
       .anim-orb1, .anim-orb2, .anim-orb3,
-      .anim-float, .anim-shimmer, .anim-glow,
-      .anim-badge-glow, .anim-particle1, .anim-particle2,
-      .anim-particle3, .anim-ring {
+      .anim-float, .anim-glow, .anim-particle1,
+      .anim-particle2, .anim-pulse-glow {
         animation: none !important;
       }
       .anim-fade-up-1, .anim-fade-up-2, .anim-fade-up-3,
       .anim-fade-up-4, .anim-fade-up-5, .anim-fade-up-6,
-      .anim-fade-scale, .anim-line,
-      .anim-slide-1, .anim-slide-2, .anim-slide-3, .anim-slide-4,
-      .anim-num { animation-duration: 0.01s !important; animation-delay: 0s !important; }
+      .anim-fade-up-7, .anim-fade-scale, .anim-line,
+      .anim-slide-1, .anim-slide-2, .anim-slide-3 {
+        animation-duration: 0.01s !important;
+        animation-delay: 0s !important;
+      }
     }
   </style>
 </head>
@@ -255,7 +181,7 @@
 
   <!-- Preheader text -->
   <div style="display:none;font-size:1px;color:#050609;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-    Your early access is ready. Build Chrome extensions with AI in seconds. Describe it, build it, ship it.
+    Extendr is live. Build Chrome extensions with AI — describe it, build it, ship it. Your early access is ready.
     &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
   </div>
 
@@ -265,47 +191,32 @@
       <td align="center" style="padding:0;">
 
         <!-- ============================================================ -->
-        <!-- FULL-BLEED GRADIENT HERO SECTION                             -->
+        <!-- FULL-BLEED GRADIENT BACKGROUND (mimics extendr.dev)          -->
         <!-- ============================================================ -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050609;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050609;position:relative;">
           <tr>
-            <td align="center" style="padding:0;position:relative;">
+            <td align="center" style="padding:0;">
 
-              <!-- Gradient background layer - mimics the website's circular gradient -->
-              <div class="gradient-header" style="width:100%;height:340px;position:relative;overflow:hidden;background:#050609;">
+              <!-- Gradient background layer - recreating the website's radial blue-green glow from bottom -->
+              <div class="gradient-header" style="width:100%;height:200px;position:relative;overflow:hidden;background:#050609;">
 
-                <!-- Animated gradient orbs - recreating the website's radial blue-green glow -->
+                <!-- Large primary orb (blue → green ellipse, matching GradientBackground.tsx) -->
+                <div class="anim-orb1" style="position:absolute;bottom:-300px;left:50%;margin-left:-400px;width:800px;height:600px;border-radius:50%;background:radial-gradient(ellipse at center bottom, rgba(111,151,179,0.9) 0%, rgba(125,167,194,0.7) 25%, rgba(90,150,101,0.5) 55%, transparent 75%);pointer-events:none;filter:blur(40px);"></div>
 
-                <!-- Large primary orb (blue-green) -->
-                <div class="anim-orb1" style="position:absolute;bottom:-60px;left:50%;margin-left:-200px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(111,151,179,0.6) 0%,rgba(90,150,101,0.4) 40%,rgba(90,150,101,0.1) 65%,transparent 80%);pointer-events:none;"></div>
-
-                <!-- Secondary orb (lighter blue) -->
-                <div class="anim-orb2" style="position:absolute;bottom:-40px;left:50%;margin-left:-150px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(152,193,218,0.5) 0%,rgba(111,151,179,0.3) 35%,rgba(90,150,101,0.1) 60%,transparent 75%);pointer-events:none;"></div>
+                <!-- Secondary inner orb (lighter blue core) -->
+                <div class="anim-orb2" style="position:absolute;bottom:-250px;left:50%;margin-left:-250px;width:500px;height:400px;border-radius:50%;background:radial-gradient(ellipse at center bottom, rgba(152,193,218,0.8) 0%, rgba(111,151,179,0.5) 35%, rgba(90,150,101,0.15) 55%, transparent 70%);pointer-events:none;filter:blur(30px);"></div>
 
                 <!-- Tertiary accent orb (green) -->
-                <div class="anim-orb3" style="position:absolute;bottom:-20px;left:50%;margin-left:-100px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(90,150,101,0.5) 0%,rgba(90,150,101,0.2) 40%,transparent 70%);pointer-events:none;"></div>
+                <div class="anim-orb3" style="position:absolute;bottom:-180px;left:50%;margin-left:-150px;width:300px;height:250px;border-radius:50%;background:radial-gradient(ellipse at center bottom, rgba(90,150,101,0.6) 0%, rgba(90,150,101,0.2) 40%, transparent 70%);pointer-events:none;filter:blur(20px);"></div>
 
                 <!-- Floating particles -->
-                <div class="anim-particle1" style="position:absolute;bottom:80px;left:30%;width:4px;height:4px;border-radius:50%;background:rgba(90,150,101,0.6);pointer-events:none;"></div>
-                <div class="anim-particle2" style="position:absolute;bottom:60px;left:60%;width:3px;height:3px;border-radius:50%;background:rgba(152,193,218,0.5);pointer-events:none;"></div>
-                <div class="anim-particle3" style="position:absolute;bottom:100px;left:45%;width:5px;height:5px;border-radius:50%;background:rgba(111,151,179,0.4);pointer-events:none;"></div>
-                <div class="anim-particle1" style="position:absolute;bottom:120px;left:55%;width:3px;height:3px;border-radius:50%;background:rgba(90,150,101,0.3);pointer-events:none;animation-delay:2s;"></div>
-                <div class="anim-particle2" style="position:absolute;bottom:90px;left:38%;width:4px;height:4px;border-radius:50%;background:rgba(152,193,218,0.3);pointer-events:none;animation-delay:3s;"></div>
-
-                <!-- Rotating ring decoration -->
-                <div class="anim-ring" style="position:absolute;bottom:20px;left:50%;margin-left:-80px;width:160px;height:160px;border-radius:50%;border:1px solid rgba(90,150,101,0.08);pointer-events:none;"></div>
-                <div class="anim-ring" style="position:absolute;bottom:-10px;left:50%;margin-left:-120px;width:240px;height:240px;border-radius:50%;border:1px solid rgba(111,151,179,0.05);pointer-events:none;animation-direction:reverse;animation-duration:30s;"></div>
+                <div class="anim-particle1" style="position:absolute;bottom:60px;left:30%;width:4px;height:4px;border-radius:50%;background:rgba(90,150,101,0.6);pointer-events:none;"></div>
+                <div class="anim-particle2" style="position:absolute;bottom:40px;left:60%;width:3px;height:3px;border-radius:50%;background:rgba(152,193,218,0.5);pointer-events:none;"></div>
+                <div class="anim-particle1" style="position:absolute;bottom:80px;left:45%;width:5px;height:5px;border-radius:50%;background:rgba(111,151,179,0.4);pointer-events:none;animation-delay:2s;"></div>
 
                 <!-- Logo at top -->
                 <div class="anim-fade-up-1" style="position:absolute;top:40px;left:0;right:0;text-align:center;">
                   <span style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">extendr</span>
-                </div>
-
-                <!-- Centered badge icon with glow -->
-                <div class="anim-fade-scale" style="position:absolute;bottom:60px;left:50%;margin-left:-36px;width:72px;height:72px;">
-                  <div class="anim-badge-glow anim-float" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#5A9665 0%,#6f97b3 50%,#5A9665 100%);display:flex;align-items:center;justify-content:center;text-align:center;line-height:72px;">
-                    <span style="font-size:30px;color:#ffffff;">&#10003;</span>
-                  </div>
                 </div>
               </div>
 
@@ -318,60 +229,188 @@
         <!-- ============================================================ -->
         <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#050609;">
 
-          <!-- ========== HERO TEXT ========== -->
+          <!-- ========== "NOW LIVE" PILL ========== -->
           <tr>
-            <td style="padding:32px 48px 0;text-align:center;" class="mobile-padding">
-
-              <!-- Early Access pill -->
-              <div class="anim-fade-up-2" style="margin-bottom:20px;">
+            <td style="padding:8px 48px 0;text-align:center;" class="mobile-padding">
+              <div class="anim-fade-up-2">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                   <tr>
-                    <td style="padding:7px 20px;border-radius:100px;background:linear-gradient(135deg,rgba(90,150,101,0.15),rgba(111,151,179,0.12));border:1px solid rgba(90,150,101,0.2);">
-                      <span style="font-size:11px;font-weight:700;color:#5A9665;text-transform:uppercase;letter-spacing:2px;">&#9733; Early Access</span>
+                    <td style="padding:8px 22px;border-radius:100px;background:rgba(90,150,101,0.08);border:1px solid rgba(90,150,101,0.2);">
+                      <span style="font-size:13px;font-weight:600;color:#5A9665;letter-spacing:0.3px;">&#9679;&nbsp; Now live</span>
                     </td>
                   </tr>
                 </table>
               </div>
+            </td>
+          </tr>
 
-              <!-- Main headline -->
+          <!-- ========== HERO HEADLINE ========== -->
+          <tr>
+            <td style="padding:28px 48px 0;text-align:center;" class="mobile-padding">
               <div class="anim-fade-up-3">
-                <h1 class="hero-text" style="margin:0 0 16px;font-size:44px;font-weight:800;color:#ffffff;letter-spacing:-1.2px;line-height:50px;">
-                  You're in.
+                <h1 class="hero-text" style="margin:0;font-size:46px;font-weight:800;color:#ffffff;letter-spacing:-1.5px;line-height:54px;">
+                  What will you<br/><em style="font-style:italic;color:#5A9665;">build</em> today?
                 </h1>
               </div>
+            </td>
+          </tr>
 
+          <!-- ========== HERO SUBTITLE ========== -->
+          <tr>
+            <td style="padding:20px 56px 0;text-align:center;" class="mobile-padding">
               <div class="anim-fade-up-4">
-                <p class="hero-sub" style="margin:0 0 8px;font-size:19px;color:#b0b0b0;line-height:28px;font-weight:400;">
-                  Extendr is live and your spot is waiting.
-                </p>
-                <p style="margin:0;font-size:15px;color:#666666;line-height:24px;">
-                  You signed up early, and we didn't forget.
+                <p class="hero-sub" style="margin:0;font-size:17px;color:#9a9a9a;line-height:27px;font-weight:400;">
+                  extendr is live. Build Chrome extensions with AI, ship them to businesses, and turn your skills into recurring revenue.
                 </p>
               </div>
             </td>
           </tr>
 
-          <!-- ========== BODY + CTA ========== -->
+          <!-- ========== ANIMATED DIVIDER ========== -->
           <tr>
-            <td style="padding:32px 48px 0;text-align:center;" class="mobile-padding">
-              <div class="anim-fade-up-5">
-                <p style="margin:0 0 32px;font-size:16px;color:#999999;line-height:27px;">
-                  Describe any Chrome extension in plain English and watch AI build it in real time. No coding required. No setup. Just ideas turning into reality.
-                </p>
+            <td style="padding:40px 48px 0;" class="mobile-padding">
+              <div style="height:1px;overflow:hidden;position:relative;">
+                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.35),rgba(111,151,179,0.35),transparent);"></div>
+              </div>
+            </td>
+          </tr>
 
-                <!-- Animated CTA Button -->
+          <!-- ========== FEATURE 1: Vibe code in seconds ========== -->
+          <tr>
+            <td style="padding:36px 48px 0;" class="mobile-padding">
+              <div class="anim-slide-1">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="52" style="vertical-align:top;padding-right:16px;">
+                      <div style="width:44px;height:44px;border-radius:12px;background:rgba(90,150,101,0.1);border:1px solid rgba(90,150,101,0.15);text-align:center;line-height:44px;">
+                        <span style="font-size:20px;">&#129513;</span>
+                      </div>
+                    </td>
+                    <td style="vertical-align:top;">
+                      <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#ffffff;line-height:22px;">
+                        Vibe code in seconds
+                      </p>
+                      <p style="margin:0;font-size:14px;color:#888888;line-height:22px;">
+                        Describe a workflow, get a working Chrome extension. No boilerplate, no setup hell.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- ========== FEATURE 2: Sell directly to businesses ========== -->
+          <tr>
+            <td style="padding:28px 48px 0;" class="mobile-padding">
+              <div class="anim-slide-2">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="52" style="vertical-align:top;padding-right:16px;">
+                      <div style="width:44px;height:44px;border-radius:12px;background:rgba(111,151,179,0.1);border:1px solid rgba(111,151,179,0.15);text-align:center;line-height:44px;">
+                        <span style="font-size:20px;">&#127978;</span>
+                      </div>
+                    </td>
+                    <td style="vertical-align:top;">
+                      <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#ffffff;line-height:22px;">
+                        Sell directly to businesses
+                      </p>
+                      <p style="margin:0;font-size:14px;color:#888888;line-height:22px;">
+                        List your extension and connect with businesses that pay real money for tools that save them time.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- ========== FEATURE 3: Own your revenue stream ========== -->
+          <tr>
+            <td style="padding:28px 48px 0;" class="mobile-padding">
+              <div class="anim-slide-3">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="52" style="vertical-align:top;padding-right:16px;">
+                      <div style="width:44px;height:44px;border-radius:12px;background:rgba(152,193,218,0.1);border:1px solid rgba(152,193,218,0.15);text-align:center;line-height:44px;">
+                        <span style="font-size:20px;">&#128200;</span>
+                      </div>
+                    </td>
+                    <td style="vertical-align:top;">
+                      <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#ffffff;line-height:22px;">
+                        Own your revenue stream
+                      </p>
+                      <p style="margin:0;font-size:14px;color:#888888;line-height:22px;">
+                        Your product, your customers, your money. No middlemen taking a cut of your work.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- ========== ANIMATED DIVIDER 2 ========== -->
+          <tr>
+            <td style="padding:40px 48px 0;" class="mobile-padding">
+              <div style="height:1px;overflow:hidden;position:relative;">
+                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(111,151,179,0.3),rgba(90,150,101,0.3),transparent);animation-delay:1.5s;"></div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- ========== WAITLIST EXCLUSIVE BOX ========== -->
+          <tr>
+            <td style="padding:36px 48px 0;" class="mobile-padding">
+              <div class="anim-fade-up-5">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(90,150,101,0.06) 0%,rgba(111,151,179,0.04) 50%,rgba(90,150,101,0.06) 100%);border:1px solid rgba(90,150,101,0.12);border-radius:20px;">
+                  <tr>
+                    <td style="padding:36px 32px;text-align:center;">
+                      <!-- Label -->
+                      <p style="margin:0 0 8px;font-size:11px;font-weight:800;color:#6f97b3;text-transform:uppercase;letter-spacing:3px;">
+                        Waitlist Exclusive
+                      </p>
+                      <!-- Offer text -->
+                      <p style="margin:0 0 24px;font-size:19px;color:#cccccc;line-height:28px;font-weight:400;">
+                        You're early. Here's <strong style="color:#ffffff;font-weight:800;">20% off</strong> your first plan.
+                      </p>
+
+                      <!-- Coupon code with dashed border -->
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                        <tr>
+                          <td style="padding:16px 40px;border:2px dashed rgba(90,150,101,0.4);border-radius:14px;background:rgba(90,150,101,0.04);">
+                            <span style="font-size:26px;font-weight:800;color:#5A9665;letter-spacing:6px;font-family:'SF Mono',Monaco,'Courier New',monospace;">LAUNCH20</span>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Copy button hint -->
+                      <p style="margin:12px 0 0;font-size:11px;color:#555555;line-height:16px;">
+                        First 100 waitlist members only
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- ========== CTA BUTTON ========== -->
+          <tr>
+            <td style="padding:36px 48px 0;text-align:center;" class="mobile-padding mobile-cta">
+              <div class="anim-fade-up-6">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td align="center" style="padding:0 0 12px;">
                       <!--[if mso]>
-                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{CTA_URL}}" style="height:58px;v-text-anchor:middle;width:300px;" arcsize="21%" fill="t" strokecolor="#5A9665" strokeweight="0">
+                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{CTA_URL}}" style="height:58px;v-text-anchor:middle;width:320px;" arcsize="21%" fill="t" strokecolor="#5A9665" strokeweight="0">
                         <v:fill type="gradient" color="#5A9665" color2="#4a8055" angle="135" />
                         <w:anchorlock/>
                         <center style="color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:17px;font-weight:700;">Start Building &rarr;</center>
                       </v:roundrect>
                       <![endif]-->
                       <!--[if !mso]><!-->
-                      <a href="{{CTA_URL}}" class="anim-glow anim-shimmer" style="display:inline-block;padding:18px 56px;background-color:#5A9665;color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;border-radius:14px;letter-spacing:0.3px;line-height:22px;box-shadow:0 4px 24px rgba(90,150,101,0.35),0 1px 3px rgba(0,0,0,0.3);">
+                      <a href="{{CTA_URL}}" class="anim-glow" style="display:inline-block;padding:18px 60px;background:linear-gradient(135deg,#5A9665,#4a8055);color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;border-radius:14px;letter-spacing:0.3px;line-height:22px;box-shadow:0 4px 24px rgba(90,150,101,0.35),0 1px 3px rgba(0,0,0,0.3);">
                         Start Building &rarr;
                       </a>
                       <!--<![endif]-->
@@ -385,163 +424,18 @@
             </td>
           </tr>
 
-          <!-- ========== ANIMATED DIVIDER ========== -->
+          <!-- ========== ANIMATED DIVIDER 3 ========== -->
           <tr>
             <td style="padding:44px 48px 0;" class="mobile-padding">
               <div style="height:1px;overflow:hidden;position:relative;">
-                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.4),rgba(111,151,179,0.4),transparent);"></div>
+                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.25),rgba(111,151,179,0.25),transparent);animation-delay:2s;"></div>
               </div>
             </td>
           </tr>
 
-          <!-- ========== CAPABILITIES SECTION ========== -->
+          <!-- ========== HOW IT WORKS ========== -->
           <tr>
-            <td style="padding:40px 48px 0;" class="mobile-padding">
-              <div class="anim-fade-up-5">
-                <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#5A9665;text-transform:uppercase;letter-spacing:2.5px;text-align:center;">
-                  Capabilities
-                </p>
-                <p style="margin:0 0 36px;font-size:22px;font-weight:700;color:#ffffff;text-align:center;letter-spacing:-0.5px;line-height:30px;">
-                  Everything you need to build
-                </p>
-              </div>
-
-              <!-- Feature Cards with staggered animations -->
-
-              <!-- Feature 1: AI Generation -->
-              <div class="anim-slide-1" style="margin-bottom:16px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(90,150,101,0.08) 0%,rgba(90,150,101,0.02) 100%);border:1px solid rgba(90,150,101,0.12);border-radius:16px;">
-                  <tr>
-                    <td style="padding:24px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                        <tr>
-                          <td width="52" style="vertical-align:top;padding-right:16px;">
-                            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,rgba(90,150,101,0.2),rgba(90,150,101,0.08));border:1px solid rgba(90,150,101,0.15);text-align:center;line-height:48px;">
-                              <span class="anim-num anim-num-1" style="font-size:18px;font-weight:800;color:#5A9665;font-family:'SF Mono',Monaco,monospace;">01</span>
-                            </div>
-                          </td>
-                          <td style="vertical-align:top;">
-                            <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#e8e8e8;line-height:22px;">
-                              AI Generation
-                            </p>
-                            <p style="margin:0 0 6px;font-size:13px;color:#888888;line-height:20px;">
-                              Describe it, build it. Type what you want in plain English and AI writes clean, working Manifest V3 code instantly.
-                            </p>
-                            <p style="margin:0;font-size:11px;font-weight:600;color:#5A9665;letter-spacing:0.5px;">
-                              15+ specialized AI tools &rarr;
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- Feature 2: Live Preview -->
-              <div class="anim-slide-2" style="margin-bottom:16px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(111,151,179,0.08) 0%,rgba(111,151,179,0.02) 100%);border:1px solid rgba(111,151,179,0.12);border-radius:16px;">
-                  <tr>
-                    <td style="padding:24px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                        <tr>
-                          <td width="52" style="vertical-align:top;padding-right:16px;">
-                            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,rgba(111,151,179,0.2),rgba(111,151,179,0.08));border:1px solid rgba(111,151,179,0.15);text-align:center;line-height:48px;">
-                              <span class="anim-num anim-num-2" style="font-size:18px;font-weight:800;color:#6f97b3;font-family:'SF Mono',Monaco,monospace;">02</span>
-                            </div>
-                          </td>
-                          <td style="vertical-align:top;">
-                            <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#e8e8e8;line-height:22px;">
-                              Live Preview
-                            </p>
-                            <p style="margin:0 0 6px;font-size:13px;color:#888888;line-height:20px;">
-                              See changes instantly. Watch your extension come alive in real-time inside a sandboxed browser environment.
-                            </p>
-                            <p style="margin:0;font-size:11px;font-weight:600;color:#6f97b3;letter-spacing:0.5px;">
-                              Real-time WebContainer &rarr;
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- Feature 3: Multi-Model -->
-              <div class="anim-slide-3" style="margin-bottom:16px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(152,193,218,0.08) 0%,rgba(152,193,218,0.02) 100%);border:1px solid rgba(152,193,218,0.12);border-radius:16px;">
-                  <tr>
-                    <td style="padding:24px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                        <tr>
-                          <td width="52" style="vertical-align:top;padding-right:16px;">
-                            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,rgba(152,193,218,0.2),rgba(152,193,218,0.08));border:1px solid rgba(152,193,218,0.15);text-align:center;line-height:48px;">
-                              <span class="anim-num anim-num-3" style="font-size:18px;font-weight:800;color:#98c1da;font-family:'SF Mono',Monaco,monospace;">03</span>
-                            </div>
-                          </td>
-                          <td style="vertical-align:top;">
-                            <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#e8e8e8;line-height:22px;">
-                              Multi-Model AI
-                            </p>
-                            <p style="margin:0 0 6px;font-size:13px;color:#888888;line-height:20px;">
-                              Choose any AI provider. Switch between OpenAI, Gemini, Claude, DeepSeek, and more with one click.
-                            </p>
-                            <p style="margin:0;font-size:11px;font-weight:600;color:#98c1da;letter-spacing:0.5px;">
-                              Hot-swap models &rarr;
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- Feature 4: One-Click Export -->
-              <div class="anim-slide-4" style="margin-bottom:0;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(90,150,101,0.06) 0%,rgba(111,151,179,0.06) 50%,rgba(152,193,218,0.06) 100%);border:1px solid rgba(90,150,101,0.1);border-radius:16px;">
-                  <tr>
-                    <td style="padding:24px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                        <tr>
-                          <td width="52" style="vertical-align:top;padding-right:16px;">
-                            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,rgba(90,150,101,0.15),rgba(111,151,179,0.15));border:1px solid rgba(90,150,101,0.12);text-align:center;line-height:48px;">
-                              <span class="anim-num anim-num-4" style="font-size:18px;font-weight:800;color:#5A9665;font-family:'SF Mono',Monaco,monospace;">04</span>
-                            </div>
-                          </td>
-                          <td style="vertical-align:top;">
-                            <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#e8e8e8;line-height:22px;">
-                              One-Click Export
-                            </p>
-                            <p style="margin:0 0 6px;font-size:13px;color:#888888;line-height:20px;">
-                              Download & install. Get a production-ready ZIP — load it straight into Chrome. No build tools needed.
-                            </p>
-                            <p style="margin:0;font-size:11px;font-weight:600;color:#5A9665;letter-spacing:0.5px;">
-                              Manifest V3 ready &rarr;
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== ANIMATED DIVIDER 2 ========== -->
-          <tr>
-            <td style="padding:44px 48px 0;" class="mobile-padding">
-              <div style="height:1px;overflow:hidden;position:relative;">
-                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(111,151,179,0.3),rgba(90,150,101,0.3),transparent);animation-delay:1.5s;"></div>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== HOW IT WORKS (VISUAL FLOW) ========== -->
-          <tr>
-            <td style="padding:40px 48px 0;text-align:center;" class="mobile-padding">
+            <td style="padding:36px 48px 0;text-align:center;" class="mobile-padding">
               <div class="anim-fade-up-6">
                 <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6f97b3;text-transform:uppercase;letter-spacing:2.5px;">
                   How It Works
@@ -641,59 +535,61 @@
             </td>
           </tr>
 
-          <!-- ========== ANIMATED DIVIDER 3 ========== -->
+          <!-- ========== ANIMATED DIVIDER 4 ========== -->
           <tr>
             <td style="padding:44px 48px 0;" class="mobile-padding">
               <div style="height:1px;overflow:hidden;position:relative;">
-                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.3),rgba(111,151,179,0.3),transparent);animation-delay:2s;"></div>
+                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.2),rgba(111,151,179,0.2),transparent);animation-delay:2.5s;"></div>
               </div>
             </td>
           </tr>
 
-          <!-- ========== SECOND CTA (Bigger, bolder) ========== -->
+          <!-- ========== SECOND CTA ========== -->
           <tr>
-            <td style="padding:40px 48px 0;text-align:center;" class="mobile-padding">
-              <!-- Gradient glow behind CTA -->
-              <div style="position:relative;">
-                <div style="width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(90,150,101,0.12) 0%,rgba(111,151,179,0.06) 40%,transparent 70%);margin:0 auto;position:absolute;top:-80px;left:50%;margin-left:-120px;pointer-events:none;"></div>
+            <td style="padding:36px 48px 0;text-align:center;" class="mobile-padding">
+              <div class="anim-fade-up-7">
+                <!-- Gradient glow behind CTA -->
+                <div style="position:relative;">
+                  <div style="width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(90,150,101,0.1) 0%,rgba(111,151,179,0.05) 40%,transparent 70%);margin:0 auto;position:absolute;top:-80px;left:50%;margin-left:-120px;pointer-events:none;"></div>
+                </div>
+
+                <p style="margin:0 0 8px;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:32px;">
+                  Ready to build?
+                </p>
+                <p style="margin:0 0 28px;font-size:15px;color:#777777;line-height:24px;">
+                  Your early access is live. No setup, no coding, no limits on creativity.
+                </p>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" style="padding:0 0 8px;">
+                      <!--[if mso]>
+                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{CTA_URL}}" style="height:58px;v-text-anchor:middle;width:320px;" arcsize="19%" fill="t" strokecolor="#5A9665" strokeweight="0">
+                        <v:fill type="gradient" color="#5A9665" color2="#4a8055" angle="135" />
+                        <w:anchorlock/>
+                        <center style="color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:17px;font-weight:700;">Get Started Free &rarr;</center>
+                      </v:roundrect>
+                      <![endif]-->
+                      <!--[if !mso]><!-->
+                      <a href="{{CTA_URL}}" class="anim-glow" style="display:inline-block;padding:18px 60px;background:linear-gradient(135deg,#5A9665,#4a8055);color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;border-radius:14px;letter-spacing:0.3px;line-height:22px;box-shadow:0 4px 24px rgba(90,150,101,0.35),0 1px 3px rgba(0,0,0,0.3);animation-delay:0.5s;">
+                        Get Started Free &rarr;
+                      </a>
+                      <!--<![endif]-->
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Ghost outline CTA -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:16px auto 0;">
+                  <tr>
+                    <td align="center">
+                      <a href="https://extendr.dev" style="display:inline-block;padding:12px 32px;color:#6f97b3;font-size:13px;font-weight:600;text-decoration:none;border-radius:10px;border:1px solid rgba(111,151,179,0.2);line-height:18px;">
+                        Explore Features &rarr;
+                      </a>
+                    </td>
+                  </tr>
+                </table>
               </div>
-
-              <p style="margin:0 0 8px;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:32px;">
-                Ready to build?
-              </p>
-              <p style="margin:0 0 28px;font-size:15px;color:#777777;line-height:24px;">
-                Your early access is live. No setup, no coding, no limits on creativity.
-              </p>
-
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td align="center" style="padding:0 0 8px;">
-                    <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{CTA_URL}}" style="height:58px;v-text-anchor:middle;width:320px;" arcsize="19%" fill="t" strokecolor="#5A9665" strokeweight="0">
-                      <v:fill type="gradient" color="#5A9665" color2="#4a8055" angle="135" />
-                      <w:anchorlock/>
-                      <center style="color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:17px;font-weight:700;">Get Started Free &rarr;</center>
-                    </v:roundrect>
-                    <![endif]-->
-                    <!--[if !mso]><!-->
-                    <a href="{{CTA_URL}}" class="anim-glow" style="display:inline-block;padding:18px 60px;background:linear-gradient(135deg,#5A9665,#4a8055);color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;border-radius:14px;letter-spacing:0.3px;line-height:22px;box-shadow:0 4px 24px rgba(90,150,101,0.35),0 1px 3px rgba(0,0,0,0.3);animation-delay:0.5s;">
-                      Get Started Free &rarr;
-                    </a>
-                    <!--<![endif]-->
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Ghost outline CTA -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:16px auto 0;">
-                <tr>
-                  <td align="center">
-                    <a href="https://extendr.dev" style="display:inline-block;padding:12px 32px;color:#6f97b3;font-size:13px;font-weight:600;text-decoration:none;border-radius:10px;border:1px solid rgba(111,151,179,0.2);line-height:18px;">
-                      Explore Features &rarr;
-                    </a>
-                  </td>
-                </tr>
-              </table>
             </td>
           </tr>
 
@@ -712,7 +608,6 @@
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:14px;">
-                    <!-- Founder avatar circle -->
                     <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#5A9665,#6f97b3);text-align:center;line-height:44px;border:2px solid rgba(90,150,101,0.2);">
                       <span style="font-size:18px;color:#ffffff;font-weight:700;">{{FOUNDER_NAME}}</span>
                     </div>
