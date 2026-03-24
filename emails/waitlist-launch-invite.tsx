@@ -289,6 +289,8 @@ export default function WaitlistLaunchInvite() {
           margin: 0,
           padding: 0,
           backgroundColor: colors.bg,
+          backgroundImage:
+            "radial-gradient(ellipse at center bottom, rgba(90,150,101,0.25) 0%, rgba(90,150,101,0.08) 40%, rgba(5,6,9,0) 70%)",
           fontFamily,
           WebkitFontSmoothing: "antialiased" as any,
         }}
