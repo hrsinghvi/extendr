@@ -18,7 +18,7 @@ import * as React from "react";
 
 // ─── Color tokens ───
 const colors = {
-  bg: "#050609",
+  bg: "#1a1a1a",
   card: "#0a0e14",
   surface: "#0d1117",
   border: "#1a2029",
