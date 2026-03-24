@@ -128,78 +128,121 @@
           <!-- ========== APP MOCKUP ========== -->
           <tr>
             <td style="padding:0 32px;" class="pad-sm">
-              <div class="mockup-wrap" style="background:#0d1117;border:1px solid #1a2029;border-radius:16px;overflow:hidden;">
+              <table role="presentation" class="mockup-wrap" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0d1117;border:1px solid #1a2029;border-radius:16px;">
                 <!-- Browser bar -->
-                <div style="padding:12px 16px;border-bottom:1px solid #161c24;display:flex;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td width="60" style="vertical-align:middle;">
-                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff5f56;margin-right:6px;"></span>
-                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ffbd2e;margin-right:6px;"></span>
-                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ca40;"></span>
-                      </td>
-                      <td style="text-align:center;vertical-align:middle;">
-                        <span style="display:inline-block;padding:4px 24px;background:#12171e;border-radius:6px;font-size:11px;color:#555555;font-family:monospace;">extendr.dev/build</span>
-                      </td>
-                      <td width="60"></td>
-                    </tr>
-                  </table>
-                </div>
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #161c24;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td width="60" style="vertical-align:middle;font-size:0;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                            <td style="width:10px;height:10px;border-radius:50%;background-color:#ff5f56;font-size:0;line-height:0;" width="10" height="10">&nbsp;</td>
+                            <td width="6"></td>
+                            <td style="width:10px;height:10px;border-radius:50%;background-color:#ffbd2e;font-size:0;line-height:0;" width="10" height="10">&nbsp;</td>
+                            <td width="6"></td>
+                            <td style="width:10px;height:10px;border-radius:50%;background-color:#27ca40;font-size:0;line-height:0;" width="10" height="10">&nbsp;</td>
+                          </tr></table>
+                        </td>
+                        <td style="text-align:center;vertical-align:middle;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                            <tr><td style="padding:4px 24px;background-color:#12171e;border-radius:6px;font-size:11px;color:#555555;font-family:'Courier New',Courier,monospace;">extendr.dev/build</td></tr>
+                          </table>
+                        </td>
+                        <td width="60"></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
                 <!-- App content area -->
-                <div style="padding:24px;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <!-- Chat side -->
-                      <td width="55%" style="vertical-align:top;padding-right:16px;">
-                        <!-- User message -->
-                        <div style="background:#141f16;border:1px solid #1a291c;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
-                          <p style="margin:0 0 4px;font-size:9px;color:#5A9665;font-weight:600;text-transform:uppercase;letter-spacing:1px;">You</p>
-                          <p style="margin:0;font-size:12px;color:#cccccc;line-height:18px;">"Build me a dark mode toggle for any website"</p>
-                        </div>
-                        <!-- AI response -->
-                        <div style="background:#10151b;border:1px solid #161c24;border-radius:12px;padding:12px 14px;">
-                          <p style="margin:0 0 4px;font-size:9px;color:#6f97b3;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Extendr AI</p>
-                          <p style="margin:0 0 8px;font-size:12px;color:#999999;line-height:18px;">Creating your extension...</p>
-                          <div style="margin-bottom:4px;">
-                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5A9665;margin-right:6px;vertical-align:middle;"></span>
-                            <span style="font-size:11px;color:#666666;font-family:monospace;">manifest.json</span>
-                          </div>
-                          <div style="margin-bottom:4px;">
-                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5A9665;margin-right:6px;vertical-align:middle;"></span>
-                            <span style="font-size:11px;color:#666666;font-family:monospace;">popup.html</span>
-                          </div>
-                          <div style="margin-bottom:4px;">
-                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e8a838;margin-right:6px;vertical-align:middle;"></span>
-                            <span style="font-size:11px;color:#666666;font-family:monospace;">content.js</span>
-                          </div>
-                          <div>
-                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#333333;margin-right:6px;vertical-align:middle;"></span>
-                            <span style="font-size:11px;color:#444444;font-family:monospace;">styles.css</span>
-                          </div>
-                        </div>
-                      </td>
-                      <!-- Preview side -->
-                      <td width="45%" style="vertical-align:top;">
-                        <div style="background:#0e1219;border:1px solid #161c24;border-radius:12px;overflow:hidden;">
-                          <div style="padding:8px 12px;border-bottom:1px solid #12171e;">
-                            <span style="font-size:9px;color:#5A9665;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Live Preview</span>
-                          </div>
-                          <div style="padding:16px;text-align:center;">
-                            <div style="width:36px;height:36px;border-radius:10px;background:#1a291c;border:1px solid #1f3222;margin:0 auto 12px;line-height:36px;">
-                              <span style="font-size:16px;">&#9789;</span>
-                            </div>
-                            <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#dddddd;">Dark Mode</p>
-                            <p style="margin:0 0 12px;font-size:10px;color:#666666;">Toggle for any site</p>
-                            <div style="display:inline-block;width:36px;height:18px;border-radius:9px;background:#5A9665;position:relative;">
-                              <div style="width:14px;height:14px;border-radius:50%;background:#ffffff;position:absolute;top:2px;right:2px;"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </div>
+                <tr>
+                  <td style="padding:24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <!-- Chat side -->
+                        <td width="55%" style="vertical-align:top;padding-right:16px;">
+                          <!-- User message -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#141f16;border:1px solid #1a291c;border-radius:12px;margin-bottom:12px;">
+                            <tr><td style="padding:12px 14px;">
+                              <p style="margin:0 0 4px;font-size:9px;color:#5A9665;font-weight:600;text-transform:uppercase;letter-spacing:1px;">You</p>
+                              <p style="margin:0;font-size:12px;color:#cccccc;line-height:18px;">"Build me a dark mode toggle for any website"</p>
+                            </td></tr>
+                          </table>
+                          <!-- AI response -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#10151b;border:1px solid #161c24;border-radius:12px;">
+                            <tr><td style="padding:12px 14px;">
+                              <p style="margin:0 0 4px;font-size:9px;color:#6f97b3;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Extendr AI</p>
+                              <p style="margin:0 0 8px;font-size:12px;color:#999999;line-height:18px;">Creating your extension...</p>
+                              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                  <td style="width:6px;height:6px;border-radius:50%;background-color:#5A9665;font-size:0;line-height:0;" width="6" height="6">&nbsp;</td>
+                                  <td width="6"></td>
+                                  <td style="font-size:11px;color:#666666;font-family:'Courier New',Courier,monospace;">manifest.json</td>
+                                </tr>
+                                <tr><td colspan="3" height="4"></td></tr>
+                                <tr>
+                                  <td style="width:6px;height:6px;border-radius:50%;background-color:#5A9665;font-size:0;line-height:0;" width="6" height="6">&nbsp;</td>
+                                  <td width="6"></td>
+                                  <td style="font-size:11px;color:#666666;font-family:'Courier New',Courier,monospace;">popup.html</td>
+                                </tr>
+                                <tr><td colspan="3" height="4"></td></tr>
+                                <tr>
+                                  <td style="width:6px;height:6px;border-radius:50%;background-color:#e8a838;font-size:0;line-height:0;" width="6" height="6">&nbsp;</td>
+                                  <td width="6"></td>
+                                  <td style="font-size:11px;color:#666666;font-family:'Courier New',Courier,monospace;">content.js</td>
+                                </tr>
+                                <tr><td colspan="3" height="4"></td></tr>
+                                <tr>
+                                  <td style="width:6px;height:6px;border-radius:50%;background-color:#333333;font-size:0;line-height:0;" width="6" height="6">&nbsp;</td>
+                                  <td width="6"></td>
+                                  <td style="font-size:11px;color:#444444;font-family:'Courier New',Courier,monospace;">styles.css</td>
+                                </tr>
+                              </table>
+                            </td></tr>
+                          </table>
+                        </td>
+                        <!-- Preview side -->
+                        <td width="45%" style="vertical-align:top;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0e1219;border:1px solid #161c24;border-radius:12px;">
+                            <!-- Header -->
+                            <tr>
+                              <td style="padding:8px 12px;border-bottom:1px solid #12171e;">
+                                <span style="font-size:9px;color:#5A9665;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Live Preview</span>
+                              </td>
+                            </tr>
+                            <!-- Content -->
+                            <tr>
+                              <td style="padding:16px;text-align:center;">
+                                <!-- Moon icon box -->
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 12px;" align="center">
+                                  <tr><td style="width:36px;height:36px;border-radius:10px;background-color:#1a291c;border:1px solid #1f3222;text-align:center;font-size:16px;line-height:36px;" width="36" height="36">&#9789;</td></tr>
+                                </table>
+                                <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#dddddd;">Dark Mode</p>
+                                <p style="margin:0 0 12px;font-size:10px;color:#666666;">Toggle for any site</p>
+                                <!-- Toggle switch using table -->
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;border-radius:9px;background-color:#5A9665;" align="center">
+                                  <tr>
+                                    <td width="4" style="font-size:0;line-height:0;">&nbsp;</td>
+                                    <td width="14" height="18" style="vertical-align:middle;font-size:0;line-height:0;">
+                                      &nbsp;
+                                    </td>
+                                    <td width="2" style="font-size:0;line-height:0;">&nbsp;</td>
+                                    <td width="14" height="18" style="vertical-align:middle;font-size:0;line-height:0;">
+                                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                                        <td style="width:14px;height:14px;border-radius:50%;background-color:#ffffff;font-size:0;line-height:0;" width="14" height="14">&nbsp;</td>
+                                      </tr></table>
+                                    </td>
+                                    <td width="2" style="font-size:0;line-height:0;">&nbsp;</td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
