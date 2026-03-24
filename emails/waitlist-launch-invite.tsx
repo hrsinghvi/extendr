@@ -354,8 +354,8 @@ export default function WaitlistLaunchInvite() {
                 <br />
                 <em style={{ fontStyle: "italic", color: colors.greenPrimary }}>
                   build
-                </em>{" "}
-                today?
+                </em>
+                {" "}today?
               </Heading>
             </Section>
 
