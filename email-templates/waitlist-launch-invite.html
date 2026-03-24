@@ -1,28 +1,5 @@
 <!DOCTYPE html>
-<!--
-  EXTENDR WAITLIST LAUNCH INVITATION EMAIL
-  =========================================
-  A visually immersive, animation-rich email inspired by the Extendr website.
-
-  Subject Line Options:
-  1. "You're in — Extendr is live"
-  2. "The wait is over. Start building."
-  3. "Your early access to Extendr is ready"
-
-  Replace these placeholders before sending:
-  {{CTA_URL}}           — Link to sign up / get started (e.g. https://extendr.dev/auth)
-  {{FOUNDER_NAME}}      — First name of the founder
-  {{FOUNDER_TITLE}}     — Title (e.g. "Founder & CEO")
-  {{COMPANY_ADDRESS}}   — Physical mailing address for CAN-SPAM
-  {{UNSUBSCRIBE_URL}}   — Unsubscribe link
-  {{SOCIAL_TWITTER_URL}} — Twitter/X link
-  {{SOCIAL_LINKEDIN_URL}} — LinkedIn link
-
-  CSS Animations:
-  - Work in: Apple Mail, iOS Mail, macOS Mail, Outlook.com, some Gmail
-  - Graceful fallback: static layout looks great without animations
--->
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -33,643 +10,696 @@
   <title>You're in — Extendr is live</title>
 
   <!--[if mso]>
-  <noscript>
-    <xml>
-      <o:OfficeDocumentSettings>
-        <o:AllowPNG/>
-        <o:PixelsPerInch>96</o:PixelsPerInch>
-      </o:OfficeDocumentSettings>
-    </xml>
-  </noscript>
-  <style>
-    body, table, td { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; }
-  </style>
+  <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <style>body,table,td{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif!important;}</style>
   <![endif]-->
 
   <style type="text/css">
-    /* ===== RESET ===== */
-    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-    body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
+    table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}
+    body{margin:0;padding:0;width:100%!important;height:100%!important;}
 
-    /* ===== KEYFRAME ANIMATIONS ===== */
-
-    @keyframes orbPulse {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.2); opacity: 1; }
-    }
-
-    @keyframes orbPulse2 {
-      0%, 100% { transform: scale(1.1); opacity: 0.5; }
-      50% { transform: scale(0.9); opacity: 0.85; }
-    }
-
-    @keyframes orbDrift {
-      0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-      33% { transform: translate(15px, -10px) scale(1.1); opacity: 0.7; }
-      66% { transform: translate(-10px, 8px) scale(0.95); opacity: 0.5; }
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeInScale {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes gentleFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-
-    @keyframes shimmer {
-      0% { background-position: -200% center; }
-      100% { background-position: 200% center; }
-    }
-
-    @keyframes glowPulse {
-      0%, 100% { box-shadow: 0 4px 24px rgba(90,150,101,0.3), 0 0 40px rgba(90,150,101,0.1); }
-      50% { box-shadow: 0 4px 32px rgba(90,150,101,0.5), 0 0 60px rgba(90,150,101,0.2); }
-    }
-
-    @keyframes lineExpand {
-      from { width: 0; }
-      to { width: 100%; }
-    }
-
-    @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-40px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes dashBorder {
-      from { stroke-dashoffset: 0; }
-      to { stroke-dashoffset: -20; }
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
-
-    @keyframes particleFloat1 {
-      0%, 100% { transform: translate(0, 0); opacity: 0.3; }
-      25% { transform: translate(20px, -30px); opacity: 0.8; }
-      50% { transform: translate(-10px, -50px); opacity: 0.4; }
-      75% { transform: translate(15px, -20px); opacity: 0.6; }
-    }
-    @keyframes particleFloat2 {
-      0%, 100% { transform: translate(0, 0); opacity: 0.2; }
-      30% { transform: translate(-25px, -20px); opacity: 0.7; }
-      60% { transform: translate(10px, -40px); opacity: 0.3; }
-    }
-
-    /* ===== ANIMATION CLASSES ===== */
-    .anim-orb1 { animation: orbPulse 4s ease-in-out infinite; }
-    .anim-orb2 { animation: orbPulse2 5s ease-in-out infinite; }
-    .anim-orb3 { animation: orbDrift 7s ease-in-out infinite; }
-    .anim-fade-up-1 { animation: fadeInUp 0.8s ease-out 0.2s both; }
-    .anim-fade-up-2 { animation: fadeInUp 0.8s ease-out 0.4s both; }
-    .anim-fade-up-3 { animation: fadeInUp 0.8s ease-out 0.6s both; }
-    .anim-fade-up-4 { animation: fadeInUp 0.8s ease-out 0.8s both; }
-    .anim-fade-up-5 { animation: fadeInUp 0.8s ease-out 1.0s both; }
-    .anim-fade-up-6 { animation: fadeInUp 0.8s ease-out 1.2s both; }
-    .anim-fade-up-7 { animation: fadeInUp 0.8s ease-out 1.4s both; }
-    .anim-fade-scale { animation: fadeInScale 0.6s ease-out 0.3s both; }
-    .anim-float { animation: gentleFloat 3s ease-in-out infinite; }
-    .anim-glow { animation: glowPulse 2.5s ease-in-out infinite; }
-    .anim-line { animation: lineExpand 1.2s ease-out 0.5s both; }
-    .anim-slide-1 { animation: slideInLeft 0.7s ease-out 1.2s both; }
-    .anim-slide-2 { animation: slideInLeft 0.7s ease-out 1.5s both; }
-    .anim-slide-3 { animation: slideInLeft 0.7s ease-out 1.8s both; }
-    .anim-particle1 { animation: particleFloat1 6s ease-in-out infinite; }
-    .anim-particle2 { animation: particleFloat2 8s ease-in-out infinite 1s; }
-    .anim-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-
-    /* ===== MOBILE ===== */
-    @media only screen and (max-width: 620px) {
-      .container { width: 100% !important; max-width: 100% !important; }
-      .mobile-padding { padding-left: 24px !important; padding-right: 24px !important; }
-      .mobile-cta a { display: block !important; width: 100% !important; text-align: center !important; box-sizing: border-box !important; }
-      .hero-text { font-size: 36px !important; line-height: 42px !important; }
-      .hero-sub { font-size: 16px !important; line-height: 24px !important; }
-      .gradient-header { height: 160px !important; }
-    }
-
-    /* ===== REDUCED MOTION ===== */
-    @media (prefers-reduced-motion: reduce) {
-      .anim-orb1, .anim-orb2, .anim-orb3,
-      .anim-float, .anim-glow, .anim-particle1,
-      .anim-particle2, .anim-pulse-glow {
-        animation: none !important;
-      }
-      .anim-fade-up-1, .anim-fade-up-2, .anim-fade-up-3,
-      .anim-fade-up-4, .anim-fade-up-5, .anim-fade-up-6,
-      .anim-fade-up-7, .anim-fade-scale, .anim-line,
-      .anim-slide-1, .anim-slide-2, .anim-slide-3 {
-        animation-duration: 0.01s !important;
-        animation-delay: 0s !important;
-      }
+    @media only screen and (max-width:660px){
+      .container{width:100%!important;max-width:100%!important;}
+      .pad{padding-left:24px!important;padding-right:24px!important;}
+      .pad-sm{padding-left:20px!important;padding-right:20px!important;}
+      .hero-h1{font-size:36px!important;line-height:42px!important;}
+      .two-col td{display:block!important;width:100%!important;padding-left:0!important;padding-right:0!important;}
+      .two-col .col-img{padding-bottom:24px!important;}
+      .two-col .col-text{padding-bottom:0!important;}
+      .reverse-mobile{direction:ltr!important;}
+      .reverse-mobile td{direction:ltr!important;}
+      .three-col td{display:block!important;width:100%!important;padding-bottom:32px!important;}
+      .mob-center{text-align:center!important;}
+      .mob-full a{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important;}
+      .mockup-wrap{height:220px!important;}
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#050609;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;">
+<body style="margin:0;padding:0;background-color:#050609;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
-  <!-- Preheader text -->
-  <div style="display:none;font-size:1px;color:#050609;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-    Extendr is live. Build Chrome extensions with AI — describe it, build it, ship it. Your early access is ready.
-    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+  <!-- Preheader -->
+  <div style="display:none;font-size:1px;color:#050609;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+    Extendr is live. Build Chrome extensions with AI, ship them, earn revenue. Your early access is ready.
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
   </div>
 
-  <!-- Full-width email wrapper -->
+  <!-- Outer wrapper -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050609;">
     <tr>
       <td align="center" style="padding:0;">
 
-        <!-- ============================================================ -->
-        <!-- FULL-BLEED GRADIENT BACKGROUND (mimics extendr.dev)          -->
-        <!-- ============================================================ -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050609;position:relative;">
+        <!-- ============================== -->
+        <!-- GREEN ACCENT BAR AT TOP        -->
+        <!-- ============================== -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td align="center" style="padding:0;">
-
-              <!-- Gradient background layer - recreating the website's radial blue-green glow from bottom -->
-              <div class="gradient-header" style="width:100%;height:200px;position:relative;overflow:hidden;background:#050609;">
-
-                <!-- Large primary orb (blue → green ellipse, matching GradientBackground.tsx) -->
-                <div class="anim-orb1" style="position:absolute;bottom:-300px;left:50%;margin-left:-400px;width:800px;height:600px;border-radius:50%;background:radial-gradient(ellipse at center bottom, rgba(111,151,179,0.9) 0%, rgba(125,167,194,0.7) 25%, rgba(90,150,101,0.5) 55%, transparent 75%);pointer-events:none;filter:blur(40px);"></div>
-
-                <!-- Secondary inner orb (lighter blue core) -->
-                <div class="anim-orb2" style="position:absolute;bottom:-250px;left:50%;margin-left:-250px;width:500px;height:400px;border-radius:50%;background:radial-gradient(ellipse at center bottom, rgba(152,193,218,0.8) 0%, rgba(111,151,179,0.5) 35%, rgba(90,150,101,0.15) 55%, transparent 70%);pointer-events:none;filter:blur(30px);"></div>
-
-                <!-- Tertiary accent orb (green) -->
-                <div class="anim-orb3" style="position:absolute;bottom:-180px;left:50%;margin-left:-150px;width:300px;height:250px;border-radius:50%;background:radial-gradient(ellipse at center bottom, rgba(90,150,101,0.6) 0%, rgba(90,150,101,0.2) 40%, transparent 70%);pointer-events:none;filter:blur(20px);"></div>
-
-                <!-- Floating particles -->
-                <div class="anim-particle1" style="position:absolute;bottom:60px;left:30%;width:4px;height:4px;border-radius:50%;background:rgba(90,150,101,0.6);pointer-events:none;"></div>
-                <div class="anim-particle2" style="position:absolute;bottom:40px;left:60%;width:3px;height:3px;border-radius:50%;background:rgba(152,193,218,0.5);pointer-events:none;"></div>
-                <div class="anim-particle1" style="position:absolute;bottom:80px;left:45%;width:5px;height:5px;border-radius:50%;background:rgba(111,151,179,0.4);pointer-events:none;animation-delay:2s;"></div>
-
-                <!-- Logo at top -->
-                <div class="anim-fade-up-1" style="position:absolute;top:40px;left:0;right:0;text-align:center;">
-                  <span style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">extendr</span>
-                </div>
-              </div>
-
-            </td>
+            <td style="height:4px;background:linear-gradient(90deg,#3d7a4a,#5A9665,#6f97b3,#5A9665,#3d7a4a);font-size:0;line-height:0;">&nbsp;</td>
           </tr>
         </table>
 
-        <!-- ============================================================ -->
-        <!-- CONSTRAINED CONTENT (600px max)                              -->
-        <!-- ============================================================ -->
-        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#050609;">
+        <!-- ============================== -->
+        <!-- MAIN CONTAINER (640px)         -->
+        <!-- ============================== -->
+        <table role="presentation" class="container" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background-color:#0a0e14;">
 
-          <!-- ========== "NOW LIVE" PILL ========== -->
+          <!-- ========== LOGO ========== -->
           <tr>
-            <td style="padding:8px 48px 0;text-align:center;" class="mobile-padding">
-              <div class="anim-fade-up-2">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
-                  <tr>
-                    <td style="padding:8px 22px;border-radius:100px;background:rgba(90,150,101,0.08);border:1px solid rgba(90,150,101,0.2);">
-                      <span style="font-size:13px;font-weight:600;color:#5A9665;letter-spacing:0.3px;">&#9679;&nbsp; Now live</span>
-                    </td>
-                  </tr>
-                </table>
-              </div>
+            <td style="padding:48px 48px 0;text-align:center;" class="pad">
+              <span style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">extendr</span>
             </td>
           </tr>
 
-          <!-- ========== HERO HEADLINE ========== -->
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:40px;"></td></tr>
+
+          <!-- ========== PILL BADGE ========== -->
           <tr>
-            <td style="padding:28px 48px 0;text-align:center;" class="mobile-padding">
-              <div class="anim-fade-up-3">
-                <h1 class="hero-text" style="margin:0;font-size:46px;font-weight:800;color:#ffffff;letter-spacing:-1.5px;line-height:54px;">
-                  What will you<br/><em style="font-style:italic;color:#5A9665;">build</em> today?
-                </h1>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== HERO SUBTITLE ========== -->
-          <tr>
-            <td style="padding:20px 56px 0;text-align:center;" class="mobile-padding">
-              <div class="anim-fade-up-4">
-                <p class="hero-sub" style="margin:0;font-size:17px;color:#9a9a9a;line-height:27px;font-weight:400;">
-                  extendr is live. Build Chrome extensions with AI, ship them to businesses, and turn your skills into recurring revenue.
-                </p>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== ANIMATED DIVIDER ========== -->
-          <tr>
-            <td style="padding:40px 48px 0;" class="mobile-padding">
-              <div style="height:1px;overflow:hidden;position:relative;">
-                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.35),rgba(111,151,179,0.35),transparent);"></div>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== FEATURE 1: Vibe code in seconds ========== -->
-          <tr>
-            <td style="padding:36px 48px 0;" class="mobile-padding">
-              <div class="anim-slide-1">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td width="52" style="vertical-align:top;padding-right:16px;">
-                      <div style="width:44px;height:44px;border-radius:12px;background:rgba(90,150,101,0.1);border:1px solid rgba(90,150,101,0.15);text-align:center;line-height:44px;">
-                        <span style="font-size:20px;">&#129513;</span>
-                      </div>
-                    </td>
-                    <td style="vertical-align:top;">
-                      <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#ffffff;line-height:22px;">
-                        Vibe code in seconds
-                      </p>
-                      <p style="margin:0;font-size:14px;color:#888888;line-height:22px;">
-                        Describe a workflow, get a working Chrome extension. No boilerplate, no setup hell.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== FEATURE 2: Sell directly to businesses ========== -->
-          <tr>
-            <td style="padding:28px 48px 0;" class="mobile-padding">
-              <div class="anim-slide-2">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td width="52" style="vertical-align:top;padding-right:16px;">
-                      <div style="width:44px;height:44px;border-radius:12px;background:rgba(111,151,179,0.1);border:1px solid rgba(111,151,179,0.15);text-align:center;line-height:44px;">
-                        <span style="font-size:20px;">&#127978;</span>
-                      </div>
-                    </td>
-                    <td style="vertical-align:top;">
-                      <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#ffffff;line-height:22px;">
-                        Sell directly to businesses
-                      </p>
-                      <p style="margin:0;font-size:14px;color:#888888;line-height:22px;">
-                        List your extension and connect with businesses that pay real money for tools that save them time.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== FEATURE 3: Own your revenue stream ========== -->
-          <tr>
-            <td style="padding:28px 48px 0;" class="mobile-padding">
-              <div class="anim-slide-3">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td width="52" style="vertical-align:top;padding-right:16px;">
-                      <div style="width:44px;height:44px;border-radius:12px;background:rgba(152,193,218,0.1);border:1px solid rgba(152,193,218,0.15);text-align:center;line-height:44px;">
-                        <span style="font-size:20px;">&#128200;</span>
-                      </div>
-                    </td>
-                    <td style="vertical-align:top;">
-                      <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#ffffff;line-height:22px;">
-                        Own your revenue stream
-                      </p>
-                      <p style="margin:0;font-size:14px;color:#888888;line-height:22px;">
-                        Your product, your customers, your money. No middlemen taking a cut of your work.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== ANIMATED DIVIDER 2 ========== -->
-          <tr>
-            <td style="padding:40px 48px 0;" class="mobile-padding">
-              <div style="height:1px;overflow:hidden;position:relative;">
-                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(111,151,179,0.3),rgba(90,150,101,0.3),transparent);animation-delay:1.5s;"></div>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== WAITLIST EXCLUSIVE BOX ========== -->
-          <tr>
-            <td style="padding:36px 48px 0;" class="mobile-padding">
-              <div class="anim-fade-up-5">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(90,150,101,0.06) 0%,rgba(111,151,179,0.04) 50%,rgba(90,150,101,0.06) 100%);border:1px solid rgba(90,150,101,0.12);border-radius:20px;">
-                  <tr>
-                    <td style="padding:36px 32px;text-align:center;">
-                      <!-- Label -->
-                      <p style="margin:0 0 8px;font-size:11px;font-weight:800;color:#6f97b3;text-transform:uppercase;letter-spacing:3px;">
-                        Waitlist Exclusive
-                      </p>
-                      <!-- Offer text -->
-                      <p style="margin:0 0 24px;font-size:19px;color:#cccccc;line-height:28px;font-weight:400;">
-                        You're early. Here's <strong style="color:#ffffff;font-weight:800;">20% off</strong> your first plan.
-                      </p>
-
-                      <!-- Coupon code with dashed border -->
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
-                        <tr>
-                          <td style="padding:16px 40px;border:2px dashed rgba(90,150,101,0.4);border-radius:14px;background:rgba(90,150,101,0.04);">
-                            <span style="font-size:26px;font-weight:800;color:#5A9665;letter-spacing:6px;font-family:'SF Mono',Monaco,'Courier New',monospace;">LAUNCH20</span>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <!-- Copy button hint -->
-                      <p style="margin:12px 0 0;font-size:11px;color:#555555;line-height:16px;">
-                        First 100 waitlist members only
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== CTA BUTTON ========== -->
-          <tr>
-            <td style="padding:36px 48px 0;text-align:center;" class="mobile-padding mobile-cta">
-              <div class="anim-fade-up-6">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td align="center" style="padding:0 0 12px;">
-                      <!--[if mso]>
-                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{CTA_URL}}" style="height:58px;v-text-anchor:middle;width:320px;" arcsize="21%" fill="t" strokecolor="#5A9665" strokeweight="0">
-                        <v:fill type="gradient" color="#5A9665" color2="#4a8055" angle="135" />
-                        <w:anchorlock/>
-                        <center style="color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:17px;font-weight:700;">Start Building &rarr;</center>
-                      </v:roundrect>
-                      <![endif]-->
-                      <!--[if !mso]><!-->
-                      <a href="{{CTA_URL}}" class="anim-glow" style="display:inline-block;padding:18px 60px;background:linear-gradient(135deg,#5A9665,#4a8055);color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;border-radius:14px;letter-spacing:0.3px;line-height:22px;box-shadow:0 4px 24px rgba(90,150,101,0.35),0 1px 3px rgba(0,0,0,0.3);">
-                        Start Building &rarr;
-                      </a>
-                      <!--<![endif]-->
-                    </td>
-                  </tr>
-                </table>
-                <p style="margin:0;font-size:12px;color:#4a4a4a;line-height:18px;">
-                  Free to start &middot; No credit card required
-                </p>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== ANIMATED DIVIDER 3 ========== -->
-          <tr>
-            <td style="padding:44px 48px 0;" class="mobile-padding">
-              <div style="height:1px;overflow:hidden;position:relative;">
-                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.25),rgba(111,151,179,0.25),transparent);animation-delay:2s;"></div>
-              </div>
-            </td>
-          </tr>
-
-          <!-- ========== HOW IT WORKS ========== -->
-          <tr>
-            <td style="padding:36px 48px 0;text-align:center;" class="mobile-padding">
-              <div class="anim-fade-up-6">
-                <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6f97b3;text-transform:uppercase;letter-spacing:2.5px;">
-                  How It Works
-                </p>
-                <p style="margin:0 0 32px;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;line-height:30px;">
-                  Three steps. That's it.
-                </p>
-              </div>
-
-              <!-- Step indicators -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <!-- Step 1 -->
+            <td style="padding:0 48px;text-align:center;" class="pad">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                 <tr>
-                  <td style="padding:0 0 24px;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;">
-                      <tr>
-                        <td style="padding:20px 24px;">
-                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                              <td width="40" style="vertical-align:top;padding-right:16px;">
-                                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5A9665,#6f97b3);text-align:center;line-height:36px;">
-                                  <span style="font-size:14px;font-weight:800;color:#ffffff;">1</span>
-                                </div>
-                              </td>
-                              <td style="vertical-align:middle;">
-                                <p style="margin:0 0 2px;font-size:15px;font-weight:600;color:#e0e0e0;line-height:20px;">Describe your extension</p>
-                                <p style="margin:0;font-size:12px;color:#777777;line-height:18px;">"Build me a tab manager that groups tabs by topic"</p>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <!-- Connector line -->
-                <tr>
-                  <td align="center" style="padding:0 0 24px;">
-                    <div style="width:1px;height:20px;background:linear-gradient(180deg,rgba(90,150,101,0.3),rgba(111,151,179,0.3));margin:0 auto;"></div>
-                  </td>
-                </tr>
-                <!-- Step 2 -->
-                <tr>
-                  <td style="padding:0 0 24px;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;">
-                      <tr>
-                        <td style="padding:20px 24px;">
-                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                              <td width="40" style="vertical-align:top;padding-right:16px;">
-                                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6f97b3,#98c1da);text-align:center;line-height:36px;">
-                                  <span style="font-size:14px;font-weight:800;color:#ffffff;">2</span>
-                                </div>
-                              </td>
-                              <td style="vertical-align:middle;">
-                                <p style="margin:0 0 2px;font-size:15px;font-weight:600;color:#e0e0e0;line-height:20px;">Watch AI build it live</p>
-                                <p style="margin:0;font-size:12px;color:#777777;line-height:18px;">Real-time code generation with instant preview</p>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <!-- Connector line -->
-                <tr>
-                  <td align="center" style="padding:0 0 24px;">
-                    <div style="width:1px;height:20px;background:linear-gradient(180deg,rgba(111,151,179,0.3),rgba(90,150,101,0.3));margin:0 auto;"></div>
-                  </td>
-                </tr>
-                <!-- Step 3 -->
-                <tr>
-                  <td style="padding:0 0 0;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;">
-                      <tr>
-                        <td style="padding:20px 24px;">
-                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                              <td width="40" style="vertical-align:top;padding-right:16px;">
-                                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5A9665,#22C55E);text-align:center;line-height:36px;">
-                                  <span style="font-size:14px;font-weight:800;color:#ffffff;">3</span>
-                                </div>
-                              </td>
-                              <td style="vertical-align:middle;">
-                                <p style="margin:0 0 2px;font-size:15px;font-weight:600;color:#e0e0e0;line-height:20px;">Export & install in Chrome</p>
-                                <p style="margin:0;font-size:12px;color:#777777;line-height:18px;">One-click download, drag into Chrome, done</p>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="padding:8px 20px;border-radius:100px;border:1px solid rgba(90,150,101,0.25);background:rgba(90,150,101,0.06);">
+                    <span style="font-size:11px;font-weight:700;color:#5A9665;text-transform:uppercase;letter-spacing:2.5px;">Now Live</span>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- ========== ANIMATED DIVIDER 4 ========== -->
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:32px;"></td></tr>
+
+          <!-- ========== HERO HEADLINE ========== -->
           <tr>
-            <td style="padding:44px 48px 0;" class="mobile-padding">
-              <div style="height:1px;overflow:hidden;position:relative;">
-                <div class="anim-line" style="height:1px;background:linear-gradient(90deg,transparent,rgba(90,150,101,0.2),rgba(111,151,179,0.2),transparent);animation-delay:2.5s;"></div>
-              </div>
+            <td style="padding:0 48px;text-align:center;" class="pad">
+              <h1 class="hero-h1" style="margin:0;font-size:48px;font-weight:800;color:#ffffff;letter-spacing:-1.5px;line-height:56px;">
+                What will you<br/><em style="font-style:italic;color:#5A9665;">build</em> today?
+              </h1>
             </td>
           </tr>
 
-          <!-- ========== SECOND CTA ========== -->
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:24px;"></td></tr>
+
+          <!-- ========== HERO SUBTITLE ========== -->
           <tr>
-            <td style="padding:36px 48px 0;text-align:center;" class="mobile-padding">
-              <div class="anim-fade-up-7">
-                <!-- Gradient glow behind CTA -->
-                <div style="position:relative;">
-                  <div style="width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(90,150,101,0.1) 0%,rgba(111,151,179,0.05) 40%,transparent 70%);margin:0 auto;position:absolute;top:-80px;left:50%;margin-left:-120px;pointer-events:none;"></div>
+            <td style="padding:0 64px;text-align:center;" class="pad">
+              <p style="margin:0;font-size:17px;color:#888888;line-height:28px;font-weight:400;">
+                extendr is live. Build Chrome extensions with AI, ship them to businesses, and turn your skills into recurring revenue.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:36px;"></td></tr>
+
+          <!-- ========== HERO CTA ========== -->
+          <tr>
+            <td style="padding:0 48px;text-align:center;" class="pad mob-full">
+              <a href="{{CTA_URL}}" style="display:inline-block;padding:16px 48px;background-color:#5A9665;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;border-radius:100px;letter-spacing:0.2px;">
+                Start Building &rarr;
+              </a>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:56px;"></td></tr>
+
+          <!-- ========== APP MOCKUP ========== -->
+          <tr>
+            <td style="padding:0 32px;" class="pad-sm">
+              <div class="mockup-wrap" style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;">
+                <!-- Browser bar -->
+                <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td width="60" style="vertical-align:middle;">
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff5f56;margin-right:6px;"></span>
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ffbd2e;margin-right:6px;"></span>
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ca40;"></span>
+                      </td>
+                      <td style="text-align:center;vertical-align:middle;">
+                        <span style="display:inline-block;padding:4px 24px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:11px;color:#555555;font-family:monospace;">extendr.dev/build</span>
+                      </td>
+                      <td width="60"></td>
+                    </tr>
+                  </table>
                 </div>
-
-                <p style="margin:0 0 8px;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:32px;">
-                  Ready to build?
-                </p>
-                <p style="margin:0 0 28px;font-size:15px;color:#777777;line-height:24px;">
-                  Your early access is live. No setup, no coding, no limits on creativity.
-                </p>
-
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td align="center" style="padding:0 0 8px;">
-                      <!--[if mso]>
-                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{CTA_URL}}" style="height:58px;v-text-anchor:middle;width:320px;" arcsize="19%" fill="t" strokecolor="#5A9665" strokeweight="0">
-                        <v:fill type="gradient" color="#5A9665" color2="#4a8055" angle="135" />
-                        <w:anchorlock/>
-                        <center style="color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:17px;font-weight:700;">Get Started Free &rarr;</center>
-                      </v:roundrect>
-                      <![endif]-->
-                      <!--[if !mso]><!-->
-                      <a href="{{CTA_URL}}" class="anim-glow" style="display:inline-block;padding:18px 60px;background:linear-gradient(135deg,#5A9665,#4a8055);color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;border-radius:14px;letter-spacing:0.3px;line-height:22px;box-shadow:0 4px 24px rgba(90,150,101,0.35),0 1px 3px rgba(0,0,0,0.3);animation-delay:0.5s;">
-                        Get Started Free &rarr;
-                      </a>
-                      <!--<![endif]-->
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Ghost outline CTA -->
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:16px auto 0;">
-                  <tr>
-                    <td align="center">
-                      <a href="https://extendr.dev" style="display:inline-block;padding:12px 32px;color:#6f97b3;font-size:13px;font-weight:600;text-decoration:none;border-radius:10px;border:1px solid rgba(111,151,179,0.2);line-height:18px;">
-                        Explore Features &rarr;
-                      </a>
-                    </td>
-                  </tr>
-                </table>
+                <!-- App content area -->
+                <div style="padding:24px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <!-- Chat side -->
+                      <td width="55%" style="vertical-align:top;padding-right:16px;">
+                        <!-- User message -->
+                        <div style="background:rgba(90,150,101,0.1);border:1px solid rgba(90,150,101,0.15);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+                          <p style="margin:0 0 4px;font-size:9px;color:#5A9665;font-weight:600;text-transform:uppercase;letter-spacing:1px;">You</p>
+                          <p style="margin:0;font-size:12px;color:#cccccc;line-height:18px;">"Build me a dark mode toggle for any website"</p>
+                        </div>
+                        <!-- AI response -->
+                        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 14px;">
+                          <p style="margin:0 0 4px;font-size:9px;color:#6f97b3;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Extendr AI</p>
+                          <p style="margin:0 0 8px;font-size:12px;color:#999999;line-height:18px;">Creating your extension...</p>
+                          <div style="margin-bottom:4px;">
+                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5A9665;margin-right:6px;vertical-align:middle;"></span>
+                            <span style="font-size:11px;color:#666666;font-family:monospace;">manifest.json</span>
+                          </div>
+                          <div style="margin-bottom:4px;">
+                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5A9665;margin-right:6px;vertical-align:middle;"></span>
+                            <span style="font-size:11px;color:#666666;font-family:monospace;">popup.html</span>
+                          </div>
+                          <div style="margin-bottom:4px;">
+                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e8a838;margin-right:6px;vertical-align:middle;"></span>
+                            <span style="font-size:11px;color:#666666;font-family:monospace;">content.js</span>
+                          </div>
+                          <div>
+                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#333333;margin-right:6px;vertical-align:middle;"></span>
+                            <span style="font-size:11px;color:#444444;font-family:monospace;">styles.css</span>
+                          </div>
+                        </div>
+                      </td>
+                      <!-- Preview side -->
+                      <td width="45%" style="vertical-align:top;">
+                        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden;">
+                          <div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);">
+                            <span style="font-size:9px;color:#5A9665;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Live Preview</span>
+                          </div>
+                          <div style="padding:16px;text-align:center;">
+                            <div style="width:36px;height:36px;border-radius:10px;background:rgba(90,150,101,0.15);border:1px solid rgba(90,150,101,0.2);margin:0 auto 12px;line-height:36px;">
+                              <span style="font-size:16px;">&#9789;</span>
+                            </div>
+                            <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#dddddd;">Dark Mode</p>
+                            <p style="margin:0 0 12px;font-size:10px;color:#666666;">Toggle for any site</p>
+                            <div style="display:inline-block;width:36px;height:18px;border-radius:9px;background:#5A9665;position:relative;">
+                              <div style="width:14px;height:14px;border-radius:50%;background:#ffffff;position:absolute;top:2px;right:2px;"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
               </div>
             </td>
           </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:72px;"></td></tr>
+
+          <!-- ========== DIVIDER ========== -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:56px;"></td></tr>
+
+          <!-- ====================================================== -->
+          <!-- FEATURE 1: Vibe code in seconds (text left, visual right) -->
+          <!-- ====================================================== -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <table role="presentation" class="two-col" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="55%" style="vertical-align:top;padding-right:24px;" class="col-text">
+                    <!-- Label -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+                      <tr>
+                        <td style="padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);">
+                          <span style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:2px;">AI-Powered</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <!-- Headline -->
+                    <h2 style="margin:0 0 16px;font-size:28px;font-weight:800;color:#ffffff;line-height:36px;letter-spacing:-0.5px;">
+                      <span style="color:#5A9665;">Vibe code</span> in seconds
+                    </h2>
+                    <!-- Body -->
+                    <p style="margin:0 0 24px;font-size:15px;color:#888888;line-height:25px;">
+                      Describe a workflow, get a working Chrome extension. No boilerplate, no setup hell. Just tell the AI what you want and watch it build.
+                    </p>
+                    <!-- CTA -->
+                    <a href="{{CTA_URL}}" style="display:inline-block;padding:12px 28px;background-color:#111519;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:100px;border:1px solid rgba(255,255,255,0.1);">
+                      Try it free &rarr;
+                    </a>
+                  </td>
+                  <td width="45%" style="vertical-align:top;" class="col-img">
+                    <!-- Visual: code generation card -->
+                    <div style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;overflow:hidden;">
+                      <div style="margin-bottom:12px;">
+                        <span style="display:inline-block;padding:4px 10px;border-radius:6px;background:rgba(90,150,101,0.1);border:1px solid rgba(90,150,101,0.15);font-size:10px;font-weight:600;color:#5A9665;text-transform:uppercase;letter-spacing:1px;">15+ AI Tools</span>
+                      </div>
+                      <div style="font-family:monospace;font-size:11px;line-height:20px;color:#555555;">
+                        <span style="color:#5A9665;">create</span> <span style="color:#6f97b3;">manifest.json</span><br/>
+                        <span style="color:#5A9665;">write</span> <span style="color:#6f97b3;">popup.html</span><br/>
+                        <span style="color:#5A9665;">write</span> <span style="color:#6f97b3;">background.js</span><br/>
+                        <span style="color:#5A9665;">style</span> <span style="color:#6f97b3;">content.css</span><br/>
+                        <span style="color:#5A9665;">preview</span> <span style="color:#6f97b3;">extension</span><br/>
+                        <span style="color:#888888;">&#10003; Done in 30s</span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:64px;"></td></tr>
+
+          <!-- ====================================================== -->
+          <!-- FEATURE 2: Sell directly (visual left, text right)      -->
+          <!-- ====================================================== -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <table role="presentation" class="two-col reverse-mobile" width="100%" cellpadding="0" cellspacing="0" border="0" dir="ltr">
+                <tr>
+                  <td width="45%" style="vertical-align:top;padding-right:24px;" class="col-img">
+                    <!-- Visual: marketplace card -->
+                    <div style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;overflow:hidden;">
+                      <div style="margin-bottom:16px;">
+                        <span style="display:inline-block;padding:4px 10px;border-radius:6px;background:rgba(111,151,179,0.1);border:1px solid rgba(111,151,179,0.15);font-size:10px;font-weight:600;color:#6f97b3;text-transform:uppercase;letter-spacing:1px;">Marketplace</span>
+                      </div>
+                      <!-- Mock listing -->
+                      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px;">
+                        <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:#dddddd;">Tab Manager Pro</p>
+                        <p style="margin:0 0 8px;font-size:11px;color:#666666;">Groups tabs by topic automatically</p>
+                        <span style="font-size:12px;font-weight:700;color:#5A9665;">$12/mo</span>
+                      </div>
+                      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;">
+                        <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:#dddddd;">Form Filler AI</p>
+                        <p style="margin:0 0 8px;font-size:11px;color:#666666;">Auto-fills business forms with AI</p>
+                        <span style="font-size:12px;font-weight:700;color:#5A9665;">$8/mo</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td width="55%" style="vertical-align:top;padding-left:0;" class="col-text">
+                    <!-- Label -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+                      <tr>
+                        <td style="padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);">
+                          <span style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:2px;">Marketplace</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <!-- Headline -->
+                    <h2 style="margin:0 0 16px;font-size:28px;font-weight:800;color:#ffffff;line-height:36px;letter-spacing:-0.5px;">
+                      <span style="color:#6f97b3;">Sell directly</span> to businesses
+                    </h2>
+                    <!-- Body -->
+                    <p style="margin:0 0 24px;font-size:15px;color:#888888;line-height:25px;">
+                      List your extension and connect with businesses that pay real money for tools that save them time. No app store middlemen.
+                    </p>
+                    <!-- CTA -->
+                    <a href="{{CTA_URL}}" style="display:inline-block;padding:12px 28px;background-color:#111519;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:100px;border:1px solid rgba(255,255,255,0.1);">
+                      Explore Marketplace &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:64px;"></td></tr>
+
+          <!-- ====================================================== -->
+          <!-- FEATURE 3: Own your revenue (text left, visual right)   -->
+          <!-- ====================================================== -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <table role="presentation" class="two-col" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="55%" style="vertical-align:top;padding-right:24px;" class="col-text">
+                    <!-- Label -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+                      <tr>
+                        <td style="padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);">
+                          <span style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:2px;">Revenue</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <!-- Headline -->
+                    <h2 style="margin:0 0 16px;font-size:28px;font-weight:800;color:#ffffff;line-height:36px;letter-spacing:-0.5px;">
+                      Own your <span style="color:#5A9665;">revenue stream</span>
+                    </h2>
+                    <!-- Body -->
+                    <p style="margin:0 0 24px;font-size:15px;color:#888888;line-height:25px;">
+                      Your product, your customers, your money. No middlemen taking a cut of your work. Keep what you earn.
+                    </p>
+                    <!-- CTA -->
+                    <a href="{{CTA_URL}}" style="display:inline-block;padding:12px 28px;background-color:#111519;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:100px;border:1px solid rgba(255,255,255,0.1);">
+                      Learn More &rarr;
+                    </a>
+                  </td>
+                  <td width="45%" style="vertical-align:top;" class="col-img">
+                    <!-- Visual: revenue dashboard -->
+                    <div style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;overflow:hidden;">
+                      <p style="margin:0 0 4px;font-size:10px;font-weight:600;color:#666666;text-transform:uppercase;letter-spacing:1px;">This Month</p>
+                      <p style="margin:0 0 16px;font-size:28px;font-weight:800;color:#5A9665;letter-spacing:-1px;">$2,840</p>
+                      <!-- Mini bar chart -->
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
+                        <tr>
+                          <td style="vertical-align:bottom;padding-right:4px;height:60px;">
+                            <div style="width:100%;height:25px;background:rgba(90,150,101,0.2);border-radius:4px 4px 0 0;"></div>
+                          </td>
+                          <td style="vertical-align:bottom;padding-right:4px;">
+                            <div style="width:100%;height:35px;background:rgba(90,150,101,0.3);border-radius:4px 4px 0 0;"></div>
+                          </td>
+                          <td style="vertical-align:bottom;padding-right:4px;">
+                            <div style="width:100%;height:28px;background:rgba(90,150,101,0.2);border-radius:4px 4px 0 0;"></div>
+                          </td>
+                          <td style="vertical-align:bottom;padding-right:4px;">
+                            <div style="width:100%;height:45px;background:rgba(90,150,101,0.4);border-radius:4px 4px 0 0;"></div>
+                          </td>
+                          <td style="vertical-align:bottom;padding-right:4px;">
+                            <div style="width:100%;height:52px;background:rgba(90,150,101,0.5);border-radius:4px 4px 0 0;"></div>
+                          </td>
+                          <td style="vertical-align:bottom;">
+                            <div style="width:100%;height:60px;background:#5A9665;border-radius:4px 4px 0 0;"></div>
+                          </td>
+                        </tr>
+                      </table>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td><span style="font-size:10px;color:#555555;">Jan</span></td>
+                          <td><span style="font-size:10px;color:#555555;">Feb</span></td>
+                          <td><span style="font-size:10px;color:#555555;">Mar</span></td>
+                          <td><span style="font-size:10px;color:#555555;">Apr</span></td>
+                          <td><span style="font-size:10px;color:#555555;">May</span></td>
+                          <td><span style="font-size:10px;color:#5A9665;font-weight:600;">Jun</span></td>
+                        </tr>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:72px;"></td></tr>
+
+          <!-- ========== DIVIDER ========== -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:56px;"></td></tr>
+
+          <!-- ====================================================== -->
+          <!-- HOW PEOPLE USE EXTENDR (social proof section)           -->
+          <!-- ====================================================== -->
+          <tr>
+            <td style="padding:0 48px;text-align:center;" class="pad">
+              <!-- Label -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 16px;">
+                <tr>
+                  <td style="padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);">
+                    <span style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:2px;">Early Builders</span>
+                  </td>
+                </tr>
+              </table>
+              <h2 style="margin:0 0 40px;font-size:30px;font-weight:800;color:#ffffff;line-height:38px;letter-spacing:-0.5px;">
+                What people are <span style="color:#5A9665;font-style:italic;">already building</span>
+              </h2>
+            </td>
+          </tr>
+
+          <!-- Testimonial cards (2 columns) -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <table role="presentation" class="two-col" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="50%" style="vertical-align:top;padding-right:12px;" class="col-text">
+                    <div style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:24px;">
+                      <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#ffffff;">SaaSFlow</p>
+                      <p style="margin:0 0 16px;font-size:14px;font-weight:600;color:#cccccc;line-height:22px;">
+                        "Built a lead capture extension in 20 minutes. Already making $400/mo."
+                      </p>
+                      <p style="margin:0 0 16px;font-size:13px;color:#777777;line-height:21px;">
+                        A solo founder using Extendr to build and sell browser tools to small agencies.
+                      </p>
+                      <span style="font-size:16px;color:#5A9665;">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    </div>
+                  </td>
+                  <td width="50%" style="vertical-align:top;padding-left:12px;" class="col-text">
+                    <div style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:24px;">
+                      <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#ffffff;">DesignLab</p>
+                      <p style="margin:0 0 16px;font-size:14px;font-weight:600;color:#cccccc;line-height:22px;">
+                        "We replaced 3 internal tools with one custom extension."
+                      </p>
+                      <p style="margin:0 0 16px;font-size:13px;color:#777777;line-height:21px;">
+                        A design agency that built a client portal extension to streamline feedback.
+                      </p>
+                      <span style="font-size:16px;color:#5A9665;">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:72px;"></td></tr>
+
+        </table>
+        <!-- End main container -->
+
+        <!-- ====================================================== -->
+        <!-- DARK CTA SECTION (full-width dark band)                 -->
+        <!-- ====================================================== -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050609;">
+          <tr>
+            <td align="center" style="padding:0;">
+              <table role="presentation" class="container" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background-color:#050609;">
+
+                <!-- Grid texture top bar -->
+                <tr>
+                  <td style="height:4px;background:linear-gradient(90deg,#3d7a4a,#5A9665,#6f97b3,#5A9665,#3d7a4a);font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+
+                <tr><td style="height:64px;"></td></tr>
+
+                <!-- Waitlist Exclusive label -->
+                <tr>
+                  <td style="padding:0 48px;text-align:center;" class="pad">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 16px;">
+                      <tr>
+                        <td style="padding:6px 14px;border-radius:6px;border:1px solid rgba(90,150,101,0.2);background:rgba(90,150,101,0.06);">
+                          <span style="font-size:10px;font-weight:700;color:#5A9665;text-transform:uppercase;letter-spacing:2px;">Waitlist Exclusive</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Headline -->
+                <tr>
+                  <td style="padding:0 48px;text-align:center;" class="pad">
+                    <h2 style="margin:0 0 12px;font-size:30px;font-weight:800;color:#ffffff;line-height:38px;letter-spacing:-0.5px;">
+                      You're early. Here's <span style="color:#5A9665;">20% off</span>
+                    </h2>
+                    <p style="margin:0 0 32px;font-size:16px;color:#777777;line-height:24px;">
+                      Use this code on your first plan. First 100 waitlist members only.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Coupon code -->
+                <tr>
+                  <td style="padding:0 48px;text-align:center;" class="pad">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 12px;">
+                      <tr>
+                        <td style="padding:18px 48px;border:2px dashed rgba(90,150,101,0.35);border-radius:14px;background:rgba(90,150,101,0.04);">
+                          <span style="font-size:28px;font-weight:800;color:#5A9665;letter-spacing:8px;font-family:'SF Mono',Monaco,'Courier New',monospace;">LAUNCH20</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <tr><td style="height:36px;"></td></tr>
+
+                <!-- CTA -->
+                <tr>
+                  <td style="padding:0 48px;text-align:center;" class="pad mob-full">
+                    <a href="{{CTA_URL}}" style="display:inline-block;padding:16px 48px;background-color:#5A9665;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;border-radius:100px;letter-spacing:0.2px;">
+                      Claim Your Spot &rarr;
+                    </a>
+                  </td>
+                </tr>
+
+                <tr><td style="height:12px;"></td></tr>
+
+                <tr>
+                  <td style="text-align:center;">
+                    <p style="margin:0;font-size:12px;color:#444444;">Free to start &middot; No credit card required</p>
+                  </td>
+                </tr>
+
+                <tr><td style="height:64px;"></td></tr>
+
+                <!-- Bottom gradient bar -->
+                <tr>
+                  <td style="height:4px;background:linear-gradient(90deg,#3d7a4a,#5A9665,#6f97b3,#5A9665,#3d7a4a);font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <!-- ====================================================== -->
+        <!-- HOW IT WORKS - 3 columns                                -->
+        <!-- ====================================================== -->
+        <table role="presentation" class="container" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background-color:#0a0e14;">
+
+          <tr><td style="height:64px;"></td></tr>
+
+          <!-- Label + headline -->
+          <tr>
+            <td style="padding:0 48px;text-align:center;" class="pad">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 16px;">
+                <tr>
+                  <td style="padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);">
+                    <span style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:2px;">How It Works</span>
+                  </td>
+                </tr>
+              </table>
+              <h2 style="margin:0 0 40px;font-size:30px;font-weight:800;color:#ffffff;line-height:38px;letter-spacing:-0.5px;">
+                Three steps to <span style="color:#5A9665;font-style:italic;">your first extension</span>
+              </h2>
+            </td>
+          </tr>
+
+          <!-- 3 columns -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <table role="presentation" class="three-col" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <!-- Step 1 -->
+                  <td width="33%" style="vertical-align:top;padding-right:12px;">
+                    <div style="text-align:center;">
+                      <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#5A9665,#6f97b3);text-align:center;line-height:48px;margin:0 auto 16px;">
+                        <span style="font-size:18px;font-weight:800;color:#ffffff;">1</span>
+                      </div>
+                      <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#ffffff;">Describe</p>
+                      <p style="margin:0;font-size:13px;color:#777777;line-height:20px;">Tell the AI what extension you want in plain English.</p>
+                    </div>
+                  </td>
+                  <!-- Step 2 -->
+                  <td width="34%" style="vertical-align:top;padding:0 6px;">
+                    <div style="text-align:center;">
+                      <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6f97b3,#98c1da);text-align:center;line-height:48px;margin:0 auto 16px;">
+                        <span style="font-size:18px;font-weight:800;color:#ffffff;">2</span>
+                      </div>
+                      <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#ffffff;">Watch it build</p>
+                      <p style="margin:0;font-size:13px;color:#777777;line-height:20px;">AI generates all files with live preview in real-time.</p>
+                    </div>
+                  </td>
+                  <!-- Step 3 -->
+                  <td width="33%" style="vertical-align:top;padding-left:12px;">
+                    <div style="text-align:center;">
+                      <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#5A9665,#22C55E);text-align:center;line-height:48px;margin:0 auto 16px;">
+                        <span style="font-size:18px;font-weight:800;color:#ffffff;">3</span>
+                      </div>
+                      <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#ffffff;">Ship it</p>
+                      <p style="margin:0;font-size:13px;color:#777777;line-height:20px;">Download, install in Chrome, or sell on the marketplace.</p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:64px;"></td></tr>
+
+          <!-- ========== DIVIDER ========== -->
+          <tr>
+            <td style="padding:0 48px;" class="pad">
+              <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+            </td>
+          </tr>
+
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:48px;"></td></tr>
 
           <!-- ========== FOUNDER SIGN-OFF ========== -->
           <tr>
-            <td style="padding:48px 48px 0;" class="mobile-padding">
-              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);margin-bottom:32px;"></div>
-
+            <td style="padding:0 48px;" class="pad">
               <p style="margin:0 0 16px;font-size:15px;color:#888888;line-height:25px;font-style:italic;">
                 "Thank you for believing in what we're building before it existed. You took a chance on an idea — and we built it for people exactly like you."
               </p>
               <p style="margin:0 0 24px;font-size:14px;color:#777777;line-height:22px;">
                 If you have any questions, just reply to this email. I read every one.
               </p>
-
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:14px;">
-                    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#5A9665,#6f97b3);text-align:center;line-height:44px;border:2px solid rgba(90,150,101,0.2);">
-                      <span style="font-size:18px;color:#ffffff;font-weight:700;">{{FOUNDER_NAME}}</span>
+                    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#5A9665,#6f97b3);text-align:center;line-height:44px;">
+                      <span style="font-size:18px;color:#ffffff;font-weight:700;">H</span>
                     </div>
                   </td>
                   <td style="vertical-align:middle;">
-                    <p style="margin:0;font-size:15px;font-weight:700;color:#e0e0e0;line-height:20px;">
-                      {{FOUNDER_NAME}}
-                    </p>
-                    <p style="margin:2px 0 0;font-size:12px;color:#555555;line-height:16px;">
-                      {{FOUNDER_TITLE}}, Extendr
-                    </p>
+                    <p style="margin:0;font-size:15px;font-weight:700;color:#e0e0e0;line-height:20px;">{{FOUNDER_NAME}}</p>
+                    <p style="margin:2px 0 0;font-size:12px;color:#555555;line-height:16px;">{{FOUNDER_TITLE}}, Extendr</p>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
+          <!-- ========== SPACER ========== -->
+          <tr><td style="height:48px;"></td></tr>
+
           <!-- ========== FOOTER ========== -->
           <tr>
-            <td style="padding:48px 24px 40px;text-align:center;">
-
-              <!-- Subtle gradient separator -->
-              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent);margin-bottom:32px;"></div>
-
-              <!-- Social links -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;">
+            <td style="padding:0 48px;" class="pad">
+              <div style="height:1px;background:rgba(255,255,255,0.04);margin-bottom:32px;"></div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 48px 40px;" class="pad">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="padding:0 6px;">
-                    <a href="{{SOCIAL_TWITTER_URL}}" style="display:inline-block;width:36px;height:36px;border-radius:10px;background-color:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);text-align:center;line-height:36px;text-decoration:none;">
-                      <span style="font-size:14px;color:#666666;">&#120143;</span>
-                    </a>
+                  <!-- Logo -->
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:16px;font-weight:700;color:#444444;letter-spacing:-0.3px;">extendr</span>
                   </td>
-                  <td style="padding:0 6px;">
-                    <a href="{{SOCIAL_LINKEDIN_URL}}" style="display:inline-block;width:36px;height:36px;border-radius:10px;background-color:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);text-align:center;line-height:36px;text-decoration:none;">
-                      <span style="font-size:14px;color:#666666;">in</span>
-                    </a>
+                  <!-- Social -->
+                  <td style="text-align:center;vertical-align:middle;">
+                    <a href="{{SOCIAL_TWITTER_URL}}" style="font-size:14px;color:#555555;text-decoration:none;margin:0 8px;">&#120143;</a>
+                    <a href="{{SOCIAL_LINKEDIN_URL}}" style="font-size:14px;color:#555555;text-decoration:none;margin:0 8px;">in</a>
+                  </td>
+                  <!-- Unsubscribe -->
+                  <td style="text-align:right;vertical-align:middle;">
+                    <a href="{{UNSUBSCRIBE_URL}}" style="font-size:12px;color:#444444;text-decoration:underline;">Unsubscribe</a>
                   </td>
                 </tr>
               </table>
-
-              <p style="margin:0 0 6px;font-size:12px;color:#444444;line-height:18px;">
-                Extendr &mdash; Build Chrome extensions with AI
-              </p>
-              <p style="margin:0 0 6px;font-size:11px;color:#333333;line-height:16px;">
+              <p style="margin:16px 0 0;font-size:10px;color:#333333;line-height:16px;text-align:center;">
                 <a href="https://extendr.dev" style="color:#5A9665;text-decoration:none;">extendr.dev</a>
                 &nbsp;&middot;&nbsp;
                 <a href="mailto:hi@extendr.dev" style="color:#444444;text-decoration:none;">hi@extendr.dev</a>
-              </p>
-              <p style="margin:0 0 8px;font-size:10px;color:#2a2a2a;line-height:14px;">
+                &nbsp;&middot;&nbsp;
                 {{COMPANY_ADDRESS}}
               </p>
-              <p style="margin:0 0 12px;font-size:10px;line-height:14px;">
-                <a href="{{UNSUBSCRIBE_URL}}" style="color:#333333;text-decoration:underline;">Unsubscribe</a>
-              </p>
-              <p style="margin:0;font-size:10px;color:#222222;line-height:14px;">
+              <p style="margin:8px 0 0;font-size:10px;color:#222222;line-height:14px;text-align:center;">
                 &copy; 2026 Extendr. All rights reserved.
               </p>
             </td>
           </tr>
 
         </table>
-        <!-- End container -->
+        <!-- End content container -->
+
       </td>
     </tr>
   </table>
