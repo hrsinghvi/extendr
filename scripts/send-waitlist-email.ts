@@ -9,6 +9,7 @@
  */
 
 import { Resend } from "resend";
+import { render } from "@react-email/render";
 import WaitlistLaunchInvite from "../emails/waitlist-launch-invite";
 import * as dotenv from "dotenv";
 
@@ -33,14 +34,23 @@ if (recipients.length === 0) {
 
 const resend = new Resend(apiKey);
 
+function stripInvisibleChars(html: string): string {
+  return html.replace(/[\u200C\u200B\u200D\u200E\u200F\uFEFF]/g, "");
+}
+
 async function main() {
+  // Pre-render HTML once and strip invisible characters to prevent Gmail clipping
+  let html = await render(WaitlistLaunchInvite());
+  html = stripInvisibleChars(html);
+  console.log(`Rendered HTML: ${Buffer.byteLength(html, "utf8")} bytes (invisible chars stripped)`);
+
   for (const to of recipients) {
     console.log(`Sending waitlist invite to ${to}...`);
     const { data, error } = await resend.emails.send({
       from: "Extendr <hi@extendr.dev>",
       to: [to],
       subject: "You're in — Extendr is live",
-      react: WaitlistLaunchInvite(),
+      html,
     });
 
     if (error) {
