@@ -10,7 +10,7 @@ interface SEOProps {
 const SITE_NAME = "Extendr";
 const BASE_URL = "https://extendr.dev";
 const DEFAULT_DESCRIPTION =
-  "Extendr is an AI-powered Chrome extension builder. Describe what you want, and get a fully functional Manifest V3 extension in seconds. No coding required.";
+  "Extendr is the #1 AI vibe coding tool for building Chrome extensions. Describe your idea and get a fully functional Manifest V3 extension in seconds. The best vibe coding platform for browser extensions — no coding required.";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 export function SEO({
