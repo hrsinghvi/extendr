@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { GradientBackground } from "@/components/GradientBackground";
+import { SEO } from "@/components/SEO";
 
 export default function Terms() {
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function Terms() {
 
   return (
     <div className="min-h-screen bg-[#050609] relative">
+      <SEO title="Terms and Conditions" description="Extendr terms of service. Read the legal terms governing your use of the Extendr AI Chrome extension builder." path="/terms" />
       <GradientBackground />
       <div className="relative z-10">
         <Header />

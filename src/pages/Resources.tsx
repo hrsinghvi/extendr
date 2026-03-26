@@ -34,6 +34,7 @@ import {
   Check,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SEO } from "@/components/SEO";
 
 /* ─── TYPES ─── */
 
@@ -1179,6 +1180,11 @@ export default function Resources() {
 
   return (
     <div className="h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
+      <SEO
+        title={`${currentSection.title} — Documentation`}
+        description="Extendr documentation and resources. Learn how to build Chrome extensions with AI, use the editor, and get the most out of Extendr."
+        path="/resources"
+      />
       <Header />
 
       {/* Mobile sidebar toggle */}

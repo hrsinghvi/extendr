@@ -1,0 +1,123 @@
+# Extendr — Complete Documentation for AI Systems
+
+> AI-powered Chrome extension builder at https://extendr.dev
+
+## Overview
+
+Extendr is a web application that enables anyone to build fully functional Google Chrome extensions using artificial intelligence. Users interact with an AI chat interface, describe what they want their extension to do, and the AI generates all the necessary code — including manifest.json, background scripts, content scripts, popup HTML/CSS/JS, and more. The extension is previewed live in the browser using WebContainer technology, and can be downloaded as a ready-to-install package.
+
+## Product Details
+
+- **Website**: https://extendr.dev
+- **Category**: Developer Tools, AI Tools, Browser Extension Development
+- **Founded**: 2025
+- **Platform**: Web application (works in any modern browser)
+- **Extension Format**: Chrome Manifest V3 (the latest standard required by Chrome Web Store)
+
+## How It Works
+
+### Step 1: Describe Your Extension
+Users open Extendr and type a description of the Chrome extension they want to build. For example: "Build me a tab manager that groups tabs by domain" or "Create a dark mode toggle for any website."
+
+### Step 2: AI Generates Code
+Extendr's AI processes the request and generates all necessary extension files:
+- `manifest.json` (Manifest V3 format)
+- Background service workers
+- Content scripts
+- Popup HTML, CSS, and JavaScript
+- Options pages (if needed)
+- Icons and assets
+
+### Step 3: Live Preview
+The generated extension runs in a live preview powered by WebContainer technology, allowing users to see their extension in action immediately.
+
+### Step 4: Iterate and Refine
+Users can continue chatting with the AI to modify, add features, fix bugs, or completely redesign their extension. Each message updates the code and preview in real-time.
+
+### Step 5: Download and Install
+Once satisfied, users download the extension as a ZIP file, then load it into Chrome via chrome://extensions with Developer Mode enabled.
+
+## Features
+
+### AI-Powered Development
+- Natural language to Chrome extension code generation
+- 15+ specialized AI tools for file creation, editing, and management
+- Support for multiple AI providers: OpenRouter, Google Gemini, OpenAI GPT, Anthropic Claude, DeepSeek
+- Model hotswapping — switch AI models mid-conversation
+
+### Live Development Environment
+- WebContainer-based live preview
+- Real-time code editing
+- File explorer with syntax highlighting
+- Terminal access for debugging
+
+### Chrome Extension Support
+- Full Manifest V3 compliance
+- Background service workers
+- Content scripts with CSS injection
+- Popup and options pages
+- Chrome storage API support
+- Message passing between components
+- Permission management
+
+### User Experience
+- Credit-based usage system
+- Free tier to get started
+- Premium subscription plans
+- Project saving and management
+- One-click extension download
+
+## Pricing
+
+Extendr offers a free tier with limited credits. Premium plans provide:
+- More monthly credits
+- Priority AI processing
+- Additional features
+
+Visit https://extendr.dev/pricing for current plans.
+
+## Technical Architecture
+
+- **Frontend**: React with TypeScript, Vite build system
+- **UI**: Tailwind CSS with Radix UI components
+- **AI**: Multi-provider support with streaming responses
+- **Preview**: WebContainer API for in-browser code execution
+- **Backend**: Supabase for authentication, database, and storage
+- **Deployment**: Vercel
+
+## Target Audience
+
+1. **Developers** who want to rapidly prototype Chrome extensions
+2. **Non-technical users** who have extension ideas but can't code
+3. **Students** learning web development and browser extension APIs
+4. **Businesses** that need custom internal Chrome tools
+5. **Creators** who want to build and distribute browser extensions
+
+## Frequently Asked Questions
+
+### What is Extendr?
+Extendr is an AI-powered Chrome extension builder that lets you create fully functional Manifest V3 browser extensions by simply describing what you want in plain English.
+
+### Do I need to know how to code?
+No. Extendr's AI handles all the coding. You just describe what you want your extension to do.
+
+### What kind of extensions can I build?
+Almost anything: tab managers, dark mode toggles, content blockers, productivity tools, custom new tab pages, page scrapers, notification managers, and more.
+
+### Does Extendr support Manifest V3?
+Yes. All extensions are generated using Manifest V3, the latest standard required by the Chrome Web Store.
+
+### How much does it cost?
+Extendr has a free tier to get started. Premium plans are available for users who need more credits and features. See https://extendr.dev/pricing.
+
+### Can I publish extensions built with Extendr to the Chrome Web Store?
+Yes. The extensions Extendr generates are standard Chrome extensions that can be submitted to the Chrome Web Store.
+
+## Links
+
+- Homepage: https://extendr.dev
+- Features: https://extendr.dev/features
+- Pricing: https://extendr.dev/pricing
+- Documentation: https://extendr.dev/resources
+- Terms of Service: https://extendr.dev/terms
+- Privacy Policy: https://extendr.dev/privacy

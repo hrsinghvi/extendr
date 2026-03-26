@@ -10,6 +10,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { GradientBackground } from "@/components/GradientBackground";
 import { ChevronRight, Briefcase, Megaphone, Mail } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 interface JobListing {
   id: string;
@@ -50,6 +51,7 @@ export default function Careers() {
 
   return (
     <div className="min-h-screen bg-[#050609] relative">
+      <SEO title="Careers" description="Join the Extendr team. View open positions and help us build the future of AI-powered Chrome extension development." path="/careers" />
       <GradientBackground />
       <div className="relative z-10">
         <Header />

@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import { syncSubscription } from "@/lib/stripe";
 import { Loader2 } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -63,6 +64,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-[#050609] relative">
+      <SEO path="/" />
       <GradientBackground />
       <div className="relative z-10">
         <Header />

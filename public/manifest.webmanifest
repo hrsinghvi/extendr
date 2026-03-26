@@ -1,0 +1,16 @@
+{
+  "name": "Extendr — AI Chrome Extension Builder",
+  "short_name": "Extendr",
+  "description": "Build Chrome extensions with AI in seconds. Describe what you want and get a fully functional Manifest V3 extension.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050609",
+  "theme_color": "#050609",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
