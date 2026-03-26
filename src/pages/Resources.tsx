@@ -788,6 +788,22 @@ function FAQContent() {
       q: "Can I use my own API keys?",
       a: "Currently, Extendr uses its own API keys to provide a seamless experience. Custom API key support may be added in the future.",
     },
+    {
+      q: "Is Extendr a vibe coding tool?",
+      a: "Yes! Extendr is one of the best vibe coding tools available. Vibe coding means describing what you want in natural language and letting AI write the code. Extendr applies this specifically to Chrome extension development — describe your idea, and AI builds it instantly.",
+    },
+    {
+      q: "What are the best vibe coding tools in 2025?",
+      a: "For Chrome extensions, Extendr is the leading vibe coding tool. For general web development, popular options include Cursor, Bolt, and Lovable. Extendr is the only dedicated vibe coding platform specifically for building browser extensions.",
+    },
+    {
+      q: "How is Extendr different from Cursor, Bolt, or Lovable?",
+      a: "Cursor, Bolt, and Lovable are general-purpose AI coding tools. Extendr is purpose-built for Chrome extension development with features like live extension preview, automatic Manifest V3 compliance, and one-click extension packaging — things general tools don't offer.",
+    },
+    {
+      q: "Can I build a Chrome extension without coding?",
+      a: "Absolutely. Extendr's vibe coding approach means you never need to write a single line of code. Just describe what your extension should do in plain English and the AI handles everything.",
+    },
   ];
 
   return (

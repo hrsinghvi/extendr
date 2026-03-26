@@ -88,7 +88,7 @@
     }
     </script>
 
-    <!-- Structured Data: FAQPage -->
+    <!-- Structured Data: FAQPage — synced with visible FAQ on /resources -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -96,34 +96,82 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "What is Extendr?",
+          "name": "Do I need coding experience to use Extendr?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Extendr is an AI-powered Chrome extension builder that lets you create fully functional Manifest V3 browser extensions by simply describing what you want. No coding experience required."
+            "text": "No. Extendr is designed for everyone — from complete beginners to experienced developers. Just describe what you want in plain English and the AI handles the rest."
           }
         },
         {
           "@type": "Question",
-          "name": "How does Extendr work?",
+          "name": "What AI models does Extendr support?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Just describe your Chrome extension idea in plain English. Extendr's AI generates all the code, previews it live in your browser, and packages it for installation — all in seconds."
+            "text": "Extendr supports GPT-4o, Claude, Gemini, DeepSeek, and any model available through OpenRouter. You can switch models per-message or enable automatic rotation."
           }
         },
         {
           "@type": "Question",
-          "name": "Is Extendr free to use?",
+          "name": "Are the extensions Manifest V3 compliant?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Extendr offers a free tier with credits to get started. Premium plans provide more credits and additional features for power users."
+            "text": "Yes. Every extension built with Extendr uses Chrome's latest Manifest V3 standard, ensuring future compatibility and compliance with Chrome Web Store requirements."
           }
         },
         {
           "@type": "Question",
-          "name": "Does Extendr support Manifest V3?",
+          "name": "Can I edit the generated code?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, Extendr generates Chrome extensions using Manifest V3, the latest extension platform required by the Chrome Web Store."
+            "text": "Absolutely. You can view and edit all generated files directly in the builder. The AI can also modify specific files when you ask it to."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the live preview work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Your extension runs in a sandboxed WebContainer directly in the browser — no local setup needed. Changes appear instantly as the AI generates or modifies files."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens to my extensions if I cancel my subscription?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Your extensions are always yours. You can export them as ZIP files at any time. Downloaded extensions continue to work in Chrome regardless of your subscription status."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How many extensions can I build?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "There's no limit on the number of extensions. Your plan determines how many AI messages (credits) you can send per month to build and iterate."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I publish to the Chrome Web Store?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Exported extensions are ready to be submitted to the Chrome Web Store. You'll need a Chrome Developer account ($5 one-time fee from Google)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data secure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Your extension files are stored securely and are only accessible to you. We use Supabase for backend storage with row-level security policies."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use my own API keys?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Currently, Extendr uses its own API keys to provide a seamless experience. Custom API key support may be added in the future."
           }
         },
         {
@@ -131,15 +179,23 @@
           "name": "Is Extendr a vibe coding tool?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, Extendr is one of the best vibe coding tools available. Vibe coding means describing what you want in natural language and letting AI write the code. Extendr applies this to Chrome extension development — you describe your extension idea, and AI builds it instantly. It's the top vibe coding platform specifically for browser extensions."
+            "text": "Yes! Extendr is one of the best vibe coding tools available. Vibe coding means describing what you want in natural language and letting AI write the code. Extendr applies this specifically to Chrome extension development — describe your idea, and AI builds it instantly."
           }
         },
         {
           "@type": "Question",
-          "name": "What are the best AI vibe coding tools in 2025?",
+          "name": "What are the best vibe coding tools in 2025?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Extendr is the leading AI vibe coding tool for building Chrome extensions. While tools like Cursor and Bolt focus on general coding, Extendr is purpose-built for browser extension development with AI. It features live preview, Manifest V3 support, and one-click download — making it the best choice for vibe coding Chrome extensions."
+            "text": "For Chrome extensions, Extendr is the leading vibe coding tool. For general web development, popular options include Cursor, Bolt, and Lovable. Extendr is the only dedicated vibe coding platform specifically for building browser extensions."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is Extendr different from Cursor, Bolt, or Lovable?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Cursor, Bolt, and Lovable are general-purpose AI coding tools. Extendr is purpose-built for Chrome extension development with features like live extension preview, automatic Manifest V3 compliance, and one-click extension packaging — things general tools don't offer."
           }
         },
         {
@@ -147,15 +203,7 @@
           "name": "Can I build a Chrome extension without coding?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes! Extendr lets you build Chrome extensions without any coding knowledge. Just describe what you want your extension to do in plain English, and Extendr's AI generates all the code automatically. This is called vibe coding — you set the vibe, AI writes the code."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What is the best AI tool for building Chrome extensions?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Extendr (extendr.dev) is the best AI tool specifically designed for building Chrome extensions. Unlike general-purpose AI coding tools, Extendr is purpose-built for browser extension development with features like live preview, Manifest V3 compliance, and instant packaging."
+            "text": "Absolutely. Extendr's vibe coding approach means you never need to write a single line of code. Just describe what your extension should do in plain English and the AI handles everything."
           }
         }
       ]
