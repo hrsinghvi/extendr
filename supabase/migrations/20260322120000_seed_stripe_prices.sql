@@ -2,12 +2,12 @@
 -- This is required for the webhook to correctly map price IDs to plan names
 
 INSERT INTO public.prices (stripe_price_id, plan_name, interval, unit_amount, active) VALUES
-('price_1TDvATFPrM3OVVmjgZqptmsj', 'pro', 'month', 1200, true),
-('price_1TDvVcFPrM3OVVmjTUxO8A7U', 'pro', 'year', 12000, true),
-('price_1TDvDIFPrM3OVVmjaDh3Jcxc', 'premium', 'month', 2400, true),
-('price_1TDvVFFPrM3OVVmjgO0UxQtr', 'premium', 'year', 24000, true),
-('price_1TDvEQFPrM3OVVmj4eQ6ty24', 'ultra', 'month', 4000, true),
-('price_1TDvUMFPrM3OVVmjNOx4suqd', 'ultra', 'year', 39600, true)
+('price_1TFPwxFPrM3OVVmj9nI3Epma', 'pro', 'month', 1200, true),
+('price_1TFPxCFPrM3OVVmj1q8vsLxA', 'pro', 'year', 12000, true),
+('price_1TFPvjFPrM3OVVmjhA4jPtQ2', 'premium', 'month', 2400, true),
+('price_1TFPwRFPrM3OVVmjWyPFB5qK', 'premium', 'year', 24000, true),
+('price_1TFPucFPrM3OVVmj5JDiWmMm', 'ultra', 'month', 4000, true),
+('price_1TFPv5FPrM3OVVmjYxve15cN', 'ultra', 'year', 39600, true)
 ON CONFLICT (stripe_price_id) DO UPDATE SET
   plan_name = EXCLUDED.plan_name,
   interval = EXCLUDED.interval,
