@@ -23,11 +23,34 @@ interface Plan {
   includes: string[];
   popular?: boolean;
   isCustom?: boolean;
+  isFree?: boolean;
   planId?: "pro" | "premium" | "ultra";
   monthlyCredits: number;
 }
 
 const plans: Plan[] = [
+  {
+    name: "Free",
+    isFree: true,
+    description: "Try Extendr at no cost — no credit card required",
+    price: 0,
+    yearlyPrice: 0,
+    buttonText: "Start for Free",
+    buttonVariant: "outline" as const,
+    monthlyCredits: 2,
+    features: [
+      { text: "AI-powered generation", icon: <Briefcase size={20} /> },
+      { text: "Live preview", icon: <Database size={20} /> },
+      { text: "Community support", icon: <Server size={20} /> },
+    ],
+    includes: [
+      "Free includes:",
+      "2 AI credits / month",
+      "AI-powered generation",
+      "Live preview",
+      "Community support",
+    ],
+  },
   {
     name: "Pro",
     planId: "pro",
@@ -203,6 +226,12 @@ export default function PricingSection3() {
   const handlePlanClick = async (plan: Plan) => {
     const interval: BillingInterval = isYearly ? "yearly" : "monthly";
 
+    // Free plan - go to build
+    if (plan.isFree) {
+      navigate("/build");
+      return;
+    }
+
     // Custom enterprise - contact sales
     if (plan.isCustom) {
       window.location.href = "mailto:sales@extendr.dev?subject=Enterprise%20Inquiry";
@@ -302,7 +331,7 @@ export default function PricingSection3() {
         animationNum={2}
         timelineRef={pricingRef}
         customVariants={revealVariants}
-        className="grid md:grid-cols-3 gap-4 mx-auto bg-muted/30 sm:p-2 rounded-lg"
+        className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mx-auto bg-muted/30 sm:p-2 rounded-lg"
       >
         {plans.map((plan, index) => (
           <TimelineContent
@@ -332,6 +361,11 @@ export default function PricingSection3() {
                   <div>
                     {plan.isCustom ? (
                       <span className="text-3xl font-semibold">Custom Enterprise</span>
+                    ) : plan.isFree ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-semibold">$0</span>
+                        <span className="text-sm text-muted-foreground">forever</span>
+                      </div>
                     ) : (
                       <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-semibold">
@@ -386,7 +420,9 @@ export default function PricingSection3() {
                       "text-sm font-medium",
                       plan.popular ? "text-primary-foreground" : "text-foreground"
                     )}>
-                      {isYearly ? `${plan.monthlyCredits * 10} credits / year` : `${plan.monthlyCredits} credits / month`}
+                      {plan.isFree
+                        ? "2 credits / month"
+                        : isYearly ? `${plan.monthlyCredits * 10} credits / year` : `${plan.monthlyCredits} credits / month`}
                     </span>
                   </div>
                 )}
@@ -430,9 +466,11 @@ export default function PricingSection3() {
                     "disabled:opacity-70 disabled:cursor-not-allowed",
                     plan.popular
                       ? "bg-primary-foreground text-primary font-semibold shadow-lg border border-primary-foreground/20 hover:bg-primary-foreground/90"
-                      : plan.buttonVariant === "outline"
-                        ? "bg-primary text-primary-foreground shadow-lg border border-primary/20 hover:bg-primary/90"
-                        : ""
+                      : plan.isFree
+                        ? "bg-muted text-foreground font-semibold border border-border hover:bg-muted/70"
+                        : plan.buttonVariant === "outline"
+                          ? "bg-primary text-primary-foreground shadow-lg border border-primary/20 hover:bg-primary/90"
+                          : ""
                   )}
                 >
                   {loadingPlan === plan.planId ? (
