@@ -391,7 +391,7 @@ export default function PricingSection3() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-3xl font-semibold">{plan.name}</h3>
                   {isYearly && !plan.isFree && !plan.isCustom && (
                     <span className={cn(
