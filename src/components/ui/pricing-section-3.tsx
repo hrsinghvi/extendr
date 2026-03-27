@@ -56,8 +56,8 @@ const plans: Plan[] = [
     planId: "pro",
     description:
       "Great for getting started with AI-powered extension building",
-    price: 12,
-    yearlyPrice: 120,
+    price: 9,
+    yearlyPrice: 96,
     buttonText: "Get Pro",
     buttonVariant: "outline" as const,
     monthlyCredits: 15,
@@ -80,8 +80,8 @@ const plans: Plan[] = [
     planId: "premium",
     description:
       "For power users who need advanced tools and priority support",
-    price: 24,
-    yearlyPrice: 240,
+    price: 19,
+    yearlyPrice: 192,
     popular: true,
     buttonText: "Get Premium",
     buttonVariant: "default" as const,
@@ -103,8 +103,8 @@ const plans: Plan[] = [
     planId: "ultra",
     description:
       "For professionals who need the full suite of tools and maximum power",
-    price: 40,
-    yearlyPrice: 400,
+    price: 25,
+    yearlyPrice: 252,
     buttonText: "Get Ultra",
     buttonVariant: "outline" as const,
     monthlyCredits: 55,
