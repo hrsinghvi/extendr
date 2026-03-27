@@ -27,6 +27,7 @@ import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import { OutOfCreditsModal } from "@/components/OutOfCreditsModal";
 import { SubscriptionRequiredModal } from "@/components/SubscriptionRequiredModal";
 import { ExportInstructionsModal } from "@/components/ExportInstructionsModal";
+import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import { CreditDisplay } from "@/components/CreditDisplay";
 
 // Preview system imports
@@ -126,13 +127,14 @@ export default function Build() {
   const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
   const [showSubRequiredModal, setShowSubRequiredModal] = useState(false);
   const [showExportInstructions, setShowExportInstructions] = useState(false);
+  const [showUpgradePlanModal, setShowUpgradePlanModal] = useState(false);
 
   // Rename modal state
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameValue, setRenameValue] = useState("");
 
   // Subscription/credits context
-  const { useCredit, hasCredits, isUsingCredit, isActive } = useSubscriptionContext();
+  const { useCredit, hasCredits, isUsingCredit, isActive, planName } = useSubscriptionContext();
 
   // Model hotswapping — single source of truth; props passed down to ModelSelector
   const { getNextEntry, getApiKeyForProvider, setPrimary, config: modelConfig } = useModelConfig();
@@ -1368,6 +1370,12 @@ export default function Build() {
             userEmail={user?.email}
             isAIWorking={isThinking}
             onExport={async (dimensions: PopupDimensions) => {
+              // Block export for free plan users
+              if (planName === 'free') {
+                setShowUpgradePlanModal(true);
+                return;
+              }
+
               // Show building toast with selected size
               const buildingToast = toast({
                 title: "Building Extension...",
@@ -1411,6 +1419,13 @@ export default function Build() {
       <OutOfCreditsModal
         open={showOutOfCreditsModal}
         onOpenChange={setShowOutOfCreditsModal}
+      />
+
+      {/* Upgrade Plan Modal (export gated for free users) */}
+      <UpgradePlanModal
+        open={showUpgradePlanModal}
+        onOpenChange={setShowUpgradePlanModal}
+        featureName="Exporting extensions"
       />
 
       {/* Subscription Required Modal */}

@@ -18,6 +18,7 @@ export const stripe = new Stripe(stripeSecretKey, {
  * Plan name to monthly credits mapping
  */
 export const PLAN_CREDITS: Record<string, number> = {
+  free: 2,
   pro: 15,
   premium: 30,
   ultra: 55,

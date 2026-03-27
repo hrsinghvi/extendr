@@ -214,8 +214,8 @@ export function getPlanInfo(planName: PlanName): {
   const plans = {
     free: {
       name: 'Free',
-      monthlyCredits: 0,
-      features: [],
+      monthlyCredits: 2,
+      features: ['2 credits/month', 'Build & preview extensions'],
     },
     pro: {
       name: 'Pro',
