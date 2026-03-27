@@ -367,7 +367,7 @@ export default function PricingSection3() {
                         <span className="text-sm text-muted-foreground">forever</span>
                       </div>
                     ) : (
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-4xl font-semibold">
                           $
                           <NumberFlow
@@ -386,6 +386,16 @@ export default function PricingSection3() {
                         >
                           {isYearly ? "per month, billed yearly" : "per month"}
                         </span>
+                        {isYearly && (
+                          <span className={cn(
+                            "rounded-full px-2 py-0.5 text-xs font-medium",
+                            plan.popular
+                              ? "bg-primary-foreground/20 text-primary-foreground"
+                              : "bg-primary/10 text-primary"
+                          )}>
+                            Save ${plan.price! * 12 - plan.yearlyPrice!}/yr
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
