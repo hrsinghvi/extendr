@@ -121,7 +121,8 @@ export function useSubscription(): UseSubscriptionReturn {
   }, [user?.id, fetchSubscription]);
 
   const planName: PlanName = subscription?.planName ?? 'free';
-  const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
+  // Free users have no subscription row but are still allowed to build (just can't export)
+  const isActive = planName === 'free' || subscription?.status === 'active' || subscription?.status === 'trialing';
   const isPro = planName === 'pro' && isActive;
   const isPremium = planName === 'premium' && isActive;
   const isUltra = planName === 'ultra' && isActive;
