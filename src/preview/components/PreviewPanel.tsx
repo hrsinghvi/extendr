@@ -390,7 +390,7 @@ export function PreviewPanel({
               >
                 <div className="flex items-center gap-2">
                   <Download className="w-4 h-4" />
-                  Export
+                  Download
                 </div>
                 <ChevronDown className="w-3 h-3 opacity-70" />
               </Button>
@@ -469,11 +469,11 @@ export function PreviewPanel({
             <Button variant="outline" onClick={() => setShowCustomSizeDialog(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleCustomExport}
               className="bg-[#5A9665] hover:bg-[#4A8655]"
             >
-              Export
+              Download
             </Button>
           </DialogFooter>
         </DialogContent>
