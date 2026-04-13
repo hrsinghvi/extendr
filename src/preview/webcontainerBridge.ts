@@ -1009,15 +1009,20 @@ export async function buildForProduction(): Promise<void> {
 
   if (exitCode !== 0) {
     writeToTerminal(`\x1b[1;31m[WebContainer]\x1b[0m Build failed with exit code ${exitCode}\r\n`);
-    // Extract the most relevant error lines (strip ANSI codes)
-    const clean = output.replace(/\x1b\[[0-9;]*m/g, '');
-    const errorLines = clean
-      .split('\n')
-      .filter(line => /error|✗|failed/i.test(line) && line.trim())
+    // Strip ALL ANSI escape sequences (not just SGR color codes)
+    const clean = output.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');
+    const lines = clean.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // Find the section after "error during build:" — that's where the actual error is
+    const errorBuildIdx = lines.findIndex(l => /^error during build/i.test(l));
+    const relevant = errorBuildIdx !== -1 ? lines.slice(errorBuildIdx + 1) : lines;
+
+    // Skip stack trace lines (start with "at ") and the ✗/failed summary lines
+    const errorLines = relevant
+      .filter(l => !l.startsWith('at ') && !/^(✗|error during build|Build failed)/i.test(l))
       .slice(0, 3)
-      .map(l => l.trim())
-      .filter(Boolean)
       .join('; ');
+
     throw new Error(
       errorLines
         ? `Build failed: ${errorLines} — open the Terminal tab for full details`
@@ -1081,6 +1086,23 @@ export async function readDirectory(dirPath: string): Promise<FileMap> {
  * @returns FileMap of built files ready for export, or null if build failed
  */
 export async function buildAndReadDist(sourceFiles: FileMap): Promise<FileMap | null> {
+  // Sync source files to WebContainer before building — ensures the build
+  // uses the latest files even if the dev server state has drifted.
+  // Excludes scaffold/build config files that are already in the container.
+  const SKIP_SYNC = new Set([
+    'node_modules', '.vite', 'dist',
+  ]);
+  const filesToSync: FileMap = {};
+  for (const [path, content] of Object.entries(sourceFiles)) {
+    if (!SKIP_SYNC.has(path.split('/')[0])) {
+      filesToSync[path] = content;
+    }
+  }
+  if (Object.keys(filesToSync).length > 0) {
+    writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Syncing source files before build...\r\n');
+    await updateFilesInContainer(filesToSync);
+  }
+
   // Run the production build — throws with a user-facing message if it fails
   await buildForProduction();
   
