@@ -999,27 +999,34 @@ export async function quickStartPreview(files: FileMap): Promise<string | null> 
  * 
  * @returns true if build succeeded, false otherwise
  */
-export async function buildForProduction(): Promise<boolean> {
-  const wc = await bootWebContainer();
-  
+export async function buildForProduction(): Promise<void> {
+  await bootWebContainer();
+
   writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Building for production...\r\n');
   console.log('[WebContainer] Starting production build');
-  
-  try {
-    const exitCode = await runCommand('npm', ['run', 'build']);
-    
-    if (exitCode !== 0) {
-      writeToTerminal(`\x1b[1;31m[WebContainer]\x1b[0m Build failed with exit code ${exitCode}\r\n`);
-      return false;
-    }
-    
-    writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Production build complete!\r\n');
-    console.log('[WebContainer] Production build succeeded');
-    return true;
-  } catch (error: any) {
-    reportError('Production build failed', error.message);
-    return false;
+
+  const { exitCode, output } = await runCommandWithOutput('npm', ['run', 'build']);
+
+  if (exitCode !== 0) {
+    writeToTerminal(`\x1b[1;31m[WebContainer]\x1b[0m Build failed with exit code ${exitCode}\r\n`);
+    // Extract the most relevant error lines (strip ANSI codes)
+    const clean = output.replace(/\x1b\[[0-9;]*m/g, '');
+    const errorLines = clean
+      .split('\n')
+      .filter(line => /error|✗|failed/i.test(line) && line.trim())
+      .slice(0, 3)
+      .map(l => l.trim())
+      .filter(Boolean)
+      .join('; ');
+    throw new Error(
+      errorLines
+        ? `Build failed: ${errorLines} — open the Terminal tab for full details`
+        : `Build failed (exit code ${exitCode}) — open the Terminal tab for full details`
+    );
   }
+
+  writeToTerminal('\x1b[1;32m[WebContainer]\x1b[0m Production build complete!\r\n');
+  console.log('[WebContainer] Production build succeeded');
 }
 
 /**
@@ -1074,11 +1081,8 @@ export async function readDirectory(dirPath: string): Promise<FileMap> {
  * @returns FileMap of built files ready for export, or null if build failed
  */
 export async function buildAndReadDist(sourceFiles: FileMap): Promise<FileMap | null> {
-  // Run the production build
-  const buildSuccess = await buildForProduction();
-  if (!buildSuccess) {
-    return null;
-  }
+  // Run the production build — throws with a user-facing message if it fails
+  await buildForProduction();
   
   // Read files from dist/
   writeToTerminal('\x1b[1;36m[WebContainer]\x1b[0m Reading build output...\r\n');

@@ -42,61 +42,51 @@ export const DEFAULT_PACKAGE_JSON = {
 export const DEFAULT_VITE_CONFIG = `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
-import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'fs';
 
 // Plugin to copy manifest.json and extension assets (icons) to dist after build
 const copyExtensionAssetsPlugin = () => ({
   name: 'copy-extension-assets',
   closeBundle() {
-    // Ensure dist exists
-    if (!existsSync('dist')) {
-      mkdirSync('dist', { recursive: true });
-    }
-    // Copy manifest.json to dist
-    if (existsSync('manifest.json')) {
-      copyFileSync('manifest.json', 'dist/manifest.json');
-      console.log('✓ Copied manifest.json to dist/');
-    } else if (existsSync('public/manifest.json')) {
-      copyFileSync('public/manifest.json', 'dist/manifest.json');
-      console.log('✓ Copied public/manifest.json to dist/');
-    }
-    // Copy icons/ directory to dist/icons/
-    if (existsSync('icons')) {
-      mkdirSync('dist/icons', { recursive: true });
-      const copyDirRecursive = (src, dest) => {
+    try {
+      // Ensure dist exists
+      if (!existsSync('dist')) {
+        mkdirSync('dist', { recursive: true });
+      }
+      // Copy manifest.json to dist
+      if (existsSync('manifest.json')) {
+        copyFileSync('manifest.json', 'dist/manifest.json');
+        console.log('✓ Copied manifest.json to dist/');
+      } else if (existsSync('public/manifest.json')) {
+        copyFileSync('public/manifest.json', 'dist/manifest.json');
+        console.log('✓ Copied public/manifest.json to dist/');
+      }
+      // Recursive copy using statSync instead of withFileTypes (better WebContainer compat)
+      const copyDir = (src, dest) => {
         if (!existsSync(dest)) mkdirSync(dest, { recursive: true });
-        const entries = readdirSync(src, { withFileTypes: true });
-        for (const entry of entries) {
-          const srcPath = src + '/' + entry.name;
-          const destPath = dest + '/' + entry.name;
-          if (entry.isDirectory()) {
-            copyDirRecursive(srcPath, destPath);
-          } else {
-            copyFileSync(srcPath, destPath);
-          }
+        for (const entry of readdirSync(src)) {
+          const srcPath = src + '/' + entry;
+          const destPath = dest + '/' + entry;
+          try {
+            if (statSync(srcPath).isDirectory()) {
+              copyDir(srcPath, destPath);
+            } else {
+              copyFileSync(srcPath, destPath);
+            }
+          } catch (e) { /* skip unreadable entries */ }
         }
       };
-      copyDirRecursive('icons', 'dist/icons');
-      console.log('✓ Copied icons/ to dist/icons/');
-    }
-    // Also copy any public/icons/ to dist/icons/
-    if (existsSync('public/icons')) {
-      mkdirSync('dist/icons', { recursive: true });
-      const copyDirRecursive = (src, dest) => {
-        if (!existsSync(dest)) mkdirSync(dest, { recursive: true });
-        const entries = readdirSync(src, { withFileTypes: true });
-        for (const entry of entries) {
-          const srcPath = src + '/' + entry.name;
-          const destPath = dest + '/' + entry.name;
-          if (entry.isDirectory()) {
-            copyDirRecursive(srcPath, destPath);
-          } else {
-            copyFileSync(srcPath, destPath);
-          }
-        }
-      };
-      copyDirRecursive('public/icons', 'dist/icons');
-      console.log('✓ Copied public/icons/ to dist/icons/');
+      if (existsSync('icons')) {
+        copyDir('icons', 'dist/icons');
+        console.log('✓ Copied icons/ to dist/icons/');
+      }
+      if (existsSync('public/icons')) {
+        copyDir('public/icons', 'dist/icons');
+        console.log('✓ Copied public/icons/ to dist/icons/');
+      }
+    } catch (e) {
+      // Never let asset copying crash the build — the JS/CSS/HTML output is what matters
+      console.warn('[copy-extension-assets] Non-fatal asset copy error:', e?.message || e);
     }
   }
 });
