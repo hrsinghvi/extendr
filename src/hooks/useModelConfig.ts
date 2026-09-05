@@ -48,12 +48,14 @@ export const PROVIDER_MODELS: Record<AIProviderType, string[]> = {
     'qwen/qwen-2.5-72b-instruct',
   ],
   gemini: [
-    // ponytail: 1.5-era models are retired; these are the live free-tier models
-    // that support function calling, which this app depends on entirely.
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-2.5-pro',
-    'gemini-2.0-flash',
+    // ponytail: 1.5/2.0 are retired and 2.5 is closed to new keys. These are
+    // verified against the live API for function calling, which this app
+    // depends on entirely. Re-check with models?key= if one starts 404ing.
+    'gemini-3.6-flash',
+    'gemini-3.7-flash',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash',
+    'gemini-flash-latest',
   ],
   openai: [
     'gpt-5-mini-2025-08-07',
@@ -90,7 +92,7 @@ export const PROVIDER_DISPLAY_NAMES: Record<AIProviderType, string> = {
 
 export const DEFAULT_MODELS: Record<AIProviderType, string> = {
   openrouter: OPENROUTER_DEFAULT_MODEL,
-  gemini: 'gemini-2.5-flash',
+  gemini: 'gemini-3.6-flash',
   openai: 'gpt-5-mini-2025-08-07',
   claude: 'claude-sonnet-4-20250514',
   deepseek: 'deepseek-chat',
