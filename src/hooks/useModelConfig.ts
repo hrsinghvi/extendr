@@ -48,12 +48,12 @@ export const PROVIDER_MODELS: Record<AIProviderType, string[]> = {
     'qwen/qwen-2.5-72b-instruct',
   ],
   gemini: [
+    // ponytail: 1.5-era models are retired; these are the live free-tier models
+    // that support function calling, which this app depends on entirely.
     'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-pro',
     'gemini-2.0-flash',
-    'gemini-2.0-flash-exp',
-    'gemini-1.5-flash',
-    'gemini-1.5-pro',
-    'gemini-1.5-flash-8b',
   ],
   openai: [
     'gpt-5-mini-2025-08-07',
@@ -90,7 +90,7 @@ export const PROVIDER_DISPLAY_NAMES: Record<AIProviderType, string> = {
 
 export const DEFAULT_MODELS: Record<AIProviderType, string> = {
   openrouter: OPENROUTER_DEFAULT_MODEL,
-  gemini: 'gemini-2.0-flash',
+  gemini: 'gemini-2.5-flash',
   openai: 'gpt-5-mini-2025-08-07',
   claude: 'claude-sonnet-4-20250514',
   deepseek: 'deepseek-chat',
@@ -107,7 +107,7 @@ export const ALL_PROVIDERS: AIProviderType[] = [
 ];
 
 // Providers that are always locked (not included in any plan yet)
-export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'gemini', 'claude', 'openrouter']);
+export const LOCKED_PROVIDERS: Set<AIProviderType> = new Set(['openai', 'claude', 'openrouter']);
 
 // Providers that require Premium or Ultra plan
 export const PREMIUM_PROVIDERS: Set<AIProviderType> = new Set([]);
@@ -143,15 +143,33 @@ export function getAvailableProviders(): AIProviderType[] {
 
 const STORAGE_KEY = 'extendr_model_config';
 
+/** A provider is usable only if it isn't locked AND its API key is present. */
+function isProviderUsable(provider: AIProviderType): boolean {
+  return !LOCKED_PROVIDERS.has(provider) && getApiKeyForProvider(provider).length > 10;
+}
+
+/**
+ * First usable provider, in ALL_PROVIDERS order, preferring Gemini.
+ * Falls back to Gemini even with no key so the UI shows a sensible label
+ * (the send path surfaces the missing-key toast).
+ */
 function getDefaultPrimary(): ModelEntry {
-  return { provider: 'huggingface', model: DEFAULT_MODELS['huggingface'] };
+  const preferred: AIProviderType[] = ['gemini', ...ALL_PROVIDERS];
+  const provider = preferred.find(isProviderUsable) ?? 'gemini';
+  return { provider, model: DEFAULT_MODELS[provider] };
 }
 
 function loadConfig(): StoredModelConfig {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved) as StoredModelConfig;
+      const parsed = JSON.parse(saved) as StoredModelConfig;
+      // A stored provider can go stale: its key was removed, or the provider
+      // got locked. Fall back instead of sending requests that always fail.
+      if (parsed?.primary && isProviderUsable(parsed.primary.provider)) {
+        return parsed;
+      }
+      return { ...parsed, primary: getDefaultPrimary() };
     }
   } catch {
     // ignore parse errors

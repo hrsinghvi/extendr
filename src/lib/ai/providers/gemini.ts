@@ -87,18 +87,25 @@ export class GeminiProvider extends BaseAIProvider {
    */
   getAvailableModels(): string[] {
     return [
-      'gemini-2.5-pro',
       'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash-8b'
+      'gemini-2.5-flash-lite',
+      'gemini-2.5-pro',
+      'gemini-2.0-flash'
     ];
   }
-  
+
   protected getDefaultModel(): string {
-    return 'gemini-2.5-pro';
+    // 2.5-flash: free tier, function calling, fast enough for the tool loop.
+    return 'gemini-2.5-flash';
+  }
+
+  /**
+   * Gemini supports far more than the 4096 base default. Writing several
+   * extension files in one response needs the headroom — a truncated
+   * response cuts a functionCall in half and the whole turn is wasted.
+   */
+  protected getMaxTokens(): number {
+    return this.config.maxTokens || 8192;
   }
   
   /**
