@@ -77,7 +77,13 @@ export const PROVIDER_MODELS: Record<AIProviderType, string[]> = {
     'deepseek-coder',
   ],
   huggingface: [
-    'Qwen/Qwen2.5-Coder-32B-Instruct',
+    // ponytail: every model here MUST support tool calling — the app is
+    // entirely tool-driven, and HF's router rejects `tools` outright on
+    // models that don't (Qwen2.5-Coder-32B is one; it was the old default).
+    // Verified live against router.huggingface.co before listing.
+    'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+    'deepseek-ai/DeepSeek-V3-0324',
+    'meta-llama/Llama-3.3-70B-Instruct',
   ],
 };
 
@@ -96,7 +102,7 @@ export const DEFAULT_MODELS: Record<AIProviderType, string> = {
   openai: 'gpt-5-mini-2025-08-07',
   claude: 'claude-sonnet-4-20250514',
   deepseek: 'deepseek-chat',
-  huggingface: 'Qwen/Qwen2.5-Coder-32B-Instruct',
+  huggingface: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
 };
 
 // Ordered list of all supported providers (add new ones here)
@@ -151,6 +157,17 @@ function isProviderUsable(provider: AIProviderType): boolean {
 }
 
 /**
+ * A stored entry is only safe to reuse if its model is still in the curated
+ * catalog. Models get retired by providers, or pulled from the catalog because
+ * they don't support tool calling — this app cannot function without tools, so
+ * a stale entry must be dropped rather than sent and failed.
+ */
+function isEntryUsable(entry: ModelEntry | undefined): boolean {
+  if (!entry || !isProviderUsable(entry.provider)) return false;
+  return (PROVIDER_MODELS[entry.provider] ?? []).includes(entry.model);
+}
+
+/**
  * First usable provider, in ALL_PROVIDERS order, preferring Gemini.
  * Falls back to Gemini even with no key so the UI shows a sensible label
  * (the send path surfaces the missing-key toast).
@@ -166,12 +183,18 @@ function loadConfig(): StoredModelConfig {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as StoredModelConfig;
-      // A stored provider can go stale: its key was removed, or the provider
-      // got locked. Fall back instead of sending requests that always fail.
-      if (parsed?.primary && isProviderUsable(parsed.primary.provider)) {
+      // A stored entry can go stale: key removed, provider locked, or the
+      // model retired/pulled for lacking tool support. Fall back instead of
+      // sending requests that are guaranteed to fail.
+      if (isEntryUsable(parsed?.primary)) {
         return parsed;
       }
-      return { ...parsed, primary: getDefaultPrimary() };
+      return {
+        ...parsed,
+        primary: getDefaultPrimary(),
+        // Stale rotation entries would fail the same way on their turn.
+        rotationModels: (parsed?.rotationModels ?? []).filter(isEntryUsable),
+      };
     }
   } catch {
     // ignore parse errors
